@@ -1,0 +1,83 @@
+
+bt_3.png
+size: 172,94
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+1
+  rotate: true
+  xy: 93, 2
+  size: 90, 77
+  orig: 90, 78
+  offset: 0, 0
+  index: -1
+2
+  rotate: true
+  xy: 93, 2
+  size: 90, 77
+  orig: 90, 78
+  offset: 0, 0
+  index: -1
+3
+  rotate: true
+  xy: 93, 2
+  size: 90, 77
+  orig: 90, 78
+  offset: 0, 0
+  index: -1
+4
+  rotate: true
+  xy: 93, 2
+  size: 90, 77
+  orig: 90, 78
+  offset: 0, 0
+  index: -1
+5
+  rotate: true
+  xy: 93, 2
+  size: 90, 77
+  orig: 90, 78
+  offset: 0, 0
+  index: -1
+6
+  rotate: true
+  xy: 93, 2
+  size: 90, 77
+  orig: 90, 78
+  offset: 0, 0
+  index: -1
+7
+  rotate: true
+  xy: 93, 2
+  size: 90, 77
+  orig: 90, 78
+  offset: 0, 0
+  index: -1
+8
+  rotate: true
+  xy: 93, 2
+  size: 90, 77
+  orig: 90, 78
+  offset: 0, 0
+  index: -1
+9
+  rotate: true
+  xy: 93, 2
+  size: 90, 77
+  orig: 90, 78
+  offset: 0, 0
+  index: -1
+From selection copy
+  rotate: true
+  xy: 93, 2
+  size: 90, 77
+  orig: 90, 78
+  offset: 0, 0
+  index: -1
+From selection copy 2
+  rotate: false
+  xy: 2, 2
+  size: 89, 90
+  orig: 89, 92
+  offset: 0, 0
+  index: -1

@@ -1,0 +1,34 @@
+
+bt_4_daily.png
+size: 1400,472
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+1
+  rotate: true
+  xy: 1255, 262
+  size: 208, 143
+  orig: 220, 150
+  offset: 10, 2
+  index: -1
+2
+  rotate: false
+  xy: 446, 4
+  size: 420, 466
+  orig: 455, 472
+  offset: 4, 1
+  index: -1
+3
+  rotate: false
+  xy: 868, 4
+  size: 385, 466
+  orig: 417, 472
+  offset: 1, 1
+  index: -1
+From selection
+  rotate: false
+  xy: 2, 2
+  size: 442, 468
+  orig: 451, 472
+  offset: 3, 1
+  index: -1

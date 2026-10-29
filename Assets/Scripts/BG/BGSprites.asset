@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f877717baedafad4fa8ad469dfbc2116, type: 3}
+  m_Name: BGSprites
+  m_EditorClassIdentifier: 
+  bgSprites:
+  - bg: {fileID: -7857424510872589897, guid: 6edeeed2ae16a774fbf8431c284a29a0, type: 3}
+    title: ChatGPT Image 15_08_21 12 thg 9, 2026_0
+  - bg: {fileID: -9080445754447832829, guid: 0c2abdd9e2905414693a2138efcd4683, type: 3}
+    title: ChatGPT Image 15_15_51 12 thg 9, 2026_0
+  - bg: {fileID: 5183154109176060344, guid: 698f4f8a00e945343a39006c9a9b828f, type: 3}
+    title: ChatGPT Image 15_31_43 12 thg 9, 2026_0
+  - bg: {fileID: 3484870710771818531, guid: c46312e6a7a3ec34ab1f9f0ac6eb49b3, type: 3}
+    title: ChatGPT Image 15_36_38 12 thg 9, 2026_0

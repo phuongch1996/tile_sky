@@ -1,0 +1,111 @@
+
+Win.png
+size: 1383,330
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Tauvutru
+  rotate: false
+  xy: 2, 4
+  size: 707, 324
+  orig: 709, 326
+  offset: 1, 1
+  index: -1
+dau
+  rotate: false
+  xy: 1177, 159
+  size: 204, 169
+  orig: 213, 245
+  offset: 6, 75
+  index: -1
+longmayphai copy
+  rotate: true
+  xy: 741, 7
+  size: 20, 15
+  orig: 22, 17
+  offset: 1, 1
+  index: -1
+longmaytrai copy
+  rotate: false
+  xy: 741, 29
+  size: 18, 19
+  orig: 20, 21
+  offset: 1, 1
+  index: -1
+matphai
+  rotate: true
+  xy: 1172, 98
+  size: 59, 72
+  orig: 61, 74
+  offset: 1, 1
+  index: -1
+mattrai
+  rotate: false
+  xy: 1293, 15
+  size: 62, 71
+  orig: 64, 73
+  offset: 1, 1
+  index: -1
+mieng
+  rotate: true
+  xy: 711, 11
+  size: 37, 28
+  orig: 39, 30
+  offset: 1, 1
+  index: -1
+taiphai
+  rotate: true
+  xy: 1293, 88
+  size: 69, 84
+  orig: 74, 86
+  offset: 1, 1
+  index: -1
+taitrai
+  rotate: false
+  xy: 1216, 15
+  size: 75, 81
+  orig: 77, 83
+  offset: 1, 1
+  index: -1
+taucat
+  rotate: false
+  xy: 711, 219
+  size: 464, 109
+  orig: 466, 111
+  offset: 1, 1
+  index: -1
+tayphai
+  rotate: true
+  xy: 1035, 96
+  size: 121, 135
+  orig: 123, 137
+  offset: 1, 1
+  index: -1
+taytrai
+  rotate: true
+  xy: 1148, 2
+  size: 92, 66
+  orig: 94, 68
+  offset: 1, 1
+  index: -1
+than
+  rotate: false
+  xy: 1035, 20
+  size: 111, 74
+  orig: 113, 80
+  offset: 1, 1
+  index: -1
+tên lửa 2
+  rotate: false
+  xy: 711, 50
+  size: 160, 167
+  orig: 162, 170
+  offset: 1, 2
+  index: -1
+tên tửa 1
+  rotate: false
+  xy: 873, 50
+  size: 160, 167
+  orig: 162, 170
+  offset: 1, 2
+  index: -1

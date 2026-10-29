@@ -1,0 +1,18 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Samples/iOS 14 Advertising Support/1.0.1/01 Context Screen/Context Screen Sample.unity
+    guid: a2154acf9dc1c46e5a8df649580ad6b9
+  - enabled: 1
+    path: Assets/BaseProject/Scenes/HomeScene.unity
+    guid: f00328a7373d4df4d9fcf51d5d0c2d93
+  - enabled: 1
+    path: Assets/BaseProject/Scenes/GameScene.unity
+    guid: dd085a878e65eb74c957e7bab68a97c1
+  m_configObjects:
+    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}

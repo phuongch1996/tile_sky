@@ -1,0 +1,83 @@
+
+star_1.png
+size: 1896,1208
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Layer 1679
+  rotate: false
+  xy: 2, 408
+  size: 798, 798
+  orig: 814, 814
+  offset: 9, 10
+  index: -1
+Layer 1681
+  rotate: false
+  xy: 1606, 839
+  size: 60, 60
+  orig: 65, 65
+  offset: 3, 3
+  index: -1
+Layer 2
+  rotate: false
+  xy: 2, 6
+  size: 400, 400
+  orig: 400, 400
+  offset: 0, 0
+  index: -1
+Layer 3
+  rotate: false
+  xy: 802, 806
+  size: 400, 400
+  orig: 400, 400
+  offset: 0, 0
+  index: -1
+Layer 4
+  rotate: false
+  xy: 1204, 806
+  size: 400, 400
+  orig: 400, 400
+  offset: 0, 0
+  index: -1
+Layer 5
+  rotate: false
+  xy: 404, 6
+  size: 400, 400
+  orig: 400, 400
+  offset: 0, 0
+  index: -1
+Layer 6
+  rotate: false
+  xy: 806, 404
+  size: 400, 400
+  orig: 400, 400
+  offset: 0, 0
+  index: -1
+Layer 7
+  rotate: false
+  xy: 806, 2
+  size: 400, 400
+  orig: 400, 400
+  offset: 0, 0
+  index: -1
+Layer 8
+  rotate: false
+  xy: 1208, 404
+  size: 400, 400
+  orig: 400, 400
+  offset: 0, 0
+  index: -1
+Layer 9
+  rotate: false
+  xy: 1208, 2
+  size: 400, 400
+  orig: 400, 400
+  offset: 0, 0
+  index: -1
+star
+  rotate: false
+  xy: 1606, 901
+  size: 288, 305
+  orig: 293, 309
+  offset: 2, 4
+  index: -1

@@ -1,0 +1,27 @@
+
+bt_2_chris.png
+size: 628,187
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+nơ
+  rotate: true
+  xy: 493, 8
+  size: 177, 133
+  orig: 177, 137
+  offset: 0, 4
+  index: -1
+nắp
+  rotate: false
+  xy: 234, 52
+  size: 257, 133
+  orig: 258, 172
+  offset: 1, 1
+  index: -1
+quà
+  rotate: false
+  xy: 2, 2
+  size: 230, 183
+  orig: 233, 190
+  offset: 3, 0
+  index: -1

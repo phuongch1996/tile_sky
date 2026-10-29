@@ -1,0 +1,118 @@
+
+vaporize.png
+size: 1130,276
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Layer 10
+  rotate: false
+  xy: 425, 139
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 11
+  rotate: false
+  xy: 425, 2
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 12
+  rotate: false
+  xy: 566, 139
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 13
+  rotate: false
+  xy: 566, 2
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 14
+  rotate: false
+  xy: 707, 139
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 15
+  rotate: false
+  xy: 707, 2
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 16
+  rotate: false
+  xy: 848, 139
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 17
+  rotate: false
+  xy: 848, 2
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 18
+  rotate: false
+  xy: 989, 139
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 3
+  rotate: false
+  xy: 2, 139
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 4
+  rotate: false
+  xy: 2, 2
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 5
+  rotate: false
+  xy: 143, 139
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 6
+  rotate: false
+  xy: 143, 2
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 7
+  rotate: false
+  xy: 284, 139
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 8
+  rotate: false
+  xy: 284, 2
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1
+Layer 9
+  rotate: false
+  xy: 989, 2
+  size: 139, 135
+  orig: 139, 135
+  offset: 0, 0
+  index: -1

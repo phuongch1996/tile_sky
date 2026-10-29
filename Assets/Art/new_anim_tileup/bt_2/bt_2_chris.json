@@ -1,0 +1,67 @@
+{
+"skeleton": {
+	"hash": "iRifz+ILYsQGxOoocCvAAwJGoRI",
+	"spine": "3.8.99",
+	"x": -126.58,
+	"y": -51.88,
+	"width": 258,
+	"height": 278.95,
+	"images": "C:/Users/PC/Desktop/anim_tileup/images",
+	"audio": "C:/Users/PC/Desktop/anim_tileup"
+},
+"bones": [
+	{ "name": "root" },
+	{ "name": "bone16", "parent": "root", "length": 74.18, "rotation": 90, "x": 6.87, "y": -12.72 },
+	{ "name": "bone17", "parent": "bone16", "x": 11.83, "y": -0.91 },
+	{ "name": "bone18", "parent": "bone17", "length": 71.44, "rotation": 90.36, "x": 101.46, "y": -0.91 },
+	{ "name": "bone19", "parent": "bone18", "length": 51.77, "rotation": -90.36, "x": 23.83, "y": -45.2 }
+],
+"slots": [
+	{ "name": "quà", "bone": "bone16", "attachment": "quà" },
+	{ "name": "nắp", "bone": "bone18", "attachment": "nắp" },
+	{ "name": "nơ", "bone": "bone19", "attachment": "nơ" }
+],
+"skins": [
+	{
+		"name": "default",
+		"attachments": {
+			"nơ": {
+				"nơ": { "x": 12.95, "y": -20.62, "rotation": -90, "width": 177, "height": 137 }
+			},
+			"nắp": {
+				"nắp": { "x": 6.18, "y": -14.47, "rotation": 179.64, "width": 258, "height": 172 }
+			},
+			"quà": {
+				"quà": { "x": 55.84, "y": 5.34, "rotation": -90, "width": 233, "height": 190 }
+			}
+		}
+	}
+],
+"animations": {
+	"animation": {
+		"bones": {
+			"bone16": {
+				"scale": [
+					{},
+					{ "time": 0.5667, "x": 0.896, "y": 0.939 },
+					{ "time": 1.1667 }
+				]
+			},
+			"bone18": {
+				"translate": [
+					{},
+					{ "time": 0.5667, "x": -8.17 },
+					{ "time": 1.1667 }
+				]
+			},
+			"bone19": {
+				"scale": [
+					{},
+					{ "time": 0.5667, "y": 0.829 },
+					{ "time": 1.1667 }
+				]
+			}
+		}
+	}
+}
+}

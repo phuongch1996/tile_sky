@@ -1,0 +1,27 @@
+
+excellent.png
+size: 865,111
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Layer 2
+  rotate: false
+  xy: 815, 49
+  size: 48, 60
+  orig: 52, 64
+  offset: 2, 2
+  index: -1
+Perfect! copy
+  rotate: false
+  xy: 531, 25
+  size: 282, 84
+  orig: 287, 87
+  offset: 3, 1
+  index: -1
+Saturation 2 copy 2
+  rotate: false
+  xy: 2, 2
+  size: 527, 107
+  orig: 545, 120
+  offset: 9, 7
+  index: -1

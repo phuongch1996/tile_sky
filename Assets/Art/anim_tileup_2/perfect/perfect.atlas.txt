@@ -1,0 +1,27 @@
+
+perfect.png
+size: 828,111
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Layer 2
+  rotate: false
+  xy: 778, 49
+  size: 48, 60
+  orig: 52, 64
+  offset: 2, 2
+  index: -1
+Perfect! copy
+  rotate: false
+  xy: 531, 27
+  size: 245, 82
+  orig: 251, 89
+  offset: 3, 4
+  index: -1
+Saturation 2 copy 2
+  rotate: false
+  xy: 2, 2
+  size: 527, 107
+  orig: 547, 122
+  offset: 10, 8
+  index: -1

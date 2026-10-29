@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f877717baedafad4fa8ad469dfbc2116, type: 3}
+  m_Name: LoadingSprites
+  m_EditorClassIdentifier: 
+  bgSprites:
+  - bg: {fileID: -4178046375966092550, guid: 24e01abccae17a849aecc77f0484232b, type: 3}
+    title: 4_0
+  - bg: {fileID: -855298285791758126, guid: dd2fa51dbfbb26242afafe1fb559df23, type: 3}
+    title: 1_0
+  - bg: {fileID: 6937817954938267909, guid: 66fca187d93869a4884aa65bacbbdb08, type: 3}
+    title: 2_0
+  - bg: {fileID: -6470460504253458178, guid: 2c8b00ba046a7e44893c8178c63467fe, type: 3}
+    title: 3_0

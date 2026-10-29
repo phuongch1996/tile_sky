@@ -1,0 +1,188 @@
+
+logo.png
+size: 4068,1732
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+A
+  rotate: false
+  xy: 3679, 844
+  size: 335, 405
+  orig: 340, 408
+  offset: 1, 2
+  index: -1
+C
+  rotate: true
+  xy: 1996, 522
+  size: 300, 403
+  orig: 303, 405
+  offset: 1, 1
+  index: -1
+Evang
+  rotate: false
+  xy: 3369, 1251
+  size: 415, 479
+  orig: 417, 481
+  offset: 1, 1
+  index: -1
+Exanh
+  rotate: false
+  xy: 3679, 422
+  size: 320, 420
+  orig: 323, 422
+  offset: 2, 1
+  index: -1
+Group 1 copy 2
+  rotate: false
+  xy: 2, 2
+  size: 1992, 1728
+  orig: 2037, 1751
+  offset: 31, 15
+  index: -1
+I
+  rotate: true
+  xy: 2521, 599
+  size: 268, 529
+  orig: 270, 531
+  offset: 1, 1
+  index: -1
+L
+  rotate: true
+  xy: 1996, 824
+  size: 298, 523
+  orig: 300, 525
+  offset: 1, 1
+  index: -1
+P
+  rotate: false
+  xy: 3052, 437
+  size: 310, 430
+  orig: 313, 432
+  offset: 2, 1
+  index: -1
+S
+  rotate: true
+  xy: 2907, 869
+  size: 329, 434
+  orig: 331, 436
+  offset: 1, 1
+  index: -1
+T
+  rotate: false
+  xy: 1996, 1192
+  size: 488, 538
+  orig: 490, 541
+  offset: 1, 2
+  index: -1
+effect
+  rotate: false
+  xy: 3523, 141
+  size: 193, 279
+  orig: 195, 281
+  offset: 1, 1
+  index: -1
+hanhtinh
+  rotate: true
+  xy: 3369, 695
+  size: 554, 308
+  orig: 556, 310
+  offset: 1, 1
+  index: -1
+longmayphai
+  rotate: true
+  xy: 2907, 1200
+  size: 530, 460
+  orig: 533, 476
+  offset: 1, 9
+  index: -1
+manhtay
+  rotate: false
+  xy: 3364, 451
+  size: 152, 66
+  orig: 154, 70
+  offset: 1, 1
+  index: -1
+matphai
+  rotate: false
+  xy: 3786, 1271
+  size: 186, 175
+  orig: 188, 177
+  offset: 1, 1
+  index: -1
+mattrai
+  rotate: true
+  xy: 2730, 452
+  size: 145, 203
+  orig: 147, 205
+  offset: 1, 1
+  index: -1
+mieng
+  rotate: false
+  xy: 3974, 1367
+  size: 86, 79
+  orig: 88, 81
+  offset: 1, 1
+  index: -1
+taiphai
+  rotate: false
+  xy: 2521, 924
+  size: 282, 198
+  orig: 285, 200
+  offset: 2, 1
+  index: -1
+taitrai
+  rotate: false
+  xy: 3718, 163
+  size: 208, 257
+  orig: 210, 260
+  offset: 1, 2
+  index: -1
+tayphai
+  rotate: false
+  xy: 1996, 254
+  size: 389, 266
+  orig: 392, 279
+  offset: 2, 12
+  index: -1
+taytrai
+  rotate: false
+  xy: 3127, 273
+  size: 394, 162
+  orig: 397, 166
+  offset: 1, 3
+  index: -1
+tenlua
+  rotate: false
+  xy: 2486, 1124
+  size: 419, 606
+  orig: 421, 626
+  offset: 1, 19
+  index: -1
+than
+  rotate: false
+  xy: 2730, 178
+  size: 395, 257
+  orig: 419, 272
+  offset: 23, 11
+  index: -1
+thienthach1
+  rotate: false
+  xy: 3786, 1448
+  size: 280, 282
+  orig: 282, 284
+  offset: 1, 1
+  index: -1
+thienthach2
+  rotate: false
+  xy: 3364, 519
+  size: 186, 174
+  orig: 188, 176
+  offset: 1, 1
+  index: -1
+traidat
+  rotate: false
+  xy: 2401, 274
+  size: 327, 323
+  orig: 329, 325
+  offset: 1, 1
+  index: -1

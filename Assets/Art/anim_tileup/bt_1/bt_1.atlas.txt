@@ -1,0 +1,27 @@
+
+bt_1.png
+size: 279,206
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Hue/Saturation 1
+  rotate: false
+  xy: 191, 116
+  size: 86, 88
+  orig: 89, 91
+  offset: 2, 2
+  index: -1
+Layer 2
+  rotate: true
+  xy: 2, 2
+  size: 202, 187
+  orig: 208, 194
+  offset: 3, 3
+  index: -1
+Layer 3
+  rotate: true
+  xy: 191, 6
+  size: 108, 39
+  orig: 114, 43
+  offset: 2, 1
+  index: -1

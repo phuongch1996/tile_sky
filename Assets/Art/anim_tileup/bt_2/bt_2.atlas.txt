@@ -1,0 +1,27 @@
+
+bt_2.png
+size: 369,313
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+nơ
+  rotate: false
+  xy: 137, 2
+  size: 176, 124
+  orig: 176, 128
+  offset: 0, 4
+  index: -1
+nắp
+  rotate: true
+  xy: 2, 54
+  size: 257, 133
+  orig: 258, 137
+  offset: 1, 1
+  index: -1
+quà
+  rotate: false
+  xy: 137, 128
+  size: 230, 183
+  orig: 233, 190
+  offset: 3, 0
+  index: -1

@@ -1,0 +1,20 @@
+
+great.png
+size: 728,111
+format: RGBA8888
+filter: Linear,Linear
+repeat: none
+Perfect! copy
+  rotate: false
+  xy: 531, 26
+  size: 195, 83
+  orig: 199, 87
+  offset: 2, 2
+  index: -1
+Saturation 2 copy 2
+  rotate: false
+  xy: 2, 2
+  size: 527, 107
+  orig: 545, 120
+  offset: 9, 7
+  index: -1
