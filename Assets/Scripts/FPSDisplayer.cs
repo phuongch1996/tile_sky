@@ -9,6 +9,9 @@ public class FPSDisplayer : MonoBehaviour
         deltaTime += (Time.unscaledDeltaTime - deltaTime) * 0.1f;
     }
 
+    /// <summary>
+    /// Displays the smoothed frame time and frame rate on screen.
+    /// </summary>
     void OnGUI()
     {
         int w = Screen.width, h = Screen.height;
