@@ -1,4 +1,3 @@
-using Firebase.RemoteConfig;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -50,6 +49,13 @@ public enum GAME_MODE
     tile_rainbow,
     tile_fog,
     tile_color,
+    // Keep all previous enum values unchanged: they are stored in progress saves.
+    tile_missslot = 9,
+    tile_poison = 10,
+    tile_bomb = 11,
+    tile_tray = 12,
+    tile_winning = 13,
+    tile_gold_2 = 14,
 }
 public class GameConfig
 {
@@ -73,7 +79,8 @@ public class GameConfig
     public const int unlockPiggyBank = 22;
     public const int unlockRank = 26;
     //public static bool IsDailyChallenge => false;
-    public static bool IsDailyChallenge => GetCurrentDate() == UnityAuthentication.instance.dailyChallengeDateIndex
+    public static bool IsDailyChallenge => UnityAuthentication.IsLeaderboard() && UnityAuthentication.instance
+         && GetCurrentDate() == UnityAuthentication.instance.dailyChallengeDateIndex
          && GetCurrentLevel() >= Common.config_unlock_dailychallenge;
 
     public const string startLevelKey = "start_level";
@@ -660,8 +667,7 @@ public class GameConfig
     }
     public static string GetUserId()
     {
-        return PlayerPrefs.GetString("unity.cloud_userid");
-        //return PlayerPrefs.GetString(userIdKey, PlayerPrefs.GetString("unity.cloud_userid"));
+        return UnityAuthentication.GetPlayerId();
     }
     const string playerNameDefaultKey = "player_name_default";
     public static string GetDefaultName()
@@ -772,6 +778,7 @@ public class GameConfig
 
     public static string GetLocalizedPrice(string productId)
     {
+        if (!IAPManager.PurchasingEnabled) return "Unavailable";
         //Product product = CodelessIAPStoreListener.Instance.StoreController.products.WithID(productId);
         try
         {
@@ -835,8 +842,7 @@ public class GameConfig
     }
     public static int GetTileSet()
     {
-        return (int)FirebaseRemoteConfig.DefaultInstance
-            .GetValue("tile_set").LongValue;
+        return Common.config_tile_set;
     }
 
     #region utils

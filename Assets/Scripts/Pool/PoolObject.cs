@@ -6,6 +6,7 @@ public class PoolObject : MonoBehaviour
     public ObjPoolerStatus PoolerStatus { get; set; }
     public virtual void Inactive()
     {
+        CancelInvoke();
         gameObject.SetActive(false);
         PoolerStatus = ObjPoolerStatus.Inactive;
     }

@@ -6,7 +6,7 @@ using Unity.Services.Leaderboards.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PopupRank : Popup
+public partial class PopupRank : Popup
 {
     public Button btClose;
     public Button btEditPlayer;
@@ -54,27 +54,30 @@ public class PopupRank : Popup
     [Space]
     public Button btInfo;
     List<RankCard> userRankCards;
+    bool hasChallengePrize;
+
+    void BindRankTabHandlers()
+    {
+        toggleDailyRank.onValueChanged.RemoveListener(OnDailyTabSelected);
+        toggleAllTimeRank.onValueChanged.RemoveListener(OnAllTimeTabSelected);
+        toggleDailyChallengeRank.onValueChanged.RemoveListener(OnChallengeTabSelected);
+        toggleDailyRank.onValueChanged.AddListener(OnDailyTabSelected);
+        toggleAllTimeRank.onValueChanged.AddListener(OnAllTimeTabSelected);
+        toggleDailyChallengeRank.onValueChanged.AddListener(OnChallengeTabSelected);
+    }
+
+    void OnDailyTabSelected(bool selected) { if (selected) ChangeTab(); }
+    void OnAllTimeTabSelected(bool selected) { if (selected) ChangeTab(); }
+    void OnChallengeTabSelected(bool selected) { if (selected) ChangeTab(); }
+
     public override void SetupTweenCallback()
     {
+        EnsureTileSkyLeaderboard();
+        BindRankTabHandlers();
         SetupTweenCallback(() =>
         {
             btClose.onClick.AddListener(() => Close());
             btEditPlayer.onClick.AddListener(() => EditPlayer());
-            toggleDailyRank.onValueChanged.AddListener((value) =>
-            {
-                if (value)
-                    ChangeTab();
-            });
-            toggleAllTimeRank.onValueChanged.AddListener((value) =>
-            {
-                if (value)
-                    ChangeTab();
-            });
-            toggleDailyChallengeRank.onValueChanged.AddListener((value) =>
-            {
-                if (value)
-                    ChangeTab();
-            });
             toggleDailyRank.interactable = true;
             toggleAllTimeRank.interactable = true;
             toggleDailyChallengeRank.interactable = true;
@@ -85,6 +88,7 @@ public class PopupRank : Popup
     bool isInit;
     public override void Open()
     {
+        EnsureTileSkyLeaderboard();
         prizeReviewGO.SetActive(false);
         btClose.onClick.RemoveAllListeners();
         btEditPlayer.onClick.RemoveAllListeners();
@@ -92,10 +96,9 @@ public class PopupRank : Popup
         toggleDailyRank.interactable = false;
         toggleAllTimeRank.interactable = false;
         toggleDailyChallengeRank.interactable = false;
-        toggleDailyRank.onValueChanged.RemoveAllListeners();
-        toggleAllTimeRank.onValueChanged.RemoveAllListeners();
-        toggleDailyChallengeRank.onValueChanged.RemoveAllListeners();
+        BindRankTabHandlers();
         toggleDailyChallengeRank.gameObject.SetActive(GameConfig.IsDailyChallenge);
+        LayoutTileSkyTabs();
         btInfo.onClick.RemoveAllListeners();
         if (!isInit)
         {
@@ -110,20 +113,28 @@ public class PopupRank : Popup
             foreach (var card in userRankCards)
                 card.UpdateInfo(GameConfig.GetPlayerAvatar(), GameConfig.GetDisplayName(), GameConfig.GetPlayerFrame(), GameConfig.GetPlayerFlag());
         }
-
+        ChangeTab();
         base.Open();
     }
     public void ChangeTab()
     {
-        bool daily = toggleDailyRank.isOn;
-        bool allTime = toggleAllTimeRank.isOn;
-        bool dailyChallenge = toggleDailyChallengeRank.isOn;
+        bool dailyChallenge = toggleDailyChallengeRank.isOn && toggleDailyChallengeRank.gameObject.activeSelf;
+        bool allTime = !dailyChallenge && toggleAllTimeRank.isOn;
+        bool daily = !dailyChallenge && !allTime;
+        toggleDailyRank.SetIsOnWithoutNotify(daily);
+        toggleAllTimeRank.SetIsOnWithoutNotify(allTime);
+        toggleDailyChallengeRank.SetIsOnWithoutNotify(dailyChallenge);
         txBtDailyRank.color = daily ? Color.white : new Color(1, 1, 1, 0.5f);
         txBtAllTimeRank.color = allTime ? Color.white : new Color(1, 1, 1, 0.5f);
         txBtDailyChallengeRank.color = dailyChallenge ? Color.white : new Color(1, 1, 1, 0.5f);
         dailyTab.SetActive(daily);
         allTimeTab.SetActive(allTime);
         dailyChallengeTab.SetActive(dailyChallenge);
+        txTimeLeft.gameObject.SetActive(dailyChallenge);
+        btInfo.gameObject.SetActive(dailyChallenge);
+        btPrizePreview.gameObject.SetActive(dailyChallenge && hasChallengePrize);
+        prizeReviewGO.SetActive(false);
+        RefreshTileSkyTabs();
     }
     //void TabDaily(bool force = false)
     //{
@@ -175,7 +186,15 @@ public class PopupRank : Popup
         userRankCards = new();
         if (!UnityAuthentication.IsLeaderboard())
         {
+            currentUserDaily.CardSetup(-1, GameConfig.GetPlayerAvatar(), GameConfig.GetDisplayName(), GameConfig.GetPlayerFrame(), GameConfig.GetPlayerFlag(),
+                UnityAuthentication.GetLocalDailyScore());
+            currentUserAllTime.CardSetup(-1, GameConfig.GetPlayerAvatar(), GameConfig.GetDisplayName(), GameConfig.GetPlayerFrame(), GameConfig.GetPlayerFlag(),
+                Mathf.Max(0, GameConfig.GetCurrentLevel() - 1));
+            userRankCards.Add(currentUserDaily);
+            userRankCards.Add(currentUserAllTime);
             loadFailedGO.SetActive(true);
+            var message = loadFailedGO.GetComponentInChildren<TextMeshProUGUI>(true);
+            if (message) message.text = "Leaderboard is not connected yet.";
             loadingGO.SetActive(false);
             isInit = true;
             return;
@@ -390,17 +409,18 @@ public class PopupRank : Popup
             if (userDailyChallengeScore != null)
             {
                 PrizeReviewSetup(userDailyChallengeScore.Rank);
-                btPrizePreview.gameObject.SetActive(true);
+                hasChallengePrize = true;
                 currentUserDailyChallenge.CardSetup(userDailyChallengeScore.Rank, GameConfig.GetPlayerAvatar(), GameConfig.GetDisplayName(), GameConfig.GetPlayerFrame(), GameConfig.GetPlayerFlag(), (int)userDailyChallengeScore.Score, true);
             }
             else
             {
-                btPrizePreview.gameObject.SetActive(false);
+                hasChallengePrize = false;
                 currentUserDailyChallenge.CardSetup(-1, GameConfig.GetPlayerAvatar(), GameConfig.GetDisplayName(), GameConfig.GetPlayerFrame(), GameConfig.GetPlayerFlag(), 5999, true);
             }
         }
         loadingGO.SetActive(false);
         isInit = true;
+        ChangeTab();
     }
     public override void Close()
     {
@@ -411,6 +431,10 @@ public class PopupRank : Popup
     private void Update()
     {
         UpdateTime();
+    }
+    private void LateUpdate()
+    {
+        FitTileSkyBackButton();
     }
     void EditPlayer()
     {
@@ -433,6 +457,7 @@ public class PopupRank : Popup
     }
     void UpdateTime()
     {
+        if (!txTimeLeft.gameObject.activeInHierarchy || !TimeManager.instance) return;
         TimeSpan ts = TimeManager.instance.TimeToNextDay();
         txTimeLeft.text = $"{Mathf.Floor((float)ts.TotalHours):00}:{ts:mm}:{ts:ss}";
     }

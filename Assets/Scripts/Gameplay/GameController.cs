@@ -8,7 +8,7 @@ using TMPro;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-public class GameController : MonoBehaviour
+public partial class GameController : MonoBehaviour
 {
     public static GameController instance;
     public Transform gameParent;
@@ -50,8 +50,9 @@ public class GameController : MonoBehaviour
     const int MatchOverflowSlotCount = 3;
     public bool IsSlotAvailable { get { return slottedItems.Count - match3Items.Count < SlotCount && slottedItems.Count < ActiveSlotTransformCount; } }
     public bool IsSlotLinkAvailable { get { return slottedItems.Count - match3Items.Count < SlotCount - 1 && slottedItems.Count < ActiveSlotTransformCount - 1; } }
-    private int SlotCount => BaseSlotCount;
-    private int ActiveSlotTransformCount => slotTransformList == null ? 0 : Mathf.Min(BaseSlotCount + PendingMatchSlotCount, slotTransformList.Count);
+    private int SlotCount => ModeSlotCount;
+    private int ActiveSlotTransformCount => slotTransformList == null ? 0 : Mathf.Min(
+        SlotCount + (gameMode == GAME_MODE.tile_missslot ? 0 : PendingMatchSlotCount), slotTransformList.Count);
     private int PendingMatchSlotCount => match3Items == null ? 0 : Mathf.Min(match3Items.Count, MatchOverflowSlotCount);
     public bool IsDanger { get { return SlotCount - slottedItems.Count <= 1 && IsSlotAvailable && match3Items.Count == 0; } }
     public bool IsChallengeAnim { get { return SlotCount - slottedItems.Count <= 2 && IsSlotAvailable && match3Items.Count == 0; } }
@@ -62,7 +63,9 @@ public class GameController : MonoBehaviour
     public List<ItemTile> match3Items;
     public List<Sprite> itemSpritesUsing;
     public GAME_STATE gameState;
-    public bool UIClickable { get { return gameState == GAME_STATE.PLAYING && !itemTiles.Exists(x => x.state == ITEMTILE_STATE.HOVERING); } }
+    public bool UIClickable { get { return gameState == GAME_STATE.PLAYING &&
+        !(GameScript.instance != null && GameScript.instance.IsLevelEntering) &&
+        !NewModeInputBlocked && !itemTiles.Exists(x => x.state == ITEMTILE_STATE.HOVERING); } }
     [HideInInspector]
     public int totalTileCount;
     [HideInInspector]
@@ -113,6 +116,9 @@ public class GameController : MonoBehaviour
         if (!GameConfig.isGameLoaded)
             return;
         Starting();
+        // Board/camera layout is now ready; introduce the HUD and tray alongside tile animations.
+        if (GameScript.instance != null)
+            GameScript.instance.AnimateLevelEntrance();
         //StartCoroutine(Starting());
     }
     int GetBoardSizeFromStringLength(int length)
@@ -257,7 +263,8 @@ public class GameController : MonoBehaviour
         parameter = leveljson.param;
         gameMode = LevelManager.GetGameMode(leveljson.mode);
         GameConfig.gameMode = gameMode;
-        if (GameConfig.gameMode != GAME_MODE.tile_gold)
+        ResetSevenSlotBoard();
+        if (GameConfig.gameMode != GAME_MODE.tile_gold && GameConfig.gameMode != GAME_MODE.tile_gold_2)
         {
             itemTypeCount = Mathf.Max(leveljson.itemTypeCount - GameConfig.Handicap(), 2);
             isGoldTile = EventManager.instance.IsCurrentLevelEvent();
@@ -563,10 +570,18 @@ public class GameController : MonoBehaviour
             return false;
         if (data.gameMode != (int)GameConfig.gameMode)
             return false;
+        if (HasNewMode && data.modeProgress == null)
+            return false;
+        if (HasNewMode && data.modeProgress.trays != null && data.modeProgress.trays.Any(tray =>
+            tray == null || tray.floor < 1 || tray.floor > floorTransformList.Count))
+            return false;
+        if (gameMode == GAME_MODE.tile_winning && data.modeProgress.roundTarget <= 0)
+            return false;
         if (GameConfig.gameMode == GAME_MODE.tile_gold && !data.tiles.Any(tile => tile.tileType == -1))
             return false;
 
         parameter = data.parameter;
+        ResetSevenSlotBoard();
         itemTypeCount = data.itemTypeCount;
         gameMode = (GAME_MODE)data.gameMode;
         GameConfig.gameMode = gameMode;
@@ -623,6 +638,7 @@ public class GameController : MonoBehaviour
                 undoList.Add(undoTile);
         }
 
+        RestoreNewModeProgress(data);
         return true;
     }
 
@@ -784,6 +800,7 @@ public class GameController : MonoBehaviour
         item.sortingIndex = tileProgress.sortingIndex;
         item.tilePos = new Vector2(tileProgress.tilePosX, tileProgress.tilePosY);
         item.state = (ITEMTILE_STATE)tileProgress.state;
+        RestoreNewModeTile(item, tileProgress);
 
         if (item.TryGetComponent(out RandomTileVariant randomTile))
             randomTile.RestoreRevealed(tileProgress.randomRevealed);
@@ -814,6 +831,8 @@ public class GameController : MonoBehaviour
 
     int GetRestoredTileType(int tileType)
     {
+        if (NewModeRules.IsSpecialType((int)gameMode, tileType))
+            return tileType;
         if (GameConfig.gameMode == GAME_MODE.tile_gold && tileType == -1)
             return -1;
 
@@ -1043,7 +1062,7 @@ public class GameController : MonoBehaviour
     {
         GameConfig.isExtraSlot = false;
         slotsAvailable.Clear();
-        for (int i = 0; i < BaseSlotCount; i++)
+        for (int i = 0; i < SlotCount; i++)
             slotsAvailable.Add(i);
 
         if (extraSlotScript)
@@ -1126,6 +1145,7 @@ public class GameController : MonoBehaviour
         }
         if (isEvent)
             itemTiles.AddRange(EventTileExtend.eventTileList);
+        InitializeNewMode();
         StartCoroutine(Wait());
     }
     IEnumerator Wait()
@@ -1169,7 +1189,6 @@ public class GameController : MonoBehaviour
         bool interStartLevel = GameConfig.InterStartLevel();
         if (!GameConfig.isChallengeLevel)
         {
-            FirebaseManager.instance.LogLevelStart(GameConfig.level);
             int diff = LevelManager.instance.GetLevelDifficulty(GameConfig.level);
             if (PlayerPrefs.GetInt("tutorial_" + GameConfig.gameMode, 0) == 0)
             {
@@ -1293,7 +1312,6 @@ public class GameController : MonoBehaviour
     public void UndoPower()
     {
         undoList[^1].UndoMove();
-        QuestManager.QuestComplete(QUEST_TYPE.USE_X_UNDOS, 1);
     }
     #endregion
 
@@ -1333,7 +1351,6 @@ public class GameController : MonoBehaviour
             tile.InitItemTile(tile.floor, tile.sortingIndex, tile.tilePos);
         }
         ShuffleItems();
-        QuestManager.QuestComplete(QUEST_TYPE.USE_X_SHUFFLE, 1);
     }
     public void ShuffleItems()
     {
@@ -1457,11 +1474,11 @@ public class GameController : MonoBehaviour
     {
         gameState = GAME_STATE.SUGGEST;
         StartCoroutine(MoveSuggestTiles(suggestTiles));
-        QuestManager.QuestComplete(QUEST_TYPE.USE_X_HINT, 1);
     }
     IEnumerator MoveSuggestTiles(List<ItemTile> suggestTiles)
     {
         yield return new WaitForEndOfFrame();
+        OnNewModeHintStarted(suggestTiles);
 
         foreach (var eventTile in EventTileExtend.eventTileList)
         {
@@ -1479,7 +1496,7 @@ public class GameController : MonoBehaviour
             if (GameConfig.gameMode == GAME_MODE.tile_freeze)
                 StartCoroutine(CheckFullFreeze());
             yield return new WaitForSeconds(0.35f);
-            gameState = GAME_STATE.PLAYING;
+            ResumeAfterModeHint();
             SaveProgress();
             yield break;
         }
@@ -1491,7 +1508,7 @@ public class GameController : MonoBehaviour
         if (GameConfig.gameMode == GAME_MODE.tile_freeze)
             StartCoroutine(CheckFullFreeze());
         yield return new WaitForSeconds(1.5f);
-        gameState = GAME_STATE.PLAYING;
+        ResumeAfterModeHint();
         SaveProgress();
     }
 
@@ -2229,7 +2246,8 @@ public class GameController : MonoBehaviour
             match3Items.Remove(item);
             item.gameObject.SetActive(false);
         }
-        bool isLose = match3Items.Count == 0 && !IsSlotAvailable;
+        OnNewModeMatchCleared(tiles);
+        bool isLose = !newModeClearing && match3Items.Count == 0 && !IsSlotAvailable;
         //bool isLose = !GameController.instance.IsSlotAvailable;
         if (isLose)
             gameState = GAME_STATE.LOSE;
@@ -2321,6 +2339,11 @@ public class GameController : MonoBehaviour
 
     public void SaveProgress()
     {
+        // Home saved (or cleared) the board before its exit animation began.
+        if (GameScript.instance != null && GameScript.instance.IsReturningHome)
+            return;
+        if (HasNewMode && (NewModeInputBlocked || !newModeReady))
+            return;
         if (GameConfig.isChallengeLevel)
         {
             GameplayProgressSave.Clear();
@@ -2349,7 +2372,8 @@ public class GameController : MonoBehaviour
             eventTotal = EventTileExtend.eventTotal,
             itemSpriteIndexes = GetUsingSpriteIndexes(),
             undoSortingIndexes = undoList.Select(x => x.sortingIndex).ToList(),
-            tiles = new List<GameplayTileProgressData>()
+            tiles = new List<GameplayTileProgressData>(),
+            modeProgress = CaptureNewModeProgress()
         };
 
         foreach (ItemTile tile in itemTiles)
@@ -2404,6 +2428,12 @@ public class GameController : MonoBehaviour
             data.randomRevealed = randomTile.isRevealed;
         if (tile.TryGetComponent(out IceTileVariant iceTile))
             data.iceCounter = iceTile.counter;
+        if (HasNewMode && tile.TryGetComponent(out TileModeMarker modeTile))
+        {
+            data.modeKind = (int)modeTile.kind;
+            data.bombMoves = modeTile.bombMoves;
+            data.bombResolved = modeTile.bombResolved;
+        }
 
         return data;
     }

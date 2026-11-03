@@ -6,122 +6,19 @@ using UnityEngine;
 
 public class AdmobAd : MonoBehaviour
 {
-    //default ad id
-#if UNITY_IOS
-        private const string _AppOpenAdUnitId = "ca-app-pub-3940256099942544/5575463023";
-        private const string _BannerAdUnitId = "ca-app-pub-3940256099942544/2435281174";
-        private const string _BannerCollapseAdUnitId = "ca-app-pub-3940256099942544/2435281174";
-        private const string _InterstitialAdUnitId = "ca-app-pub-3940256099942544/4411468910";
-        private const string _InterstitialAdBreakAdUnitId = "ca-app-pub-3940256099942544/4411468910";
-        private const string _RewardedAdUnitId = "ca-app-pub-3940256099942544/1712485313";
-        private const string _NativeAdUnitId = "ca-app-pub-3940256099942544/3986624511";
-#else
-    //testads
-    private const string _AppOpenAdUnitIdTest = "ca-app-pub-3940256099942544/9257395921";
-    private const string _BannerAdUnitIdTest = "ca-app-pub-3940256099942544/9214589741";
-    private const string _BannerCollapseAdUnitIdTest = "ca-app-pub-3940256099942544/9214589741";
-    private const string _InterstitialAdUnitIdTest = "ca-app-pub-3940256099942544/1033173712";
-    private const string _InterstitialAdBreakAdUnitIdTest = "ca-app-pub-3940256099942544/1033173712";
-    private const string _RewardedAdUnitIdTest = "ca-app-pub-3940256099942544/5224354917";
-    private const string _NativeAdUnitIdTest = "ca-app-pub-3940256099942544/2247696110";
-    //real
-    private const string _AppOpenAdUnitId = "ca-app-pub-2266966365312947/3200462064";
-    private const string _BannerAdUnitId = "ca-app-pub-2266966365312947/1588831640";
-    private const string _BannerCollapseAdUnitId = "ca-app-pub-2266966365312947/9275749972";
-    private const string _InterstitialAdUnitId = "ca-app-pub-2266966365312947/3967582978";
-    private const string _InterstitialAdBreakAdUnitId = "ca-app-pub-2266966365312947/3967582978";
-    private const string _RewardedAdUnitId = "ca-app-pub-2266966365312947/6508764643";
-    //
-    //private const string _NativeAdUnitId = "ca-app-pub-3940256099942544/2247696110";
-#endif
-    const bool TESTAD = false;
-    private string AppOpenAdUnitId
-    {
-        get
-        {
-            if (TESTAD)
-                return _AppOpenAdUnitIdTest;
-            if (!string.IsNullOrEmpty(Common.ads_aoa_id_admob))
-                return Common.ads_aoa_id_admob;
-            return _AppOpenAdUnitId;
-        }
-    }
-    private string BannerAdUnitId
-    {
-        get
-        {
-            if (TESTAD)
-                return _BannerAdUnitIdTest;
-            if (!string.IsNullOrEmpty(Common.ads_banner_id_admob))
-                return Common.ads_banner_id_admob;
-            return _BannerAdUnitId;
-        }
-    }
-    private string BannerCollapseAdUnitId
-    {
-        get
-        {
-            if (TESTAD)
-                return _BannerCollapseAdUnitIdTest;
-            if (!string.IsNullOrEmpty(Common.ads_collapse_id_admob))
-                return Common.ads_collapse_id_admob;
-            return _BannerCollapseAdUnitId;
-        }
-    }
-    private string InterstitialAdUnitId
-    {
-        get
-        {
-            if (TESTAD)
-                return _InterstitialAdUnitIdTest;
-            if (!string.IsNullOrEmpty(Common.ads_inter_id_admob))
-                return Common.ads_inter_id_admob;
-            return _InterstitialAdUnitId;
-        }
-    }
-    private string InterstitialAdBreakAdUnitId
-    {
-        get
-        {
-            if (TESTAD)
-                return _InterstitialAdBreakAdUnitIdTest;
-            if (!string.IsNullOrEmpty(Common.ads_inter_ad_break_id_admob))
-                return Common.ads_inter_ad_break_id_admob;
-            return _InterstitialAdBreakAdUnitId;
-        }
-    }
-    private string RewardedAdUnitId
-    {
-        get
-        {
-            if (TESTAD)
-                return _RewardedAdUnitIdTest;
-            if (!string.IsNullOrEmpty(Common.ads_reward_id_admob))
-                return Common.ads_reward_id_admob;
-            return _RewardedAdUnitId;
-        }
-    }
-    //unused
-    private string NativeAdUnitId
-    {
-        get
-        {
-            //if (TESTAD)
-            return _NativeAdUnitIdTest;
-            // if (!string.IsNullOrEmpty(Common.ads_native_id_admob))
-            //    return Common.ads_native_id_admob;
-            //return _NativeAdUnitId;
-        }
-    }
+    // Always use Google demo units, including when Remote Config has cached live IDs.
+    private string AppOpenAdUnitId => GoogleTestAds.AppOpen;
+    private string BannerAdUnitId => GoogleTestAds.Banner;
+    private string BannerCollapseAdUnitId => GoogleTestAds.Banner;
+    private string InterstitialAdUnitId => GoogleTestAds.Interstitial;
+    private string InterstitialAdBreakAdUnitId => GoogleTestAds.Interstitial;
+    private string RewardedAdUnitId => GoogleTestAds.Rewarded;
+    private string NativeAdUnitId => GoogleTestAds.Native;
 
     internal static List<string> TestDeviceIds = new List<string>()
-        {
-            AdRequest.TestDeviceSimulator,
-            //"46DE0836A7D5532C5AD898EB9CEE6E12",
-            "39B8E82D05395A4049872B3A496BD7BD",
-            "A645389550666D563AF1F8AB5F9C7CCA"
-            //"TestDeviceIds"
-        };
+    {
+        AdRequest.TestDeviceSimulator
+    };
     public static bool? _isInitialized;
 
     public static AdmobAd instance;
@@ -386,15 +283,6 @@ public class AdmobAd : MonoBehaviour
 
                 string adId = ad.GetAdUnitID();
 
-                var impressionParameters = new[] {
-                        new Firebase.Analytics.Parameter("ad_platform", "Admob"),
-                        new Firebase.Analytics.Parameter("ad_source", adSourceName),
-                        new Firebase.Analytics.Parameter("ad_unit_name", adId),
-                        new Firebase.Analytics.Parameter("ad_format", "APPOPEN"),
-                        new Firebase.Analytics.Parameter("value", trueValue),
-                        new Firebase.Analytics.Parameter("currency", currencyCode),
-                };
-                //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_impression", impressionParameters);
             }
             catch (Exception ex)
             {
@@ -425,7 +313,6 @@ public class AdmobAd : MonoBehaviour
             {
                 Debug.LogWarning(ex.Message);
             }
-            //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_aoa_click");
         };
         // Raised when an ad opened full screen content.
         ad.OnAdFullScreenContentOpened += () =>
@@ -433,7 +320,6 @@ public class AdmobAd : MonoBehaviour
             try
             {
                 Debug.Log("App open ad full screen content opened.");
-                //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_aoa_show");
                 // Inform the UI that the ad is consumed and not ready.
             }
             catch (Exception ex)
@@ -463,10 +349,6 @@ public class AdmobAd : MonoBehaviour
                 Debug.LogError("App open ad failed to open full screen content with error : "
                                 + error.GetMessage());
 
-                //var impressionParameters = new[] {
-                //    new Firebase.Analytics.Parameter("errormsg", error.ToString())
-                //};
-                //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_aoa_fail", impressionParameters);
             }
             catch (Exception ex)
             {
@@ -591,7 +473,6 @@ public class AdmobAd : MonoBehaviour
                 Debug.Log("Banner view loaded an ad with response : " + _bannerView.GetResponseInfo());
                 //isBannerLoaded = true;
                 retryAttemptBanner = 0;
-                //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_banner_load");
                 // Inform the UI that the ad is ready.
             }
             catch (Exception ex)
@@ -617,10 +498,6 @@ public class AdmobAd : MonoBehaviour
                     GameConfig.isMaxBanner = true;
                     GameConfig.ShowBannerAd();
                 }
-                //var impressionParameters = new[] {
-                //    new Firebase.Analytics.Parameter("errormsg", error.ToString())
-                //};
-                //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_banner_fail", impressionParameters);
             }
             catch (Exception ex)
             {
@@ -655,15 +532,6 @@ public class AdmobAd : MonoBehaviour
 
                 string adId = _bannerView.GetAdUnitID();
 
-                var impressionParameters = new[] {
-                        new Firebase.Analytics.Parameter("ad_platform", "Admob"),
-                        new Firebase.Analytics.Parameter("ad_source", adSourceName),
-                        new Firebase.Analytics.Parameter("ad_unit_name", adId),//_isCollapsible ? BannerCollapseAdUnitId : BannerAdUnitId),
-                        new Firebase.Analytics.Parameter("ad_format", "BANNER"),
-                        new Firebase.Analytics.Parameter("value", trueValue),
-                        new Firebase.Analytics.Parameter("currency", currencyCode), // All AppLovin revenue is sent in USD
-                };
-                //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_impression", impressionParameters);
             }
             catch (Exception ex)
             {
@@ -688,7 +556,6 @@ public class AdmobAd : MonoBehaviour
             try
             {
                 Debug.Log("Banner view was clicked.");
-                //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_banner_click");
             }
             catch (Exception ex)
             {
@@ -858,15 +725,6 @@ public class AdmobAd : MonoBehaviour
                 long latencyMillis = loadedAdapterResponseInfo.LatencyMillis;
                 Dictionary<string, string> credentials = loadedAdapterResponseInfo.AdUnitMapping;
 
-                var impressionParameters = new[] {
-                        new Firebase.Analytics.Parameter("ad_platform", "Admob"),
-                        new Firebase.Analytics.Parameter("ad_source", adSourceName),
-                        new Firebase.Analytics.Parameter("ad_unit_name", ad.GetAdUnitID()),
-                        new Firebase.Analytics.Parameter("ad_format", "INTER"),
-                        new Firebase.Analytics.Parameter("value", trueValue),
-                        new Firebase.Analytics.Parameter("currency", currencyCode), // All AppLovin revenue is sent in USD
-                };
-                //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_impression", impressionParameters);
             }
             catch (Exception ex)
             {
@@ -1228,7 +1086,6 @@ public class AdmobAd : MonoBehaviour
                 default:
                     break;
             }
-            QuestManager.QuestComplete(QUEST_TYPE.WATCH_X_ADS, 1);
             TYPE_REWARD = -1;
         }
     }
@@ -1287,15 +1144,6 @@ public class AdmobAd : MonoBehaviour
                 Dictionary<string, string> credentials = loadedAdapterResponseInfo.AdUnitMapping;
                 string adId = ad.GetAdUnitID();
 
-                var impressionParameters = new[] {
-                        new Firebase.Analytics.Parameter("ad_platform", "Admob"),
-                        new Firebase.Analytics.Parameter("ad_source", adSourceName),
-                        new Firebase.Analytics.Parameter("ad_unit_name", adId),
-                        new Firebase.Analytics.Parameter("ad_format", "REWARDED"),
-                        new Firebase.Analytics.Parameter("value", trueValue),
-                        new Firebase.Analytics.Parameter("currency", currencyCode), // All AppLovin revenue is sent in USD
-                };
-                //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_impression", impressionParameters);
             }
             catch (Exception ex)
             {
@@ -1546,15 +1394,6 @@ public class AdmobAd : MonoBehaviour
                 AdapterResponseInfo loadedAdapterResponseInfo = responseInfo.GetLoadedAdapterResponseInfo();
                 string adSourceName = loadedAdapterResponseInfo.AdSourceName;
 
-                var impressionParameters = new[] {
-                        new Firebase.Analytics.Parameter("ad_platform", "Admob"),
-                        new Firebase.Analytics.Parameter("ad_source", adSourceName),
-                        new Firebase.Analytics.Parameter("ad_unit_name", NativeAdUnitId),
-                        new Firebase.Analytics.Parameter("ad_format", "NATIVE"),
-                        new Firebase.Analytics.Parameter("value", trueValue),
-                        new Firebase.Analytics.Parameter("currency", currencyCode), // All AppLovin revenue is sent in USD
-                };
-                //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_impression", impressionParameters);
             }
             catch (Exception ex)
             {

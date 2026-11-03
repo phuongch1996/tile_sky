@@ -30,7 +30,6 @@ public class TimeManager : MonoBehaviour
         currentTime = time;
         Today();
         connected = true;
-        QuestManager.instance.Init();
         BattlePassManager.instance.GetBattlePassTimer();
         //StartCoroutine(WaitRemoteConfig());
         //BlackFridayScript.instance.SetupBlackFriday();
@@ -38,7 +37,6 @@ public class TimeManager : MonoBehaviour
     }
     //public IEnumerator WaitRemoteConfig()
     //{
-    //    yield return new WaitUntil(() => FirebaseManager.instance.isRemoteConfig || FirebaseManager.instance.isRemoteFailed);
     //    EventManager.instance.GetEventTimer();
     //}
     void Today()
@@ -75,14 +73,12 @@ public class TimeManager : MonoBehaviour
         GameConfig.ResetFreeCoins();
         //GameConfig.ResetDailyBonus();
         //GameConfig.ResetDailyGift();
-        QuestManager.DailyReset();
         if (!GameConfig.IsDailyLogin())
             GameConfig.SetDailyLogin(0);
     }
     void NewWeek()
     {
         GameConfig.SetCurrentWeek(today);
-        //QuestManager.instance.WeeklyReset();
     }
     void NewMonth()
     {

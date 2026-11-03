@@ -5,7 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PopupDailyLogin : Popup
+public partial class PopupDailyLogin : Popup
 {
     public readonly static List<DailyPrize> dailyLoginPrize = new()
     {
@@ -44,6 +44,7 @@ public class PopupDailyLogin : Popup
     }
     public override void Open()
     {
+        EnsureHeavenlyDailyUI();
         SetupDailyObs();
         btClose.onClick.RemoveAllListeners();
         btClaim.onClick.RemoveAllListeners();
@@ -54,10 +55,14 @@ public class PopupDailyLogin : Popup
     }
     private void Update()
     {
+        FitHeavenlyDailyUI();
         if (nextRewardGO.activeSelf && GameConfig.GetDailyLoginDate() >= GameConfig.GetCurrentDate())
         {
             TimeSpan ts = TimeManager.instance.TimeToNextDay();
-            txNextReward.text = "next reward in\n" + $"{Mathf.Floor((float)ts.TotalHours):00}:{ts:mm}:{ts:ss}";
+            string time = $"{Mathf.Floor((float)ts.TotalHours):00}:{ts:mm}:{ts:ss}";
+            txNextReward.text = heavenlyDailyRoot
+                ? "NEXT REWARD IN\n<color=#FFE55B>" + time + "</color>"
+                : "next reward in\n" + time;
         }
     }
     void SetupDailyObs()
@@ -107,7 +112,6 @@ public class PopupDailyLogin : Popup
             GameConfig.SetDailyLogin(dailyLogin + 1);
             GameConfig.SetDailyLoginDate(GameConfig.GetCurrentDate());
             GameConfig.SetDailyLoginTotal();
-            QuestManager.QuestComplete(QUEST_TYPE.CLAIM_X_DAILY, 1);
         }
         else
         {

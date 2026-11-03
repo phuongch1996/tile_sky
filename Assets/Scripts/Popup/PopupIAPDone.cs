@@ -31,14 +31,14 @@ public class PopupIAPDone : Popup
         removeAdsGO.SetActive(isRemoveAds);
         txPackName.text = iapid switch
         {
-            IAPManager.tileevo_removeads => "remove ads",
-            IAPManager.tileevo_firstpack => "first pack",
-            IAPManager.tileevo_megapack => "mega pack",
-            IAPManager.tileevo_ultipack => "ultimate pack",
-            IAPManager.tileevo_gold1 => "gold pack",
-            IAPManager.tileevo_gold2 => "gold pack",
-            IAPManager.tileevo_gold3 => "gold pack",
-            IAPManager.tileevo_piggybank => "piggy bank",
+            IAPManager.tilespace_removeads => "remove ads",
+            IAPManager.tilespace_firstpack => "first pack",
+            IAPManager.tilespace_megapack => "mega pack",
+            IAPManager.tilespace_ultipack => "ultimate pack",
+            IAPManager.tilespace_gold1 => "gold pack",
+            IAPManager.tilespace_gold2 => "gold pack",
+            IAPManager.tilespace_gold3 => "gold pack",
+            IAPManager.tilespace_piggybank => "piggy bank",
             _ => ""
         };
     }
@@ -50,11 +50,11 @@ public class PopupIAPDone : Popup
         {
             successGO.SetActive(true);
             failGO.SetActive(false);
-            if (string.Equals(iapid, IAPManager.tileevo_piggybank, System.StringComparison.Ordinal))
+            if (string.Equals(iapid, IAPManager.tilespace_piggybank, System.StringComparison.Ordinal))
             {
-                Setup(IAPManager.tileevo_piggybank, IAPManager.piggyBank);
+                Setup(IAPManager.tilespace_piggybank, IAPManager.piggyBank);
             }
-            else if (string.Equals(iapid, IAPManager.tileevo_battlepass, System.StringComparison.Ordinal))
+            else if (string.Equals(iapid, IAPManager.tilespace_battlepass, System.StringComparison.Ordinal))
             {
                 return;
             }

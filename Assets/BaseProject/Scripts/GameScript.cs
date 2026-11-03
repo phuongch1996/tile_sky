@@ -10,6 +10,14 @@ using UnityEngine.UI;
 
 public class GameScript : MonoBehaviour
 {
+    [SerializeField, Min(0.1f)] private float homeExitDuration = 1f;
+    [SerializeField, Min(0.1f)] private float levelEntranceDuration = 0.85f;
+    public bool IsLevelEntering { get; private set; }
+    private Sequence levelEntranceSequence;
+    private readonly Dictionary<Transform, Vector3> levelEntrancePositions = new();
+    public bool IsReturningHome { get; private set; }
+    private Sequence homeExitSequence;
+
     [FormerlySerializedAs("toggleUI")]
     public GameObject hideUI;
     public GameObject uiux;
@@ -206,6 +214,10 @@ public class GameScript : MonoBehaviour
     }
     private void OnDisable()
     {
+        levelEntranceSequence?.Kill(false);
+        FinishLevelEntrance();
+        homeExitSequence?.Kill(false);
+        homeExitSequence = null;
         GameConfig.OnGoldChange -= OnGoldChange;
         GameConfig.OnPowerUpsChange -= PowerUpsStrings;
     }
@@ -620,6 +632,8 @@ public class GameScript : MonoBehaviour
     }
     public void Restart()
     {
+        if (IsReturningHome)
+            return;
         GameController.instance.ClearSavedProgress();
         GameConfig.reviveCount = 0;
         GameConfig.loseCount++;
@@ -628,37 +642,243 @@ public class GameScript : MonoBehaviour
     }
     public void Quit()
     {
+        if (IsReturningHome)
+            return;
         GameController.instance.ClearSavedProgress();
-        if (!GameConfig.isChallengeLevel)
-        {
-            FirebaseManager.instance.LogLevelQuit(GameConfig.level, GameConfig.GetActionDeltaTime(GameConfig.startLevelKey));
-        }
         Home();
     }
     public void Home(bool clearSavedProgress = true)
     {
+        if (IsReturningHome)
+            return;
         if (clearSavedProgress && GameController.instance)
             GameController.instance.ClearSavedProgress();
+        IsReturningHome = true;
         GameConfig.reviveCount = 0;
         GameConfig.loseCount = 0;
         GameConfig.boosterCount = 0;
-        PoolManager.instance.ReleaseAllObjects();
+        // Cancel old callbacks before moving tiles, and keep the saved board unchanged.
+        StopAllCoroutines();
+        if (GameController.instance != null)
+        {
+            GameController.instance.StopAllCoroutines();
+            GameController.instance.gameState = GAME_STATE.PAUSE;
+        }
         DOTween.KillAll();
-        LoadingCamera.instance.StartLoad(GameConfig.homeScene, true);
+        AnimateReturnHome();
     }
+
+    public void AnimateLevelEntrance()
+    {
+        if (IsReturningHome || IsLevelEntering)
+            return;
+
+        var buttons = FindObjectsByType<Button>(FindObjectsSortMode.None)
+            .Where(button => button.gameObject.scene == gameObject.scene &&
+                button.GetComponentInParent<Popup>() == null);
+        var candidates = GetLevelUIElements(buttons).Distinct().ToList();
+        var targets = candidates.Where(target => !candidates.Any(parent => parent != target && target.IsChildOf(parent)))
+            .OrderByDescending(target => target.position.y).ThenBy(target => target.position.x).ToList();
+        if (targets.Count == 0)
+            return;
+
+        IsLevelEntering = true;
+        Canvas.ForceUpdateCanvases();
+        float duration = Mathf.Max(0.1f, levelEntranceDuration);
+        float slideDuration = targets.Count > 1 ? duration * 0.6f : duration;
+        float stagger = targets.Count > 1 ? (duration - slideDuration) / (targets.Count - 1) : 0f;
+        var camera = Camera.main;
+        levelEntranceSequence = DOTween.Sequence().SetUpdate(true);
+        for (int i = 0; i < targets.Count; i++)
+        {
+            var target = targets[i];
+            target.DOKill(false);
+            levelEntrancePositions[target] = target.localPosition;
+            var destination = target.position;
+            target.position = target is RectTransform rect && rect.GetComponentInParent<Canvas>() != null
+                ? HomeScript.GetUIExitPosition(rect)
+                : GetWorldExitPosition(target, camera);
+            levelEntranceSequence.Insert(i * stagger,
+                target.DOMove(destination, slideDuration).SetEase(Ease.OutBack));
+        }
+        // Restore the layout both on completion and if another scene transition interrupts it.
+        levelEntranceSequence.OnComplete(FinishLevelEntrance).OnKill(FinishLevelEntrance);
+    }
+
+    private void FinishLevelEntrance()
+    {
+        foreach (var item in levelEntrancePositions)
+        {
+            if (item.Key != null)
+                item.Key.localPosition = item.Value;
+        }
+        levelEntrancePositions.Clear();
+        levelEntranceSequence = null;
+        IsLevelEntering = false;
+    }
+
+    private List<Transform> GetLevelUIElements(IEnumerable<Button> buttons)
+    {
+        var elements = buttons.Select(button => button.transform).ToList();
+        var tray = GameController.instance != null ? GameController.instance.slotParent : null;
+        if (tray != null && tray.gameObject.activeInHierarchy)
+            elements.Add(tray);
+        foreach (var counter in new[] { levelGO, goldTileCountGO, comboCountGO, challengeTimerGO })
+        {
+            if (counter != null && counter.activeInHierarchy)
+                elements.Add(counter.transform);
+        }
+        if (topBarScript != null && topBarScript.goldsCounter != null && topBarScript.goldsCounter.activeInHierarchy)
+            elements.Add(topBarScript.goldsCounter.transform);
+        return elements;
+    }
+
+    private void AnimateReturnHome()
+    {
+        var buttons = FindObjectsByType<Button>(FindObjectsSortMode.None)
+            .Where(button => button.gameObject.scene == gameObject.scene).ToList();
+        foreach (var button in buttons)
+            button.interactable = false;
+
+        // Include pooled tiles in the tray even if they have moved outside the board hierarchy.
+        var tiles = FindObjectsByType<ItemTile>(FindObjectsSortMode.None)
+            .Where(tile => tile.gameObject.scene == gameObject.scene ||
+                (GameController.instance != null &&
+                 ((GameController.instance.itemTiles != null && GameController.instance.itemTiles.Contains(tile)) ||
+                  (GameController.instance.slottedItems != null && GameController.instance.slottedItems.Contains(tile)))))
+            .ToList();
+        foreach (var tile in tiles)
+        {
+            tile.StopTileAppearAnimation();
+            tile.CancelInvoke();
+            tile.StopAllCoroutines();
+            foreach (var collider in tile.GetComponentsInChildren<Collider2D>())
+                collider.enabled = false;
+        }
+
+        var ui = GetLevelUIElements(buttons);
+
+        // Move open popup content as a group and clear its dimmer so the board exit remains visible.
+        foreach (var popup in FindObjectsByType<Popup>(FindObjectsSortMode.None))
+        {
+            if (popup.gameObject.scene != gameObject.scene || popup.panel == null || !popup.Showing)
+                continue;
+            if (popup.bg != null)
+                popup.bg.DOFade(0f, 0.2f).SetUpdate(true);
+            if (popup.box != null && popup.box.gameObject.activeInHierarchy)
+                ui.Add(popup.box);
+        }
+
+        var roots = ui.Distinct().Where(target => target.gameObject.activeInHierarchy).ToList();
+        roots = roots.Where(target => !roots.Any(parent => parent != target && target.IsChildOf(parent))).ToList();
+        var candidates = tiles.Select(tile => tile.transform).Concat(roots).Distinct().ToList();
+        var targets = candidates.Where(target => !candidates.Any(parent => parent != target && target.IsChildOf(parent)))
+            .OrderByDescending(target => target.position.y).ThenBy(target => target.position.x).ToList();
+        Canvas.ForceUpdateCanvases();
+
+        float duration = Mathf.Max(0.1f, homeExitDuration);
+        float slideDuration = targets.Count > 1 ? duration * 0.4f : duration;
+        float stagger = targets.Count > 1 ? (duration - slideDuration) / (targets.Count - 1) : 0f;
+        var camera = Camera.main;
+        // Pick once per return: nearest edge (original), up, down, left or right.
+        var exitEdges = new[] { -1, 2, 3, 0, 1 };
+        int exitEdge = exitEdges[UnityEngine.Random.Range(0, exitEdges.Length)];
+        homeExitSequence = DOTween.Sequence().SetUpdate(true);
+        homeExitSequence.AppendInterval(duration);
+        for (int i = 0; i < targets.Count; i++)
+        {
+            var target = targets[i];
+            target.DOKill(false);
+            var destination = target is RectTransform rect && rect.GetComponentInParent<Canvas>() != null
+                ? HomeScript.GetUIExitPosition(rect, exitEdge)
+                : GetWorldExitPosition(target, camera, exitEdge);
+            homeExitSequence.Insert(i * stagger, target.DOMove(destination, slideDuration).SetEase(Ease.InBack));
+        }
+        float overlapDuration = duration * 0.35f;
+        homeExitSequence.InsertCallback(duration - overlapDuration, () =>
+        {
+            // Preserve the outgoing frame while Home loads, then overlap its last slide/fade
+            // with the new Home entrance. Keep a single scene active for gameplay managers.
+            homeExitSequence.Pause();
+            LoadingCamera.instance.StartHomeReturnTransition(overlapDuration, exitEdge, () =>
+            {
+                homeExitSequence?.Kill(false);
+                homeExitSequence = null;
+                DOTween.KillAll();
+                PoolManager.instance.ReleaseAllObjects();
+            });
+        });
+    }
+
+    private static Vector3 GetWorldExitPosition(Transform target, Camera camera, int exitEdge = -1)
+    {
+        if (camera == null)
+            return target.position + Vector3.down * 30f;
+
+        var bounds = new Bounds(target.position, Vector3.zero);
+        foreach (var sprite in target.GetComponentsInChildren<SpriteRenderer>())
+        {
+            if (sprite.enabled)
+                bounds.Encapsulate(sprite.bounds);
+        }
+        Vector2 min = new Vector2(float.PositiveInfinity, float.PositiveInfinity);
+        Vector2 max = new Vector2(float.NegativeInfinity, float.NegativeInfinity);
+        for (int x = 0; x < 2; x++)
+        for (int y = 0; y < 2; y++)
+        for (int z = 0; z < 2; z++)
+        {
+            var corner = camera.WorldToScreenPoint(new Vector3(x == 0 ? bounds.min.x : bounds.max.x,
+                y == 0 ? bounds.min.y : bounds.max.y, z == 0 ? bounds.min.z : bounds.max.z));
+            min = Vector2.Min(min, corner);
+            max = Vector2.Max(max, corner);
+        }
+        var screen = camera.pixelRect;
+        var distances = new[] { max.x - screen.xMin, screen.xMax - min.x,
+            screen.yMax - min.y, max.y - screen.yMin };
+        var directions = new[] { Vector3.left, Vector3.right, Vector3.up, Vector3.down };
+        int edge = exitEdge;
+        if (edge < 0)
+        {
+            edge = 0;
+            for (int i = 1; i < distances.Length; i++)
+            {
+                if (distances[i] < distances[edge])
+                    edge = i;
+            }
+        }
+        var position = camera.WorldToScreenPoint(target.position);
+        return camera.ScreenToWorldPoint(position + directions[edge] * (Mathf.Max(0f, distances[edge]) + 64f));
+    }
+    bool nextLevelLoading;
     public void Next()
     {
-        GameController.instance.ClearSavedProgress();
-        GameConfig.reviveCount = 0;
-        GameConfig.loseCount = 0;
-        GameConfig.boosterCount = 0;
-        GameConfig.level += 1;
-        PoolManager.instance.ReleaseAllObjects();
-        DOTween.KillAll();
-        LoadingCamera.instance.StartLoad(GameConfig.gameScene);
+        if (nextLevelLoading || IsReturningHome)
+            return;
+        nextLevelLoading = true;
+        int completedLevel = GameConfig.level;
+        try
+        {
+            GameController.instance.ClearSavedProgress();
+            GameConfig.reviveCount = 0;
+            GameConfig.loseCount = 0;
+            GameConfig.boosterCount = 0;
+            // Stop callbacks before returning their targets to the persistent pool.
+            DOTween.KillAll();
+            PoolManager.instance.ReleaseAllObjects();
+            GameConfig.level = completedLevel + 1;
+            LoadingCamera.instance.StartLoad(GameConfig.gameScene);
+        }
+        catch
+        {
+            GameConfig.level = completedLevel;
+            nextLevelLoading = false;
+            throw;
+        }
     }
     public void ContinueGame()
     {
+        if (IsReturningHome)
+            return;
         GameController.instance.gameState = GAME_STATE.PLAYING;
     }
     public PopupTutorial tutorialPopup;
@@ -692,15 +912,12 @@ public class GameScript : MonoBehaviour
     public void Win()
     {
         GameController.instance.ClearSavedProgress();
-        QuestManager.QuestComplete(QUEST_TYPE.COMPLETE_X_LEVELS, 1);
-        QuestManager.QuestComplete(QUEST_TYPE.MATCH_X_TILES, GameController.instance.totalTileCount / 3);
         GameController.instance.gameState = GAME_STATE.WIN_POPUP;
         winPopup.Open();
     }
     public void WinChallenge()
     {
         GameController.instance.ClearSavedProgress();
-        QuestManager.QuestComplete(QUEST_TYPE.MATCH_X_TILES, GameController.instance.totalTileCount / 3);
         GameController.instance.gameState = GAME_STATE.WIN_POPUP;
         winChallengePopup.OpenWinChallenge(timer);
     }

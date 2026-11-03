@@ -66,6 +66,12 @@ public class LevelManager : MonoBehaviour
             5 => GAME_MODE.tile_2up,
             6 => GAME_MODE.tile_rainbow,
             7 => GAME_MODE.tile_fog,
+            9 => GAME_MODE.tile_missslot,
+            10 => GAME_MODE.tile_poison,
+            11 => GAME_MODE.tile_bomb,
+            12 => GAME_MODE.tile_tray,
+            13 => GAME_MODE.tile_winning,
+            14 => GAME_MODE.tile_gold_2,
             //8 => GAME_MODE.tile_color,
             _ => GAME_MODE.normal
         };
@@ -81,6 +87,12 @@ public class LevelManager : MonoBehaviour
             GAME_MODE.tile_2up => 5,
             GAME_MODE.tile_rainbow => 6,
             GAME_MODE.tile_fog => 7,
+            GAME_MODE.tile_missslot => 9,
+            GAME_MODE.tile_poison => 10,
+            GAME_MODE.tile_bomb => 11,
+            GAME_MODE.tile_tray => 12,
+            GAME_MODE.tile_winning => 13,
+            GAME_MODE.tile_gold_2 => 14,
             //GAME_MODE.tile_color => 8,
             GAME_MODE.normal => 0,
             _ => -1
@@ -90,6 +102,7 @@ public class LevelManager : MonoBehaviour
 
 [Skip]
 [Serializable]
+[Newtonsoft.Json.JsonConverter(typeof(LeveljsonConverter))]
 public class Leveljson
 {
     public List<string> data;
@@ -97,6 +110,7 @@ public class Leveljson
     public int itemTypeCount;
     public int mode;
     public int param;
+    public int bombMoves = 5;
     public Leveljson(List<string> data, int itemTypeCount, int mode, int param)
     {
         this.data = data;

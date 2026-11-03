@@ -34,12 +34,53 @@ public class PopupTutorial : Popup
     {
         foreach (var tut in tutorials)
             tut.SetActive(false);
+        if (modeTutorial != null)
+            modeTutorial.gameObject.SetActive(false);
         HideOptionalPopup(addSlotPopup);
         HideOptionalPopup(hardPopup);
         HideOptionalPopup(superHardPopup);
+        if (NewModeRules.IsExtendedMode(tutIndex))
+        {
+            OpenNewModeTutorial(tutIndex);
+            return;
+        }
         if (tutIndex < 0 || tutIndex >= tutorials.Length)
+        {
             Close();
+            return;
+        }
         tutorials[tutIndex].SetActive(true);
+        Open();
+    }
+    TextMeshProUGUI modeTutorial;
+
+    void OpenNewModeTutorial(int mode)
+    {
+        if (modeTutorial == null)
+        {
+            var go = new GameObject("New mode instructions", typeof(TextMeshProUGUI));
+            go.transform.SetParent(tutorials[0].transform.parent, false);
+            modeTutorial = go.GetComponent<TextMeshProUGUI>();
+            modeTutorial.font = txHard != null ? txHard.font : TMP_Settings.defaultFontAsset;
+            modeTutorial.fontSize = 42;
+            modeTutorial.alignment = TextAlignmentOptions.Center;
+            modeTutorial.raycastTarget = false;
+            var rect = modeTutorial.rectTransform;
+            rect.anchorMin = new Vector2(0.08f, 0.15f);
+            rect.anchorMax = new Vector2(0.92f, 0.85f);
+            rect.offsetMin = rect.offsetMax = Vector2.zero;
+        }
+        modeTutorial.text = mode switch
+        {
+            9 => "LIMITED TRAY\n\nSome tray slots are locked. Match triples before the remaining slots fill up.",
+            10 => "POISON\n\nMatching a POISON triple sends one random ordinary tile to your tray, then shuffles the board.",
+            11 => "BOMB\n\nExposed bombs count down on each selection. At zero, each bomb sends one random tile to the tray. Collect a bomb before it expires.",
+            12 => "UNCOVER TRAYS\n\nRemove the tiles covering every orange tray to win. Remaining tiles clear automatically.",
+            13 => "TARGET TILES\n\nMatch the TARGET triple to reveal the next target. Complete all rounds to win.",
+            14 => "COIN TILES\n\nMatch every COIN triple to win. Remaining tiles clear automatically.",
+            _ => ""
+        };
+        modeTutorial.gameObject.SetActive(true);
         Open();
     }
     const string hard = "hard_";
@@ -58,6 +99,7 @@ public class PopupTutorial : Popup
     }
     public void OpenHardPopup()
     {
+        if (modeTutorial != null) modeTutorial.gameObject.SetActive(false);
         foreach (var tut in tutorials)
             tut.SetActive(false);
         HideOptionalPopup(addSlotPopup);
@@ -69,6 +111,7 @@ public class PopupTutorial : Popup
     }
     public void OpenSuperHardPopup()
     {
+        if (modeTutorial != null) modeTutorial.gameObject.SetActive(false);
         foreach (var tut in tutorials)
             tut.SetActive(false);
         HideOptionalPopup(addSlotPopup);

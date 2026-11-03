@@ -1,0 +1,1 @@
+PASS: actual prefab rendered at 1080x1920, 1080x2340 and 1440x1920. Timer stays inside the frame and above the viewport; list has positive height; background is full-screen. Preview uses sample progress/time and makes no service requests.

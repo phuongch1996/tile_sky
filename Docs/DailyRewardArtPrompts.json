@@ -1,0 +1,21 @@
+{
+  "mode": "built-in image_gen",
+  "assets": [
+    {
+      "path": "Assets/Resources/HeavenlyDaily/Panel.png",
+      "prompt": "Create a production game UI overlay sprite inspired by the FIRST supplied Daily Reward reference screenshot, with a truly transparent exterior and transparent cutouts wherever background sky would show. Portrait 1:2 canvas, 1024x2048. Only the foreground UI, DO NOT generate any sky, castle, rainbow, horizon or scene background: the app already draws its own background. Top decorative title at y=12%-23%: a big glossy purple gift with gold ribbon on white clouds, gold stars, exact rounded white text 'DAILY REWARD' thick deep blue outline. Main body from x=3% to97%, y=20%-84%: glossy rich royal-blue rounded rectangle with thick luminous white/lavender beveled rim. Upper right rim at x=91%, y=21% has a red circular glossy close button with a white X. Timer panel centered x=25%-75%, y=25%-32%, dark-blue rounded pill with lavender-white rim, small golden stopwatch icon on left. Leave timer text area EMPTY. Below, arrange 8 EMPTY reward tile faces, all have small EMPTY circular number badges overlapping top-left corners. Seven blue cyan beveled rounded square tiles in a three-column grid, golden special eighth tile spans last TWO columns. Grid x centers=20%,50%,80%. Row1 centers y=42%; row2 centers y=57%; row3 center y=72%. Each standard blue tile width27% canvas, height14% canvas. Gold day8 tile x=35%-94%, y=65%-80%, with orange/gold badge, sunburst, tiny golden crown at top-center, glossy gold-white rim, purple and gold ribbon at lower-right corner. Do NOT put numbers, coins, reward icons, reward amounts, checks or text in ANY tile or badge. All seven standard tiles are same bright cyan, no pre-claimed tiles. Keep large clear empty centers to overlay actual rewards. Below body centered x=22%-78%, y=86%-94% a wide glossy bright lime-green pill button, tiny white play triangle in white-rim circle on left, completely EMPTY right side for live CLAIM / RECLAIM label. No gold counter. No other text except DAILY REWARD. Match the reference's saturated polished 3D cartoon mobile puzzle style. Transparent outside UI silhouette and in empty area above and below the panel.",
+      "transparent_background": true
+    },
+    {
+      "path": "Assets/Resources/HeavenlyDaily/Boosters.png",
+      "prompt": "Make ONE production transparent PNG sprite atlas with exactly three booster button icons laid out in ONE perfectly aligned horizontal row, equal square cells, canvas aspect ratio 3:1. Use the three supplied standalone booster icon reference images as edit targets, preserve their appearance as closely as possible, do not invent new designs. Order in output LEFT TO RIGHT: (1) bright glossy green rounded square with thick white curved undo arrow pointing back left, (2) glossy golden yellow-orange rounded square with small white five-point star on purple magic-wand handle and pale tiny sparkle strokes, (3) glossy cyan/deep blue rounded square with two chunky white crossing shuffle arrows. Complete rounded squares visible with consistent little shadow/green-orange-blue layered bevel and clouds along bottom face just like originals. Each icon centered in its own cell and filling 88% of cell width/height, identical sizes and aligned bottoms. Truly transparent exterior and gaps, no grid borders, no scene, no background, no labels or numbers, no new ornament. These will be sliced as three equal-width cells by Unity.",
+      "transparent_background": true,
+      "note": "Reference-based reconstruction of the three supplied icons, sliced into equal horizontal cells; display order Undo, Magic, Shuffle."
+    },
+    {
+      "path": "Assets/Resources/HeavenlyDaily/Check.png",
+      "prompt": "One isolated large green checkmark reward-claimed icon, transparent PNG. A thick rounded vivid lime-green tick leaning up to the right, smoothly beveled glossy mobile puzzle game 3D cartoon UI style, pale light green highlight on top left, medium green edge and deep emerald thin outline, soft subtle shadow hugging tick only. Exact shape of a success tick, not a square button or badge. No background, no circle, no square, no other symbols or text. Complete silhouette centered filling 85% of canvas, transparent surrounding.",
+      "transparent_background": true
+    }
+  ]
+}

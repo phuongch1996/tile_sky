@@ -92,6 +92,8 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
     public bool isFogAnim;
     public virtual void DefaultValue()
     {
+        if (TryGetComponent(out TileModeMarker modeMarker))
+            modeMarker.ResetMarker();
         state = ITEMTILE_STATE.START;
         tileType = 0;
         floor = 0;
@@ -220,6 +222,8 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
         if (IsEventTile)
             return;
         isRainbow = false;
+        if (GameController.instance != null && GameController.instance.TrySetNewModeTileType(this, type))
+            return;
         if (GameConfig.gameMode == GAME_MODE.tile_rainbow && type == -1)
         {
             SetRainbow();
@@ -521,6 +525,7 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
         GameController.instance.IdleAnimKill();
         state = ITEMTILE_STATE.SLOTTED;
         shadow.gameObject.SetActive(false);
+        GameController.instance.OnNewModeTileCollected(this, delay);
         SetSortingLayer("Slotted");
         SetSortingOrder(_slotted);
         if (delay)
@@ -552,6 +557,7 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
             {
                 glow.gameObject.SetActive(false);
                 GameController.instance.BounceTray();
+                GameController.instance.OnNewModeTileArrived();
                 Debug.Log($"match3 {isMatch3}");
                 Debug.Log($"isLose {isLose} {GameController.instance.gameState}");
                 if (isMatch3)

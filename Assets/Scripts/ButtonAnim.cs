@@ -4,11 +4,14 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 [RequireComponent(typeof(Selectable))]
-public class ButtonAnim : MonoBehaviour, IPointerDownHandler, IPointerUpHandler//, IPointerClickHandler
+public class ButtonAnim : MonoBehaviour, IPointerDownHandler, IPointerUpHandler, IPointerExitHandler
 {
     public Transform tfm;
     public Selectable bt;
     public float scale;
+    Tween pressTween;
+    Vector3 restingScale;
+    bool ownsScale;
     //bool sfx = true;
     private void OnValidate()
     {
@@ -61,18 +64,38 @@ public class ButtonAnim : MonoBehaviour, IPointerDownHandler, IPointerUpHandler/
 
     void IPointerDownHandler.OnPointerDown(PointerEventData eventData)
     {
-        if (!bt.interactable)
+        if (!bt) bt = GetComponent<Selectable>();
+        if (!tfm) tfm = transform;
+        if (!bt || !bt.IsInteractable() || !bt.IsActive())
             return;
-        tfm.DOKill();
-        tfm.DOScale(0.95f * scale, 0.05f);
+        // Layouts can change the scale after prefab initialization.
+        if (!ownsScale) restingScale = tfm.localScale;
+        ownsScale = true;
+        pressTween?.Kill();
+        pressTween = tfm.DOScale(restingScale * 0.95f, 0.05f).SetUpdate(true);
     }
 
     void IPointerUpHandler.OnPointerUp(PointerEventData eventData)
     {
-        if (!bt.interactable)
-            return;
-        tfm.DOKill();
-        tfm.DOScale(1 * scale, 0.05f);
+        RestoreScale();
+    }
+
+    void IPointerExitHandler.OnPointerExit(PointerEventData eventData) => RestoreScale();
+
+    void RestoreScale()
+    {
+        if (!ownsScale || !tfm) return;
+        pressTween?.Kill();
+        pressTween = tfm.DOScale(restingScale, 0.05f).SetUpdate(true)
+            .OnComplete(() => { ownsScale = false; pressTween = null; });
+    }
+
+    void OnDisable()
+    {
+        pressTween?.Kill();
+        pressTween = null;
+        if (ownsScale && tfm) tfm.localScale = restingScale;
+        ownsScale = false;
     }
 
     //void IPointerClickHandler.OnPointerClick(PointerEventData eventData)

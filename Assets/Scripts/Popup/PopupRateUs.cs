@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PopupRateUs : Popup
+public partial class PopupRateUs : Popup
 {
     public Button btClose;
     public Button btPanel;
@@ -14,6 +14,7 @@ public class PopupRateUs : Popup
     const string ratingKey = "rating";
     public override void SetupTweenCallback()
     {
+        ApplyTileSkyLayout();
         SetupTweenCallback(() =>
         {
             btClose.onClick.AddListener(() => Close());
@@ -56,6 +57,7 @@ public class PopupRateUs : Popup
     }
     public override void Open()
     {
+        ApplyTileSkyLayout();
         btClose.interactable = true;
         btPanel.interactable = true;
         btRate.interactable = true;

@@ -12,6 +12,10 @@ public class LoadingCamera : MonoBehaviour
     const float MaxInitialLoadingDuration = 2f;
 
     public static LoadingCamera instance;
+    public bool IsHomeReturnTransition { get; private set; }
+    private GameObject homeReturnOverlay;
+    private Texture2D homeReturnSnapshot;
+    private Sequence homeReturnTween;
     public List<MaskableGraphic> maskableGraphics;
     public Image loadProgress;
     public TextMeshProUGUI txLoadProgress;
@@ -65,7 +69,6 @@ public class LoadingCamera : MonoBehaviour
         {
             StartInitialLoadingProgress();
             StartCoroutine(CompleteLoadingAfterTimeout());
-            FirebaseManager.instance.RemoteConfig();
             if (GameConfig.CHEAT_ENABLED)
             {
                 CompleteLoading();
@@ -163,10 +166,6 @@ public class LoadingCamera : MonoBehaviour
         open_count++;
         PlayerPrefs.SetInt("open_count", open_count);
 
-        yield return new WaitUntil(() => loadFinished || FirebaseManager.instance.isRemoteConfig || FirebaseManager.instance.isRemoteFailed);
-        if (loadFinished)
-            yield break;
-
         yield return new WaitUntil(() => loadFinished || (videoPrepared && UnityAuthentication.isSignedIn.HasValue));
         if (loadFinished)
             yield break;
@@ -228,6 +227,105 @@ public class LoadingCamera : MonoBehaviour
     }
 
     int LoadTime => Common.config_loading_time;
+
+    public void StartHomeReturnTransition(float overlapDuration, int exitEdge, System.Action beforeUnload)
+    {
+        if (IsHomeReturnTransition)
+            return;
+        IsHomeReturnTransition = true;
+        StartCoroutine(HomeReturnTransition(overlapDuration, exitEdge, beforeUnload));
+    }
+
+    private IEnumerator HomeReturnTransition(float overlapDuration, int exitEdge, System.Action beforeUnload)
+    {
+        yield return new WaitForEndOfFrame();
+        try
+        {
+            homeReturnSnapshot = ScreenCapture.CaptureScreenshotAsTexture();
+        }
+        catch (System.Exception exception)
+        {
+            Debug.LogWarning("Could not capture the Home transition: " + exception.Message);
+        }
+
+        // Release old pooled objects before Home can request any objects of its own.
+        beforeUnload?.Invoke();
+        if (homeReturnSnapshot == null)
+        {
+            IsHomeReturnTransition = false;
+            StartLoad(GameConfig.homeScene, true);
+            yield break;
+        }
+
+        homeReturnOverlay = new GameObject("Home Return Overlay", typeof(RectTransform),
+            typeof(Canvas), typeof(CanvasGroup), typeof(GraphicRaycaster));
+        homeReturnOverlay.transform.SetParent(transform, false);
+        // A nested Canvas keeps its default 100x100 rect unless explicitly stretched.
+        // Match the persistent loading canvas so the captured frame never becomes a thumbnail.
+        var overlayRect = (RectTransform)homeReturnOverlay.transform;
+        overlayRect.anchorMin = Vector2.zero;
+        overlayRect.anchorMax = Vector2.one;
+        overlayRect.pivot = new Vector2(0.5f, 0.5f);
+        overlayRect.offsetMin = overlayRect.offsetMax = Vector2.zero;
+        overlayRect.localScale = Vector3.one;
+        var canvas = homeReturnOverlay.GetComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.overrideSorting = true;
+        var loadingCanvas = GetComponent<Canvas>();
+        if (loadingCanvas != null)
+            canvas.sortingLayerID = loadingCanvas.sortingLayerID;
+        canvas.sortingOrder = 32760;
+        var imageObject = new GameObject("Outgoing Game", typeof(RectTransform), typeof(RawImage));
+        imageObject.transform.SetParent(homeReturnOverlay.transform, false);
+        var image = imageObject.GetComponent<RawImage>();
+        image.texture = homeReturnSnapshot;
+        var imageRect = (RectTransform)image.transform;
+        imageRect.anchorMin = Vector2.zero;
+        imageRect.anchorMax = Vector2.one;
+        imageRect.offsetMin = imageRect.offsetMax = Vector2.zero;
+        Canvas.ForceUpdateCanvases();
+
+        graphicRaycaster.enabled = true;
+        var previousPriority = Application.backgroundLoadingPriority;
+        Application.backgroundLoadingPriority = ThreadPriority.Normal;
+        var load = SceneManager.LoadSceneAsync(GameConfig.homeScene);
+        while (!load.isDone)
+            yield return null;
+        Application.backgroundLoadingPriority = previousPriority;
+        // Allow Home.Start to prepare its icons at scale zero before revealing them.
+        yield return null;
+        SetAlpha(0);
+        graphicRaycaster.enabled = false;
+
+        var directions = new[] { Vector2.left, Vector2.right, Vector2.up, Vector2.down };
+        var direction = exitEdge < 0 ? Vector2.up : directions[exitEdge];
+        float distance = (direction.x == 0 ? overlayRect.rect.height : overlayRect.rect.width) * 0.08f;
+        float duration = Mathf.Max(0.1f, overlapDuration);
+        homeReturnTween = DOTween.Sequence().SetUpdate(true)
+            .Append(homeReturnOverlay.GetComponent<CanvasGroup>().DOFade(0f, duration).SetEase(Ease.OutQuad))
+            .Join(imageRect.DOAnchorPos(direction * distance, duration).SetEase(Ease.OutQuad));
+        yield return homeReturnTween.WaitForCompletion();
+        ClearHomeReturnOverlay();
+        IsHomeReturnTransition = false;
+    }
+
+    private void ClearHomeReturnOverlay()
+    {
+        homeReturnTween?.Kill(false);
+        homeReturnTween = null;
+        if (homeReturnOverlay != null)
+            Destroy(homeReturnOverlay);
+        if (homeReturnSnapshot != null)
+            Destroy(homeReturnSnapshot);
+        homeReturnOverlay = null;
+        homeReturnSnapshot = null;
+    }
+
+    private void OnDestroy()
+    {
+        ClearHomeReturnOverlay();
+    }
+
     public void StartLoad(string sceneToLoad, bool forceDisableLoading = false)
     {
         if (disableLoading || LoadTime <= 0 || forceDisableLoading)

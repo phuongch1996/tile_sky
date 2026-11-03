@@ -15,6 +15,7 @@ public class EventCard : MonoBehaviour
     public GameObject[] prizes;
     public Image goldImg;
     public TextMeshProUGUI txPrizeAm;
+    [System.NonSerialized] public bool heavenlyStyle;
     public void InitPrize(int index, bool link, int[] prizesIndex, int amount)
     {
         foreach (var p in prizes)
@@ -61,5 +62,7 @@ public class EventCard : MonoBehaviour
                 claimedGO.SetActive(true);
                 break;
         }
+        if (heavenlyStyle)
+            lockGO.SetActive(state < 2);
     }
 }

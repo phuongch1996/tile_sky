@@ -4,79 +4,13 @@ using UnityEngine;
 
 public class MaxAd : MonoBehaviour
 {
-    //#if UNITY_IOS
-    //        private const string _AppOpenAdUnitIdMAX = "";
-    //        private const string _BannerAdUnitIdMAX = "";
-    //        private const string _InterstitialAdUnitIdMAX = "";
-    //        private const string _InterstitialAdBreakAdUnitIdMAX = "";
-    //        private const string _RewardedAdUnitIdMAX = "";
-    //        private const string _MrecAdUnitIdMAX = "";
-    //#else
-    private const string _AppOpenAdUnitIdMAX = "3f59155b46ae8266";
-    private const string _BannerAdUnitIdMAX = "8367e62f680d47eb";
-    private const string _InterstitialAdUnitIdMAX = "79c0e12015a527af";
-    private const string _InterstitialAdBreakAdUnitIdMAX = "79c0e12015a527af";
-    private const string _RewardedAdUnitIdMAX = "d546a75822759418";
-    private const string _MrecAdUnitIdMAX = "eec5f6d6387b00e4";
-    //#endif
-    private string AppOpenAdUnitIdMAX
-    {
-        get
-        {
-            if (!string.IsNullOrEmpty(Common.ads_aoa_id_max))
-                return Common.ads_aoa_id_max;
-            return _AppOpenAdUnitIdMAX;
-        }
-    }
-    private string BannerAdUnitIdMAX
-    {
-        get
-        {
-            if (!string.IsNullOrEmpty(Common.ads_banner_id_max))
-                return Common.ads_banner_id_max;
-            return _BannerAdUnitIdMAX;
-        }
-    }
-    private string InterstitialAdUnitIdMAX
-    {
-        get
-        {
-            if (!string.IsNullOrEmpty(Common.ads_inter_id_max))
-                return Common.ads_inter_id_max;
-            return _InterstitialAdUnitIdMAX;
-        }
-    }
-    private string InterstitialAdBreakAdUnitIdMAX
-    {
-        get
-        {
-            if (!string.IsNullOrEmpty(Common.ads_inter_ad_break_id_max))
-                return Common.ads_inter_ad_break_id_max;
-            return _InterstitialAdBreakAdUnitIdMAX;
-        }
-    }
-    private string RewardedAdUnitIdMAX
-    {
-        get
-        {
-            if (!string.IsNullOrEmpty(Common.ads_reward_id_max))
-                return Common.ads_reward_id_max;
-            return _RewardedAdUnitIdMAX;
-        }
-    }
-    private string MrecAdUnitIdMAX
-    {
-        get
-        {
-            if (!string.IsNullOrEmpty(Common.ads_mrec_id_max))
-                return Common.ads_mrec_id_max;
-            return _MrecAdUnitIdMAX;
-        }
-    }
-
-    private readonly TimeSpan APPOPEN_TIMEOUT = TimeSpan.FromHours(4);
-    private DateTime appOpenExpireTime;
-
+    // MAX SDK is retained, with all legacy units removed. Only Google demo ads run.
+    private string AppOpenAdUnitIdMAX => string.Empty;
+    private string BannerAdUnitIdMAX => string.Empty;
+    private string InterstitialAdUnitIdMAX => string.Empty;
+    private string InterstitialAdBreakAdUnitIdMAX => string.Empty;
+    private string RewardedAdUnitIdMAX => string.Empty;
+    private string MrecAdUnitIdMAX => string.Empty;
     public bool _isDebug;
 
     public int retryAOAAttempt;
@@ -102,6 +36,12 @@ public class MaxAd : MonoBehaviour
     }
     public void Initialize()
     {
+        if (!GoogleTestAds.MaxEnabled)
+        {
+            // Complete the existing startup wait without initializing MAX.
+            initMaxSuccess = true;
+            return;
+        }
         //MaxSdk.SetHasUserConsent(true);
         //MaxSdk.SetIsAgeRestrictedUser(false);
         //MaxSdk.SetDoNotSell(false);
@@ -109,7 +49,6 @@ public class MaxAd : MonoBehaviour
         if (initMaxSuccess.HasValue)
             return;
         initMaxSuccess = false;
-        //MaxSdk.SetTestDeviceAdvertisingIdentifiers(new string[] { "349fbed8-8b3e-919b-0258-839f61fb18cc" });
         MaxSdkCallbacks.OnSdkInitializedEvent += sdkConfiguration =>
         {
             initMaxSuccess = true;
@@ -122,6 +61,7 @@ public class MaxAd : MonoBehaviour
     }
     public void LoadAds()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         InitializeAOA();
         InitializeBannerAds();
         InitializeInterstitialAds();
@@ -130,6 +70,7 @@ public class MaxAd : MonoBehaviour
     }
     public void InitializeAOA()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         MaxSdkCallbacks.AppOpen.OnAdLoadedEvent += OnAppOpenLoadedEvent;
         MaxSdkCallbacks.AppOpen.OnAdClickedEvent += OnAppOpenClickedEvent;
         MaxSdkCallbacks.AppOpen.OnAdHiddenEvent += OnAppOpenDismissedEvent;
@@ -155,14 +96,17 @@ public class MaxAd : MonoBehaviour
     }
     public void LoadAOAAd()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         MaxSdk.LoadAppOpenAd(AppOpenAdUnitIdMAX);
     }
     public bool IsAOAReady()
     {
+        if (!GoogleTestAds.MaxEnabled) return false;
         return initMaxSuccess == true && MaxSdk.IsAppOpenAdReady(AppOpenAdUnitIdMAX);
     }
     public void ShowAOAIfReady()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         if (MaxSdk.IsAppOpenAdReady(AppOpenAdUnitIdMAX))
         {
             MaxSdk.ShowAppOpenAd(AppOpenAdUnitIdMAX);
@@ -177,7 +121,8 @@ public class MaxAd : MonoBehaviour
     //bool initBanner;
     public void InitializeBannerAds()
     {
-        // Banners are automatically sized to 320Å~50 on phones and 728Å~90 on tablets
+        if (!GoogleTestAds.MaxEnabled) return;
+        // Banners are automatically sized to 320ÔøΩ~50 on phones and 728ÔøΩ~90 on tablets
         // You may call the utility method MaxSdkUtils.isTablet() to help with view sizing adjustments
         MaxSdk.CreateBanner(BannerAdUnitIdMAX, new MaxSdkBase.AdViewConfiguration(MaxSdkBase.AdViewPosition.BottomCenter));
 
@@ -200,14 +145,17 @@ public class MaxAd : MonoBehaviour
     }
     public void ShowBanner()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         MaxSdk.ShowBanner(BannerAdUnitIdMAX);
     }
     public void HideBanner()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         MaxSdk.HideBanner(BannerAdUnitIdMAX);
     }
     public void DestroyBanner()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         MaxSdk.DestroyBanner(BannerAdUnitIdMAX);
     }
     private void OnBannerAdLoadedEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
@@ -241,6 +189,7 @@ public class MaxAd : MonoBehaviour
     #region Inter
     public void InitializeInterstitialAds()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         // Attach callback
         MaxSdkCallbacks.Interstitial.OnAdLoadedEvent += OnInterstitialLoadedEvent;
         MaxSdkCallbacks.Interstitial.OnAdLoadFailedEvent += OnInterstitialLoadFailedEvent;
@@ -259,33 +208,37 @@ public class MaxAd : MonoBehaviour
 
     public bool IsInterstitialAvailable()
     {
+        if (!GoogleTestAds.MaxEnabled) return false;
         return (MaxSdk.IsInterstitialReady(InterstitialAdUnitIdMAX));
     }
     private void LoadInterstitial()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         MaxSdk.LoadInterstitial(InterstitialAdUnitIdMAX);
     }
     public void ShowInterstitial()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         if (MaxSdk.IsInterstitialReady(InterstitialAdUnitIdMAX))
         {
-            //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_inter_show");
             MaxSdk.ShowInterstitial(InterstitialAdUnitIdMAX);
         }
     }
     public bool IsInterstitialAdBreakAvailable()
     {
+        if (!GoogleTestAds.MaxEnabled) return false;
         return (MaxSdk.IsInterstitialReady(InterstitialAdBreakAdUnitIdMAX));
     }
     private void LoadInterstitialAdBreak()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         MaxSdk.LoadInterstitial(InterstitialAdBreakAdUnitIdMAX);
     }
     public void ShowInterstitialAdBreak()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         if (MaxSdk.IsInterstitialReady(InterstitialAdBreakAdUnitIdMAX))
         {
-            //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_inter_show");
             MaxSdk.ShowInterstitial(InterstitialAdBreakAdUnitIdMAX);
         }
     }
@@ -293,7 +246,6 @@ public class MaxAd : MonoBehaviour
     private void OnInterstitialLoadedEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
     {
         // Interstitial ad is ready for you to show. MaxSdk.IsInterstitialReady(adUnitId) now returns 'true'
-        //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_inter_load");
         // Reset retry attempt
         if (adUnitId == InterstitialAdUnitIdMAX)
             retryAttempt = 0;
@@ -305,10 +257,6 @@ public class MaxAd : MonoBehaviour
     {
         // Interstitial ad failed to load 
         // AppLovin recommends that you retry with exponentially higher delays, up to a maximum delay (in this case 64 seconds)
-        //var impressionParameters = new[] {
-        //    new Firebase.Analytics.Parameter("errormsg", errorInfo.ToString())
-        //};
-        //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_inter_fail", impressionParameters);
         if (adUnitId == InterstitialAdUnitIdMAX)
         {
             retryAttempt++;
@@ -342,7 +290,6 @@ public class MaxAd : MonoBehaviour
 
     private void OnInterstitialClickedEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
     {
-        //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_inter_click");
     }
 
     private void OnInterstitialHiddenEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
@@ -368,6 +315,7 @@ public class MaxAd : MonoBehaviour
     #region Reward
     public void InitializeRewardedAds()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         // Attach callback
         MaxSdkCallbacks.Rewarded.OnAdLoadedEvent += OnRewardedAdLoadedEvent;
         MaxSdkCallbacks.Rewarded.OnAdLoadFailedEvent += OnRewardedAdLoadFailedEvent;
@@ -385,16 +333,19 @@ public class MaxAd : MonoBehaviour
 
     public bool IsRewardedAdAvailable()
     {
+        if (!GoogleTestAds.MaxEnabled) return false;
         return (MaxSdk.IsRewardedAdReady(RewardedAdUnitIdMAX));
     }
 
     private void LoadRewardedAd()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         MaxSdk.LoadRewardedAd(RewardedAdUnitIdMAX);
     }
 
     public void ShowRewardedAd()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         Debug.Log(MaxSdk.IsRewardedAdReady(RewardedAdUnitIdMAX));
         if (MaxSdk.IsRewardedAdReady(RewardedAdUnitIdMAX))
         {
@@ -408,6 +359,7 @@ public class MaxAd : MonoBehaviour
     Action rewardCallback;
     public void ShowRewardedAd(Action action)
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         Debug.Log(MaxSdk.IsRewardedAdReady(RewardedAdUnitIdMAX));
         if (MaxSdk.IsRewardedAdReady(RewardedAdUnitIdMAX))
         {
@@ -475,6 +427,7 @@ public class MaxAd : MonoBehaviour
 
     public void InitializeMRecAds()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         MaxSdkCallbacks.MRec.OnAdLoadedEvent += OnMRecAdLoadedEvent;
         MaxSdkCallbacks.MRec.OnAdLoadFailedEvent += OnMRecAdLoadFailedEvent;
         MaxSdkCallbacks.MRec.OnAdExpandedEvent += OnMRecAdExpandedEvent;
@@ -488,6 +441,7 @@ public class MaxAd : MonoBehaviour
     }
     public void ShowMrec()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         // MRECs are sized to 300x250 on phones and tablets
         // var aspect = (float)Screen.height / Screen.width;
         float deviceScale = MobileAds.Utils.GetDeviceScale();
@@ -509,10 +463,12 @@ public class MaxAd : MonoBehaviour
     }
     public void HideMrec()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         MaxSdk.HideMRec(MrecAdUnitIdMAX);
     }
     public void DestroyMrec()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         MaxSdk.DestroyMRec(MrecAdUnitIdMAX);
     }
     //public bool MRecAdLoaded;
@@ -528,6 +484,7 @@ public class MaxAd : MonoBehaviour
     }
     void LoadMrec()
     {
+        if (!GoogleTestAds.MaxEnabled) return;
         MaxSdk.CreateMRec(MrecAdUnitIdMAX, new MaxSdkBase.AdViewConfiguration(MaxSdkBase.AdViewPosition.BottomCenter));
     }
 
@@ -545,14 +502,5 @@ public class MaxAd : MonoBehaviour
     {
         double revenue = impressionData.Revenue;
         Debug.Log(String.Format("{0} max impression {1}", impressionData.AdFormat, revenue));
-        var impressionParameters = new[] {
-            new Firebase.Analytics.Parameter("ad_platform", "AppLovin"),
-            new Firebase.Analytics.Parameter("ad_source", impressionData.NetworkName),
-            new Firebase.Analytics.Parameter("ad_unit_name", impressionData.AdUnitIdentifier),
-            new Firebase.Analytics.Parameter("ad_format", impressionData.AdFormat),
-            new Firebase.Analytics.Parameter("value", revenue),
-            new Firebase.Analytics.Parameter("currency", "USD"), // All AppLovin revenue is sent in USD
-        };
-        //Firebase.Analytics.FirebaseAnalytics.LogEvent("ad_impression", impressionParameters);
     }
 }

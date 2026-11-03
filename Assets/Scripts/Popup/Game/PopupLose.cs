@@ -53,7 +53,6 @@ public class PopupLose : Popup
         AudioManager.instance.PlaySFXOneShot(AudioManager.SFX.LOSE);
         if (!GameConfig.isChallengeLevel)
         {
-            FirebaseManager.instance.LogLevelFail(GameConfig.level, GameConfig.GetActionDeltaTime(GameConfig.startLevelKey), GameConfig.loseCount + 1);
             EventManager.instance.StreakLose();
         }
         lose1.SetActive(false);

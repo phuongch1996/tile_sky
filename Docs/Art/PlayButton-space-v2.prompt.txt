@@ -1,0 +1,7 @@
+Tool: built-in image_gen.imagegen
+Mode: edit; transparent_background=true
+Reference: Assets/Tile Space/Homescreen/Untitled-20.png
+Output: Assets/Tile Space/Homescreen/PlayButton-space-v2.png
+
+Final prompt:
+Use case: precise-object-edit / style-transfer. Edit target/reference: the attached existing green mobile-game button sprite. Create ONE replacement Unity UI button background, retaining the same lime-to-deep-green color family, bright lime rim and dark green lower edge. Change its style clearly: a polished playful space-console button with softly chamfered rounded corners, a thick smooth beveled frame, two restrained segmented details at the left and right edges, a broad clean uninterrupted green central face and a crisp thin top highlight. More structured and clean than the original speckled jelly button; remove the speckled texture. Front view, symmetric horizontal silhouette, wide approximately 3:1 visible button aspect ratio, visually fills the canvas with only a small transparent safety margin; artwork should work when displayed at 600x220 UI units. Truly transparent background, no backdrop or external glow. No text, no letters, no numbers, no play triangle or other center icon: the game renders its dynamic level label separately. Keep the entire central two thirds clear and readable behind white outlined text. Only the isolated replacement button asset, no scene, no mockup, no multiple variants.

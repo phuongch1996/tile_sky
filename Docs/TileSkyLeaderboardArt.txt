@@ -1,0 +1,13 @@
+Tile Sky Leaderboard art
+Mode: built-in image_gen (imagegen skill).
+Saved atlas: Assets/Resources/TileSkyLeaderboard/Controls.png
+Back button: existing Assets/Resources/HeavenlyBattlePass/Back.png, matching the supplied blue/cyan arrow style.
+
+Final generation prompt:
+Create a production Unity mobile game UI sprite atlas on a transparent 1024x1024 square canvas, polished casual 3D illustrated Tile Sky theme, rich royal blue glossy bevels, glowing cyan rims, fluffy white cloud accents and small gold stars. EXACT layout with 4 separate isolated assets, no overlap, no text anywhere: top area x=40..984,y=20..290 a wide ornamental title plaque royal blue with cyan rim, fluffy white cloud wings, golden star at each end, central blank dark royal blue space for a title; middle area x=40..984,y=330..510 a wide rounded rectangle leaderboard player row in sapphire blue with subtle gradient and cyan border, completely empty interior; next area x=40..984,y=560..740 identical wide rounded row but warm gold orange gradient and golden border, empty interior; bottom area x=40..984,y=800..980 a wide rounded pill selected tab button, turquoise cyan gradient and pale cyan border, blank interior. Each sprite fully within specified rectangle with ample transparent separation. No letters, no numbers, no icons, no avatars, no mockup background. Straight front view, sharp game UI finish, consistent rounded corners.
+
+Validation:
+Runtime C# compilation: PASS using the project references and new partial files.
+Editor preview tool C# compilation: PASS.
+Unity render: not completed; the project is already open in another Editor instance and a second batch instance exited.
+Manual preview menu: Tools > Tile Space > Preview Tile Sky Leaderboard.

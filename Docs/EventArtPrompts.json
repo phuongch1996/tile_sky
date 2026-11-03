@@ -1,0 +1,25 @@
+{
+  "mode": "built-in image_gen",
+  "assets": [
+    {
+      "path": "Assets/Resources/HeavenlyEvents/Panel.png",
+      "prompt": "Create ONE production mobile game event popup foreground panel sprite, portrait 9:16, 1152x2048, inspired by the attached heavenly COMBO EVENT reference screenshot. Polished glossy saturated 3D cartoon mobile puzzle style, blue sky/cyan/white clouds, shiny gold details, candy purple ribbon. Transparent exterior, no full-screen backdrop outside UI silhouette, no phone border. Top y=3%-20%: adorable smiling golden curly-haired baby angel waving, gold halo, white wings, small rainbow behind, clouds and gold stars. Across y=15%-25%: wide curved purple ribbon edged pink, white and gold wings, EMPTY ribbon center for live title; absolutely NO letters on ribbon. Main body x=3%-97% y=22%-91%: tall rounded glossy blue panel, thick luminous white/cyan beveled outline, sky blue interior with white cloud patches around edges and bottom, subtle rays. Small blue dark pill timer x=33%-68%, y=25%-31%, golden stopwatch icon at left, EMPTY center for live timer. Red circular glossy close button with chunky white X at x=92%, y=20%. Small cyan round info button with lowercase white i at x=91%, y=27%. Below timer leave room for progress UI at y=33%-37%, no bar or numbers drawn. Main lower area x=15%-85%, y=39%-85% is EMPTY blue sky for an interactive scrolling reward ladder. Do NOT draw any reward cards, path, badges, coins, milestones, padlocks or numbers inside the lower area. At bottom y=90%-96% a large shiny gold star with gold wings resting on white clouds as ornamental footer. No other text, no currency counter. Match the reference closely except omit all dynamic content. Transparent background outside panel and header.",
+      "transparent_background": true
+    },
+    {
+      "path": "Assets/Resources/HeavenlyEvents/RewardCard.png",
+      "prompt": "One isolated reusable heavenly game reward-card frame sprite, transparent PNG, landscape aspect ratio 1.5:1. Thick polished shiny golden rounded rectangular rim around a light pastel sky blue and white cloud interior. Small golden five-pointed star with white angel wings centered over upper rim, smaller golden star on lower rim, small gold wings protruding from left and right sides, puffy white clouds clustered along bottom edge. EMPTY center for live coin or booster rewards: no coins, no item icons, no text, no numbers, no padlock, no ribbon, no background scene. Premium saturated glossy 3D cartoon mobile puzzle art. Complete unclipped silhouette with small transparent margin, uniform front view suitable for repeatedly stacking as ladder reward cards.",
+      "transparent_background": true
+    },
+    {
+      "path": "Assets/Resources/HeavenlyEvents/Symbols.png",
+      "prompt": "One transparent game UI sprite atlas with exactly TWO separate event symbols in a single horizontal row, equal square cells, aspect ratio 2:1. LEFT cell: electric CYAN BLUE lightning bolt, thick beveled glossy toy shape, bright pale blue highlight, saturated royal blue edge, short simple zigzag lightning silhouette. RIGHT cell: one golden mahjong-style rounded square TILE, chunky cream-gold face, rich polished golden yellow beveled border and bottom edge, small embossed golden five-point star centered on face. Front view, tile upright with slightly visible thickness. Matching premium heavenly mobile puzzle game 3D cartoon art. Each symbol fills 80% of its own square cell, centered, zero overlap, true transparent background and gaps. No words, no numbers, no extra ornament, no coins. Blue bolt is the Combo event symbol; gold tile is the Collection event symbol.",
+      "transparent_background": true
+    },
+    {
+      "path": "Assets/Resources/HeavenlyEvents/Lock.png",
+      "prompt": "One isolated small golden padlock game UI icon on transparent background. Rounded shiny golden yellow lock body, thick curved gold shackle, single dark amber keyhole. Front view, chunky polished 3D cartoon mobile puzzle style, white highlight on left, subtle orange bevel and shadow. No wings, no scene, no badge, no text, complete silhouette filling 80% of square canvas. Matches a heavenly gold and cloud reward ladder UI.",
+      "transparent_background": true
+    }
+  ]
+}

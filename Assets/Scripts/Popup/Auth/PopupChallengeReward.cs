@@ -39,7 +39,6 @@ public class PopupChallengeReward : Popup
                 boosterPrizes[i].SetActive(i != 3 && booster.prizeTypes.Select(GameConfig.NormalizePowerUpPrizeType).Contains(i));
         }
         txDesc.text = string.Format(descFormat, rank + 1, date.ToString("d"));// $"You placed <color=red>{rank + 1}</color> on <color=yellow>{date:d}";
-        QuestManager.QuestProgressSet(QUEST_TYPE.TOP_DAILY_RANK, rank + 1);
         if (!test)
             UnityAuthentication.instance.PastLeaderboardPrizeClaim();
         Open();

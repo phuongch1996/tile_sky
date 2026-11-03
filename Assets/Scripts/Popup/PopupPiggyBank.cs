@@ -29,8 +29,8 @@ public class PopupPiggyBank : Popup
             else
                 ToastScript.instance.Toast(2);
         });
-        iapButtonPiggyBank.productId = IAPManager.tileevo_piggybank;
-        iapButtonPiggyBank.GetComponentInChildren<TextMeshProUGUI>().text = GameConfig.GetLocalizedPrice(IAPManager.tileevo_piggybank);
+        iapButtonPiggyBank.productId = IAPManager.tilespace_piggybank;
+        iapButtonPiggyBank.GetComponentInChildren<TextMeshProUGUI>().text = GameConfig.GetLocalizedPrice(IAPManager.tilespace_piggybank);
         txMax1Piggy.text = $"{GameConfig.piggyMax1}";
         txMax2Piggy.text = $"{GameConfig.piggyMax2}";
         float max2 = 718;

@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-public class RankCard : PoolObjectUI
+public partial class RankCard : PoolObjectUI
 {
     public bool isTop3;
     [Header("Rank")]
@@ -61,6 +61,7 @@ public class RankCard : PoolObjectUI
     }
     public void CardSetup(int rank, int avatar, string displayName, int frame, int flag, int score, bool dailyChallenge = false)
     {
+        ApplyTileSkyStyle();
         isDailyChallengeCard = dailyChallenge;
         CacheDefaultVisuals();
         SetRank(rank);
@@ -112,6 +113,8 @@ public class RankCard : PoolObjectUI
         {
             imgRankIcon.sprite = hasTopIcon ? topRankSprites[rank] : defaultRankIconSprite;
             imgRankIcon.color = hasTopIcon ? Color.white : defaultRankIconColor;
+            imgRankIcon.type = hasTopIcon || !tileSkyStyled ? Image.Type.Simple : Image.Type.Sliced;
+            imgRankIcon.preserveAspect = true;
         }
 
         if (!txRank)
@@ -127,6 +130,8 @@ public class RankCard : PoolObjectUI
 
         bool hasGift = rank >= 0 && rank < rankGiftSprites.Length && rankGiftSprites[rank];
         imgGift.sprite = hasGift ? rankGiftSprites[rank] : null;
+        imgGift.type = Image.Type.Simple;
+        imgGift.preserveAspect = true;
         imgGift.color = hasGift ? Color.white : new Color(0, 0, 0, 0);
     }
 }

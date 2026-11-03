@@ -1,0 +1,21 @@
+{
+  "mode": "built-in image_gen",
+  "assets": [
+    {
+      "path": "Assets/Resources/HeavenlyBattlePass/Header.png",
+      "prompt": "Create a new production mobile game Battle Pass HEADER BACKGROUND asset inspired by the FIRST attached reference image. The SECOND image is only the back button reference and MUST NOT appear in this new header asset. Landscape-ish aspect 6:5, 1536x1280. Full rectangular opaque bright heavenly sky background, no phone bezel. Match the first reference composition and polished 3D cartoon art: luminous saturated sky blue, voluminous white clouds, rainbow behind a cute smiling blond baby angel with purple eyes closed in joy, gold halo, white wings, waving with one hand and leaning on clouds at upper center. Small white arch with green vines on left, tiny floating gold-roof castle island waterfall on right, gold stars. Exact large white rounded lettering 'BATTLE PASS' with deep blue outline centered across cloud bank at y=54%, gold wings left and right and a small central golden diamond flourish below. Upper left x=3%-20% y=8%-26% MUST be mostly empty sky for a separately overlaid back button. Upper right x=63%-96% y=8%-26% MUST be mostly empty sky for a separately overlaid Home gold counter; DO NOT paint any button, coin, counter, frame or number here. Bottom third y=67%-97% is a glossy blue rounded rectangular panel edged in luminous white and cyan with clouds in bottom corners, EMPTY interior to overlay interactive progress and activation UI. DO NOT draw any progress bars, buttons or text inside the bottom panel. No prices, numbers or UI besides the exact BATTLE PASS title. The lower edge blends into sky blue for continuing game reward list beneath. High quality crisp toy-like render, visually close to first reference.",
+      "transparent_background": false
+    },
+    {
+      "path": "Assets/Resources/HeavenlyBattlePass/Back.png",
+      "prompt": "Extract the exact circular BLUE BACK BUTTON from the supplied second reference image (the standalone blue circular button with a white left-pointing arrow), as an isolated transparent PNG sprite. Preserve the source design as closely as possible: glossy deep royal-blue circular face, bright electric-cyan luminous concentric circular rim, beveled thick soft white arrow pointing left with subtle lavender shadow, tiny white glints at top-left. Do not use or copy the green button from the Battle Pass screenshot. No new ornament, no text, no surrounding panel. Center the complete blue circular button on square transparent canvas with a small 4% transparent margin. Clean alpha silhouette.",
+      "transparent_background": true,
+      "note": "Image-generation extraction/reconstruction using the supplied blue back-button reference."
+    },
+    {
+      "path": "Assets/Resources/HeavenlyBattlePass/Activate.png",
+      "prompt": "One isolated game UI activation button sprite, transparent PNG, wide 2:1 aspect ratio. Premium heavenly cartoon mobile puzzle art: large glossy rounded rectangular gold yellow-orange pill face, thick shiny gold and white beveled border, soft luminous highlights, little white angel wings at the lower left and right corners, golden laurel leaves curling underneath and a tiny five-pointed gold star centered at bottom. Large clean EMPTY yellow central face for two lines of live text, no letters, words, price or digits at all. Match bright polished 3D cartoon heavenly Battle Pass game UI. Complete silhouette centered with 5% transparent margin. No background, no scene, no other objects.",
+      "transparent_background": true
+    }
+  ]
+}

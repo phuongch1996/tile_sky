@@ -20,24 +20,26 @@ public class IAPValues
 }
 public class IAPManager : MonoBehaviour, IDetailedStoreListener
 {
-    public const string tileevo_removeads = "tileevo_removeads"; //300, 1, true  $0.99
-    public const string tileevo_firstpack = "tileevo_firstpack"; //300, 3        $0.99
-    public const string tileevo_megapack = "tileevo_megapack";   //1500, 15      $4.99
-    public const string tileevo_ultipack = "tileevo_ultipack";   //3000, 30      $9.99
-    public const string tileevo_gold1 = "tileevo_gold1";         //1200          $0.99
-    public const string tileevo_gold2 = "tileevo_gold2";         //3900          $2.99
-    public const string tileevo_gold3 = "tileevo_gold3";         //7800          $4.99
-    public const string tileevo_piggybank = "tileevo_piggybank"; //piggybank     $2.99
-    public const string tileevo_battlepass = "tileevo_battlepass"; //battlepass  $3.99
+    // No store is configured for this game yet. Never initialize the old catalog.
+    public static bool PurchasingEnabled => false;
+    public const string tilespace_removeads = "tilespace_removeads"; //300, 1, true  $0.99
+    public const string tilespace_firstpack = "tilespace_firstpack"; //300, 3        $0.99
+    public const string tilespace_megapack = "tilespace_megapack";   //1500, 15      $4.99
+    public const string tilespace_ultipack = "tilespace_ultipack";   //3000, 30      $9.99
+    public const string tilespace_gold1 = "tilespace_gold1";         //1200          $0.99
+    public const string tilespace_gold2 = "tilespace_gold2";         //3900          $2.99
+    public const string tilespace_gold3 = "tilespace_gold3";         //7800          $4.99
+    public const string tilespace_piggybank = "tilespace_piggybank"; //piggybank     $2.99
+    public const string tilespace_battlepass = "tilespace_battlepass"; //battlepass  $3.99
     public static readonly Dictionary<string, IAPValues> iapidList = new()
     {
-        { tileevo_removeads, new(300, 1, true) },
-        { tileevo_firstpack, new(300, 3) },
-        { tileevo_megapack, new(1500, 15) },
-        { tileevo_ultipack, new(3000, 30) },
-        { tileevo_gold1, new(1200) },
-        { tileevo_gold2, new(3900) },
-        { tileevo_gold3, new(7800) },
+        { tilespace_removeads, new(300, 1, true) },
+        { tilespace_firstpack, new(300, 3) },
+        { tilespace_megapack, new(1500, 15) },
+        { tilespace_ultipack, new(3000, 30) },
+        { tilespace_gold1, new(1200) },
+        { tilespace_gold2, new(3900) },
+        { tilespace_gold3, new(7800) },
     };
     public static IAPValues GetIAPValues(string iapid)
     {
@@ -59,13 +61,23 @@ public class IAPManager : MonoBehaviour, IDetailedStoreListener
         else
             instance = this;
         DontDestroyOnLoad(gameObject);
+        if (!PurchasingEnabled)
+        {
+            foreach (var purchase in FindObjectsByType<CodelessIAPButton>(FindObjectsInactive.Include))
+            {
+                purchase.enabled = false;
+                var button = purchase.GetComponent<UnityEngine.UI.Button>();
+                if (button) button.interactable = false;
+            }
+        }
     }
     private void Start()
     {
-        StartCoroutine(InitializePurchasing());
+        if (PurchasingEnabled) StartCoroutine(InitializePurchasing());
     }
     public IEnumerator InitializePurchasing()
     {
+        if (!PurchasingEnabled) yield break;
         yield return new WaitUntil(() => IsInitialized());
         Debug.Log("Init IAP");
         //if (IsInitialized())
@@ -83,7 +95,7 @@ public class IAPManager : MonoBehaviour, IDetailedStoreListener
     }
     private bool IsInitialized()
     {
-        return CodelessIAPStoreListener.initializationComplete;
+        return PurchasingEnabled && CodelessIAPStoreListener.initializationComplete;
         //return m_StoreController != null && m_StoreExtensionProvider != null;
     }
     public void OnProductsFetched(ProductCollection products)
@@ -148,14 +160,14 @@ public class IAPManager : MonoBehaviour, IDetailedStoreListener
     bool isRestore;
     PurchaseProcessingResult IStoreListener.ProcessPurchase(PurchaseEventArgs purchaseEvent)
     {
-        if (string.Equals(purchaseEvent.purchasedProduct.definition.id, tileevo_removeads, System.StringComparison.Ordinal))
+        if (!PurchasingEnabled) return PurchaseProcessingResult.Pending;
+        if (string.Equals(purchaseEvent.purchasedProduct.definition.id, tilespace_removeads, System.StringComparison.Ordinal))
         {
             Debug.Log("Non-consumable purchased or restored: " + purchaseEvent.purchasedProduct.definition.id);
             isRestore = true;
             // Grant access to non-consumable content
             //OnRemoveAds(true);
         }
-        //else if (string.Equals(args.purchasedProduct.definition.id, tileup_starterpack, System.StringComparison.Ordinal))
         //{
         //    Debug.Log("Non-consumable purchased or restored: " + args.purchasedProduct.definition.id);
         //    isRestore = true;
@@ -171,18 +183,19 @@ public class IAPManager : MonoBehaviour, IDetailedStoreListener
     }
     public void OnPurchaseComplete(Product product)
     {
-        if (string.Equals(product.definition.id, tileevo_piggybank, System.StringComparison.Ordinal))
+        if (!PurchasingEnabled) return;
+        if (string.Equals(product.definition.id, tilespace_piggybank, System.StringComparison.Ordinal))
         {
             OnPiggyBank();
             OnPurchasePack(piggyBank);
         }
-        else if (string.Equals(product.definition.id, tileevo_battlepass, System.StringComparison.Ordinal))
+        else if (string.Equals(product.definition.id, tilespace_battlepass, System.StringComparison.Ordinal))
         {
             BattlePassManager.BuyBattlePassVIP();
         }
         else
         {
-            if (string.Equals(product.definition.id, tileevo_removeads, System.StringComparison.Ordinal))
+            if (string.Equals(product.definition.id, tilespace_removeads, System.StringComparison.Ordinal))
                 OnRemoveAds();
             IAPValues iap = GetIAPValues(product.definition.id);
             OnPurchasePack(iap.goldAm, iap.boostersAm, iap.removeAds);
@@ -191,13 +204,13 @@ public class IAPManager : MonoBehaviour, IDetailedStoreListener
     }
     public static bool IsRemoveAdsBought()
     {
-        return PlayerPrefs.GetInt(tileevo_removeads, 0) != 0;
+        return PlayerPrefs.GetInt(tilespace_removeads, 0) != 0;
     }
     public static bool RemoveAdsBought()
     {
         if (IsRemoveAdsBought())
             return false;
-        PlayerPrefs.SetInt(tileevo_removeads, 1);
+        PlayerPrefs.SetInt(tilespace_removeads, 1);
         return true;
     }
     public void OnRemoveAds()
@@ -232,11 +245,13 @@ public class IAPManager : MonoBehaviour, IDetailedStoreListener
     }
     public void OnIAPClick()
     {
+        if (!PurchasingEnabled) return;
         isRestore = false;
         GameConfig.SetDisableCommonAd(true);
     }
     public void OnRestoreClick()
     {
+        if (!PurchasingEnabled) return;
         isRestore = true;
         GameConfig.SetDisableCommonAd(true);
         RestorePurchases();

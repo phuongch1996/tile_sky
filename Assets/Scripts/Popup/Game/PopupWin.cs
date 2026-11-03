@@ -91,7 +91,6 @@ public class PopupWin : Popup
     public override void Open()
     {
         PlayOpenThenRun();
-        FirebaseManager.instance.LogLevelComplete(GameConfig.level, GameConfig.GetActionDeltaTime(GameConfig.startLevelKey));
 
         if (BattlePassManager.instance.isBattlePass)
             BattlePassManager.AddBPWinCount();
@@ -240,7 +239,7 @@ public class PopupWin : Popup
             });
             streakGO.transform.DOBlendableLocalMoveBy(new Vector3(0, 500), 0.25f).SetDelay(5);
         }
-        if (comboGO)
+        if (comboGO.activeSelf)
         {
             comboGO.transform.DOBlendableLocalMoveBy(new Vector3(0, 500), 0.25f).SetInverted(true);
             int eventPrizeClaimed = EventManager.GetEventPrizeClaimed();
@@ -318,9 +317,9 @@ public class PopupWin : Popup
             GameScript.instance.OpenUnlock(3);
         //else if (GameConfig.GetCurrentLevel() == Common.config_unlock_battlepass && BattlePassManager.instance.isBattlePass)//battlepass
         //    GameScript.instance.OpenUnlock(4);
-        else if (goldenTileProgressSlider.value >= goldenTileProgressSlider.maxValue ||
-            streakProgressSlider.value >= streakProgressSlider.maxValue ||
-            comboProgressSlider.value >= comboProgressSlider.maxValue)
+        else if ((goldenTileGO.activeSelf && goldenTileProgressSlider.value >= goldenTileProgressSlider.maxValue) ||
+            (streakGO.activeSelf && streakProgressSlider.value >= streakProgressSlider.maxValue) ||
+            (comboGO.activeSelf && comboProgressSlider.value >= comboProgressSlider.maxValue))
             GameScript.instance.OnOpenEvent();
         //else if (GameConfig.level % 10 == 1 && GameConfig.level > 10)
         else if (GameConfig.GetCurrentLevel() > 10 && GameConfig.GetCurrentLevel() % 10 == 2)

@@ -47,6 +47,34 @@ public class ExpandableButtonMenu : MonoBehaviour
         get { return isOpen; }
     }
 
+    public void ReleaseButtonsForStandaloneLayout()
+    {
+        sequence?.Kill();
+        if (mainButton != null)
+            mainButton.onClick.RemoveListener(Toggle);
+        if (childButtons != null)
+        {
+            foreach (var button in childButtons)
+            {
+                if (button == null) continue;
+                button.onClick.RemoveListener(Close);
+                button.transform.DOKill();
+                button.transform.localScale = Vector3.one;
+                button.interactable = true;
+                var group = button.GetComponent<CanvasGroup>();
+                if (group != null)
+                {
+                    group.DOKill();
+                    group.alpha = 1f;
+                    group.interactable = group.blocksRaycasts = true;
+                }
+            }
+        }
+        childButtons = new Button[0];
+        childRects = new RectTransform[0];
+        enabled = false;
+    }
+
     private void Reset()
     {
         mainButton = GetComponentInChildren<Button>();

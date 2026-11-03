@@ -3,19 +3,12 @@ using EasyButtons;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Unity.Services.Authentication;
-using Unity.Services.Core;
-using Unity.Services.Leaderboards;
 using Unity.Services.Leaderboards.Models;
 using UnityEngine;
 
 public class UnityAuthentication : MonoBehaviour
 {
-    const string allTimeLeaderboardId = "tileevo_alltime";
-    const string dailyLeaderboardId = "tileevo_daily";
-    const string dailyChallengeLeaderboardId = "tileevo_daily_challenge";
 
     public static DateTime nextReset;
     public static UnityAuthentication instance;
@@ -95,49 +88,28 @@ public class UnityAuthentication : MonoBehaviour
             instance = this;
         DontDestroyOnLoad(gameObject);
     }
-    async void Start()
+    // Retain local profile/art references without signing into the former game.
+    void Start()
     {
-        await UnityServices.InitializeAsync();
-
-        AuthenticationService.Instance.SignedIn += async () =>
-        {
-            Debug.Log("Signed in as: " + AuthenticationService.Instance.PlayerId);
-            //if (!GPGScript.instance.IsLogin)
-            //{
-            string name = await AuthenticationService.Instance.GetPlayerNameAsync();
-            string[] words = Regex.Split(name, @"(?<!^)(?=[A-Z])");
-            string word = words[0].Substring(0, Mathf.Min(15, words[0].Length));
-            GameConfig.SetDefaultName(word);
-            SetLogInStatus(1);
-            //}
-            HasLocalScore();
-            await GetDailyChallengeDate();
-            isSignedIn = true;
-        };
-        AuthenticationService.Instance.SignInFailed += s =>
-        {
-            isSignedIn = false;
-            // Take some action here...
-            Debug.Log("Signed in fail");
-        };
-
-        //if (GetLogInStatus() != 2)
-        await SignInAnonymously();
-        //else
-        //    GPGScript.instance.Authenticate();
+        isSignedIn = false;
+        SetLogInStatus(0);
+        dailyChallengeDateIndex = null;
+        currentDailyChallengeVersionId = string.Empty;
+        dailyChallengeScore = null;
+        pastEntry = null;
     }
-    public static bool? isSignedIn;
+    public static bool? isSignedIn = false;
 
     public static TimeSpan GetTimeLeft()
     {
         return nextReset - TimeManager.instance.currentTime;
     }
-    public static bool IsLeaderboard()
-    {
-        return isSignedIn == true;
-    }
+    public static bool IsLeaderboard() { return false; }
     public Sprite GetAvatarSprite(int avatar)
     {
+        var heavenlyAvatars = HeavenlyInfoArt.Avatars;
+        if (heavenlyAvatars.Length == 9)
+            return heavenlyAvatars[((avatar % 9) + 9) % 9];
         return avatarSprites[avatar % avatarSprites.Length];
     }
     public Sprite GetFrameSprite(int frame)
@@ -158,29 +130,27 @@ public class UnityAuthentication : MonoBehaviour
             _ => 2
         }];
     }
-    async Task SignInAnonymously()
-    {
-        await AuthenticationService.Instance.SignInAnonymouslyAsync();
-    }
+
     public static string GetPlayerId()
     {
-        //Debug.Log(AuthenticationService.Instance.PlayerId);
-        return AuthenticationService.Instance.PlayerId;
+        const string key = "tilespace_player_id";
+        if (!PlayerPrefs.HasKey(key)) PlayerPrefs.SetString(key, Guid.NewGuid().ToString("N"));
+        return PlayerPrefs.GetString(key);
     }
-    public void WinAddScore()
+    public void WinAddScore() { SaveLocalScore(); }
+    public Task UpdateMetadata() { return Task.CompletedTask; }
+    const string localLBKey = "tilespace_local_lb";
+
+    public static int GetLocalDailyScore()
     {
-        SaveLocalScore();
-        HasLocalScore();
+        if (!PlayerPrefs.HasKey(localLBKey)) return 0;
+        try
+        {
+            var score = JsonConvert.DeserializeObject<LocalScore>(PlayerPrefs.GetString(localLBKey));
+            return score != null && score.date == GameConfig.GetCurrentDate() ? score.scoreDaily : 0;
+        }
+        catch (JsonException) { return 0; }
     }
-    public async Task UpdateMetadata()
-    {
-        //GPG_CloudSaveSystem.Instance.SaveToCloud();
-        await AddScoreDaily(0);
-        await AddScore(GameConfig.GetCurrentLevel() - 1);
-        if (dailyChallengeScore != null)
-            _ = await UpdateDailyChallengeScore((int)dailyChallengeScore.Score);
-    }
-    const string localLBKey = "local_lb";
     [Button]
     void SaveLocalScore()
     {
@@ -192,7 +162,6 @@ public class UnityAuthentication : MonoBehaviour
         }
         else
         {
-            //string local_lb = PlayerPrefs.GetString("local_lb");
             var localScore = JsonConvert.DeserializeObject<LocalScore>(PlayerPrefs.GetString(localLBKey));
             if (GameConfig.GetCurrentDate() == localScore.date)
             {
@@ -208,30 +177,7 @@ public class UnityAuthentication : MonoBehaviour
             }
         }
     }
-    //public DateTime? endtime;
-    async void HasLocalScore()
-    {
-        if (PlayerPrefs.HasKey(localLBKey))
-        {
-            DateTime endTime;
-            try
-            {
-                endTime = await GetDailyLeaderboardVersion();
-            }
-            catch
-            {
-                Debug.Log("add score fail");
-                return;
-            }
-            var localScore = JsonConvert.DeserializeObject<LocalScore>(PlayerPrefs.GetString(localLBKey));
-            PlayerPrefs.DeleteKey(localLBKey);
-            await AddScore(localScore.scoreAllTime);
-            if (localScore.date == GameConfig.GetDateIndex(endTime))
-            {
-                await AddScoreDaily(localScore.scoreDaily);
-            }
-        }
-    }
+
     public int? dailyChallengeDateIndex;
     public string currentDailyChallengeVersionId;
     public int dailyChallengeTestDayOfYear;
@@ -250,45 +196,7 @@ public class UnityAuthentication : MonoBehaviour
         PlayerPrefs.DeleteKey(dailyChallengeAdKey);
     }
 
-    async Task<DateTime> GetDailyChallengeDate()
-    {
-        //DateTime dailyChallengeDate = await GetDailyChallengeLeaderboardVersion();
-        var dailyChallengeVersions = await GetDailyChallengeLeaderboardVersion();
-        DateTime dailyChallengeDate;
-        if (dailyChallengeVersions.Results.Count > 0)
-            dailyChallengeDate = dailyChallengeVersions.Results[0].End;
-        else
-            dailyChallengeDate = DateTime.UtcNow;
-        dailyChallengeDateIndex = GameConfig.GetDateIndex(dailyChallengeDate);
-        currentDailyChallengeVersionId = dailyChallengeVersions.VersionId;
 
-        Debug.Log("dailyChallengeDateIndex " + dailyChallengeDateIndex);
-        Debug.Log("currentDailyChallengeVersionId " + currentDailyChallengeVersionId);
-        try
-        {
-            dailyChallengeScore = await GetPlayerScoreDailyChallenge();
-        }
-        catch
-        {
-            dailyChallengeScore = null;
-            ResetDailyChallengeAds();
-        }
-        try
-        {
-            pastEntry = await GetPastDailyChallengeScore();
-        }
-        catch (Exception ex)
-        {
-            Debug.LogError(ex);
-            pastEntry = null;
-        }
-        //Debug.Log(pastEntry);
-        if (pastEntry != null)
-        {
-            Debug.Log("pastEntry" + pastEntry);
-        }
-        return dailyChallengeDate;
-    }
     public bool IsDailyChallengeHasScore()
     {
         return dailyChallengeScore != null;
@@ -299,131 +207,32 @@ public class UnityAuthentication : MonoBehaviour
             return score <= dailyChallengeScore.Score;
         return true;
     }
-    public async Task<bool> UpdateDailyChallengeScore(float score)
-    {
-        //if (Config.GetCurrentDate() != dailyChallengeDateIndex)
-        //    return;
-        if (!GameConfig.IsDailyChallenge)
-            return false;
-        if (score <= 0)
-            return false;
-
-        //GPG_CloudSaveSystem.Instance.SaveToCloud();
-        if (dailyChallengeScore == null || score <= dailyChallengeScore.Score)
-            await AddScoreDailyChallenge(score);
-        dailyChallengeScore = await GetPlayerScoreDailyChallenge();
-        SetDailyChallengeLeaderboardId(currentDailyChallengeVersionId);
-        return true;
-    }
-    public async Task AddScoreDaily(int score)
-    {
-        var metadata = new ScoreMetadata { playerAvatar = GameConfig.GetPlayerAvatar(), displayName = GameConfig.GetDisplayName(), playerFrame = GameConfig.GetPlayerFrame(), playerFlag = GameConfig.GetPlayerFlag() };
-        var playerEntry = await LeaderboardsService.Instance.AddPlayerScoreAsync(dailyLeaderboardId, score, new AddPlayerScoreOptions() { Metadata = metadata });
-        Debug.Log(JsonConvert.SerializeObject(playerEntry));
-    }
-    public async Task AddScore(int score)
-    {
-        var metadata = new ScoreMetadata { playerAvatar = GameConfig.GetPlayerAvatar(), displayName = GameConfig.GetDisplayName(), playerFrame = GameConfig.GetPlayerFrame(), playerFlag = GameConfig.GetPlayerFlag() };
-        var playerEntry = await LeaderboardsService.Instance.AddPlayerScoreAsync(allTimeLeaderboardId, score, new AddPlayerScoreOptions() { Metadata = metadata });
-        Debug.Log(JsonConvert.SerializeObject(playerEntry));
-    }
-    public async Task<LeaderboardEntry> AddScoreDailyChallenge(float score)
-    {
-        var metadata = new ScoreMetadata { playerAvatar = GameConfig.GetPlayerAvatar(), displayName = GameConfig.GetDisplayName(), playerFrame = GameConfig.GetPlayerFrame(), playerFlag = GameConfig.GetPlayerFlag() };
-        var playerEntry = await LeaderboardsService.Instance.AddPlayerScoreAsync(dailyChallengeLeaderboardId, score, new AddPlayerScoreOptions() { Metadata = metadata });
-        Debug.Log(JsonConvert.SerializeObject(playerEntry));
-        return playerEntry;
-    }
+    // Compatibility API: no requests, uploads, remote players or archived rewards.
+    public Task<bool> UpdateDailyChallengeScore(float score) { return Task.FromResult(false); }
+    public Task AddScoreDaily(int score) { return Task.CompletedTask; }
+    public Task AddScore(int score) { return Task.CompletedTask; }
+    public Task<LeaderboardEntry> AddScoreDailyChallenge(float score) { return Task.FromResult<LeaderboardEntry>(null); }
     //public void ButtonGetScores()
     //{
     //    GetScoresDaily();
     //    GetScores();
     //}
-    public async Task<LeaderboardScoresPage> GetScoresDaily()
-    {
-        var scoreResponse = await LeaderboardsService.Instance.GetScoresAsync(dailyLeaderboardId, new GetScoresOptions { Limit = 100, IncludeMetadata = true });
-        Debug.Log(JsonConvert.SerializeObject(scoreResponse));
-        return scoreResponse;
-    }
-    public async Task<LeaderboardScoresPage> GetScores()
-    {
-        var scoreResponse = await LeaderboardsService.Instance.GetScoresAsync(allTimeLeaderboardId, new GetScoresOptions { Limit = 100, IncludeMetadata = true });
-        Debug.Log(JsonConvert.SerializeObject(scoreResponse));
-        return scoreResponse;
-    }
-    public async Task<LeaderboardScoresPage> GetScoresDailyChallenge()
-    {
-        var scoreResponse = await LeaderboardsService.Instance.GetScoresAsync(dailyChallengeLeaderboardId, new GetScoresOptions { Limit = 100, IncludeMetadata = true });
-        Debug.Log(JsonConvert.SerializeObject(scoreResponse));
-        return scoreResponse;
-    }
-    public async Task<LeaderboardScores> GetPlayerRangeDailyChallenge()
-    {
-        var scoreResponse = await LeaderboardsService.Instance.GetPlayerRangeAsync(dailyChallengeLeaderboardId, new GetPlayerRangeOptions { RangeLimit = 25, IncludeMetadata = true });
-        Debug.Log(JsonConvert.SerializeObject(scoreResponse));
-        return scoreResponse;
-    }
+    public Task<LeaderboardScoresPage> GetScoresDaily() { return Task.FromResult(new LeaderboardScoresPage(results: new List<LeaderboardEntry>())); }
+    public Task<LeaderboardScoresPage> GetScores() { return Task.FromResult(new LeaderboardScoresPage(results: new List<LeaderboardEntry>())); }
+    public Task<LeaderboardScoresPage> GetScoresDailyChallenge() { return Task.FromResult(new LeaderboardScoresPage(results: new List<LeaderboardEntry>())); }
+    public Task<LeaderboardScores> GetPlayerRangeDailyChallenge() { return Task.FromResult(new LeaderboardScores(new List<LeaderboardEntry>())); }
     //public void ButtonGetPlayerScore()
     //{
     //    GetPlayerScoreDaily();
     //    GetPlayerScore();
     //}
-    public async Task<LeaderboardEntry> GetPlayerScoreDaily()
-    {
-        var scoreResponse = await LeaderboardsService.Instance.GetPlayerScoreAsync(dailyLeaderboardId);
-        Debug.Log(JsonConvert.SerializeObject(scoreResponse));
-        return scoreResponse;
-    }
-    public async Task<LeaderboardEntry> GetPlayerScore()
-    {
-        var scoreResponse = await LeaderboardsService.Instance.GetPlayerScoreAsync(allTimeLeaderboardId);
-        Debug.Log(JsonConvert.SerializeObject(scoreResponse));
-        return scoreResponse;
-    }
-    public async Task<LeaderboardEntry> GetPlayerScoreDailyChallenge()
-    {
-        var scoreResponse = await LeaderboardsService.Instance.GetPlayerScoreAsync(dailyChallengeLeaderboardId);
-        Debug.Log(JsonConvert.SerializeObject(scoreResponse));
-        return scoreResponse;
-    }
-    public async Task<DateTime> GetDailyLeaderboardVersion()
-    {
-        var versionsResponse = await LeaderboardsService.Instance.GetVersionsAsync(dailyLeaderboardId);
-        Debug.Log(JsonConvert.SerializeObject(versionsResponse));
-        Debug.Log(JsonConvert.SerializeObject(versionsResponse.Results));
-        //versionsResponse.VersionId;
-        //return versionsResponse;
-        if (versionsResponse.Results.Count > 0)
-        {
-            return versionsResponse.Results[0].End;
-        }
-        return DateTime.UtcNow;
-    }
+    public Task<LeaderboardEntry> GetPlayerScoreDaily() { return Task.FromResult<LeaderboardEntry>(null); }
+    public Task<LeaderboardEntry> GetPlayerScore() { return Task.FromResult<LeaderboardEntry>(null); }
+    public Task<LeaderboardEntry> GetPlayerScoreDailyChallenge() { return Task.FromResult<LeaderboardEntry>(null); }
+    public Task<DateTime> GetDailyLeaderboardVersion() { return Task.FromResult(DateTime.UtcNow); }
     public LeaderboardEntry pastEntry;
-    public async Task<LeaderboardEntry> GetPastDailyChallengeScore()
-    {
-        if (HasDailyChallengeLeaderboardId())
-        {
-            string leaderboardId = GetDailyChallengeLeaderboardId();
-            Debug.Log(leaderboardId);
-            var response1 = await LeaderboardsService.Instance.GetVersionScoresByPlayerIdsAsync(dailyChallengeLeaderboardId, leaderboardId, new List<string>() { AuthenticationService.Instance.PlayerId });
-            Debug.Log(JsonConvert.SerializeObject(response1));
-            return response1.Results[0];
-        }
-        return null;
-    }
-    public async Task<LeaderboardVersions> GetDailyChallengeLeaderboardVersion()
-    {
-        var versionsResponse = await LeaderboardsService.Instance.GetVersionsAsync(dailyChallengeLeaderboardId);
-        Debug.Log(JsonConvert.SerializeObject(versionsResponse));
-        Debug.Log(JsonConvert.SerializeObject(versionsResponse.Results));
-        return versionsResponse;
-        //if (versionsResponse.Results.Count > 0)
-        //{
-        //    return versionsResponse.Results[0].End;
-        //}
-        //return DateTime.UtcNow;
-    }
+    public Task<LeaderboardEntry> GetPastDailyChallengeScore() { return Task.FromResult<LeaderboardEntry>(null); }
+    public Task<LeaderboardVersions> GetDailyChallengeLeaderboardVersion() { return Task.FromResult(new LeaderboardVersions(results: new List<LeaderboardVersion>())); }
     //public void ButtonGetPastLeaderboardVersions()
     //{
     //    GetDailyLeaderboardVersion();
@@ -471,12 +280,7 @@ public class UnityAuthentication : MonoBehaviour
     {
         PlayerPrefs.SetInt(dailyChallengeLeaderboardPrizeClaimKey, claimed ? 1 : 0);
     }
-    public bool IsPastLeaderboardPrizeClaim()
-    {
-        if (!GetPastLeaderboardPrizeClaim())
-            pastEntry = null;
-        return pastEntry != null;
-    }
+    public bool IsPastLeaderboardPrizeClaim() { return false; }
 }
 
 [Skip]

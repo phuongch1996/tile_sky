@@ -23,6 +23,7 @@ public class PopupComboEvent : Popup
     public Image goldImg;
     public TextMeshProUGUI txPrizeAm;
     bool isInit;
+    HeavenlyEventView heavenlyView;
     public override void SetupTweenCallback()
     {
         SetupTweenCallback(() =>
@@ -41,6 +42,8 @@ public class PopupComboEvent : Popup
         btCollectAds.onClick.RemoveAllListeners();
         if (!isInit)
             SetupEventCards();
+        if (heavenlyView == null)
+            heavenlyView = HeavenlyEventView.Create(this);
         EventProgress();
         //Invoke(nameof(Tfm), Time.deltaTime);
         base.Open();
@@ -63,6 +66,7 @@ public class PopupComboEvent : Popup
     }
     private void Update()
     {
+        heavenlyView?.UpdateLayout();
         UpdateTimerText();
     }
     void UpdateTimerText()

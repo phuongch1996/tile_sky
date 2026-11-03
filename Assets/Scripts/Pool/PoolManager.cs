@@ -87,7 +87,10 @@ public class PoolManager : MonoBehaviour
             PoolParam poolParam = poolParams.Find(x => x.poolObject == prefab);
             if (poolObjectsDict.TryGetValue(poolParam.poolTfm, out var value))
             {
-                if (poolParam.poolTfm.childCount == 0)
+                // Unity retains managed references to objects destroyed with a scene/FX parent.
+                value.RemoveAll(obj => obj == null);
+                var reusable = value.Find(obj => obj.PoolerStatus == ObjPoolerStatus.Inactive);
+                if (reusable == null)
                 {
                     var poolObj = Instantiate(poolParam.poolObject, parent != null ? parent : poolParam.poolTfm, true);
                     poolObj.poolTfm = poolParam.poolTfm;
@@ -97,9 +100,8 @@ public class PoolManager : MonoBehaviour
                 }
                 else
                 {
-                    var obj = poolParam.poolTfm.GetChild(0).GetComponent<PoolObject>();
-                    if (parent != null)
-                        obj.transform.SetParent(parent);
+                    var obj = reusable;
+                    obj.transform.SetParent(parent != null ? parent : poolParam.poolTfm);
                     obj.Active(timeActive);
                     return obj.GetComponent<T>();
                 }
@@ -109,7 +111,9 @@ public class PoolManager : MonoBehaviour
     }
     public void ReleaseObject(PoolObject poolObj)
     {
-        poolObj.transform.SetParent(poolObj.poolTfm);
+        if (poolObj == null)
+            return;
+        poolObj.transform.SetParent(poolObj.poolTfm != null ? poolObj.poolTfm : transform);
         poolObj.Inactive();
     }
     public void ReleaseAllObjects()
@@ -118,9 +122,15 @@ public class PoolManager : MonoBehaviour
         {
             if (poolObjectsDict.TryGetValue(poolParams[i].poolTfm, out var value))
             {
-                foreach (var obj in value)
+                for (int index = value.Count - 1; index >= 0; index--)
                 {
-                    if (obj.PoolerStatus != ObjPoolerStatus.Inactive)
+                    var obj = value[index];
+                    if (obj == null)
+                    {
+                        value.RemoveAt(index);
+                        continue;
+                    }
+                    if (obj.PoolerStatus != ObjPoolerStatus.Inactive || obj.transform.parent != obj.poolTfm)
                         ReleaseObject(obj);
                 }
             }

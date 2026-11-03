@@ -24,6 +24,12 @@ public class DailyObject : MonoBehaviour
     Sprite cachedDaySprite;
     bool cachedDefaultDaySprite;
 
+    // Optional foreground visuals supplied by the new Daily Reward layout.
+    [System.NonSerialized] public Image heavenlyShade;
+    [System.NonSerialized] public Image heavenlyBadgeShade;
+    [System.NonSerialized] public CanvasGroup heavenlyPrizeGroup;
+    [System.NonSerialized] public GameObject heavenlyTick;
+
     public void InitPrize(DailyPrize dailyPrize)
     {
         goldImg.gameObject.SetActive(dailyPrize.goldAm > 0);
@@ -35,6 +41,17 @@ public class DailyObject : MonoBehaviour
     public void Init(int state, string txDay) //0:unavail 1:today 2:claimed
     {
         this.txDay.text = txDay;
+        if (heavenlyShade)
+        {
+            bool claimed = state == 2;
+            heavenlyShade.gameObject.SetActive(claimed);
+            heavenlyBadgeShade.gameObject.SetActive(claimed);
+            heavenlyPrizeGroup.alpha = claimed ? 0.55f : 1f;
+            heavenlyTick.SetActive(claimed);
+            this.txDay.color = claimed ? new Color32(211, 222, 241, 255) : Color.white;
+            btDaily.interactable = state == 1;
+            return;
+        }
         SetDaySprite(state == 1);
         switch (state)
         {

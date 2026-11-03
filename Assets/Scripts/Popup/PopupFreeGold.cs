@@ -2,7 +2,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PopupFreeGold : Popup
+public partial class PopupFreeGold : Popup
 {
     public Image fillImage;
     public TextMeshProUGUI txFill;
@@ -13,6 +13,7 @@ public class PopupFreeGold : Popup
 
     public override void SetupTweenCallback()
     {
+        EnsureHeavenlyFreeGoldUI();
         SetupTweenCallback(() =>
         {
             btWatchAds.onClick.AddListener(() =>
@@ -26,6 +27,8 @@ public class PopupFreeGold : Popup
     }
     public override void Open()
     {
+        EnsureHeavenlyFreeGoldUI();
+        FitFreeGoldUI();
         btWatchAds.onClick.RemoveAllListeners();
         btClose.onClick.RemoveAllListeners();
         btPanel.onClick.RemoveAllListeners();

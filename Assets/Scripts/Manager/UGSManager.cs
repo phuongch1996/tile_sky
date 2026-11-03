@@ -1,5 +1,3 @@
-using System;
-using Unity.Services.Core;
 using UnityEngine;
 
 public class UGSManager : MonoBehaviour
@@ -13,19 +11,6 @@ public class UGSManager : MonoBehaviour
             instance = this;
         DontDestroyOnLoad(gameObject);
     }
-    async void Start()
-    {
-        try
-        {
-            Debug.Log("Init UGS");
-            await UnityServices.InitializeAsync();
-            // UGS initialized, now proceed to initialize Unity IAP
-            IAPManager.instance.InitializePurchasing();
-        }
-        catch (Exception exception)
-        {
-            // An error occurred during services initialization.
-            Debug.LogError($"Unity Services initialization failed: {exception.Message}");
-        }
-    }
+    // Compatibility component for existing scenes. A new Tile Space backend
+    // must be configured before Unity Gaming Services can be initialized again.
 }

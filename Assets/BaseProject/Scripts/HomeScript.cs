@@ -11,6 +11,16 @@ public class HomeScript : MonoBehaviour
 {
 	public static HomeScript instance;
 
+	[SerializeField, Min(0.1f)] private float playExitDuration = 1f;
+	[SerializeField] private RectTransform homeLogo;
+	private enum PlayExitStyle { StaggeredEdges, Up, Down, Left, Right }
+	private bool startingLevel;
+	private Sequence playExitSequence;
+	private Sequence homeEntranceSequence;
+	private Coroutine homeAnimation;
+	private readonly Dictionary<RectTransform, Vector3> homeIconPositions = new Dictionary<RectTransform, Vector3>();
+	private RectTransform homeFeatureRow;
+
 	public GameObject canvasBlocker;
 
 	public CanvasBG canvasBG;
@@ -26,7 +36,31 @@ public class HomeScript : MonoBehaviour
 
 	private void OnEnable()
 	{
+		ResetPlayTransition();
+		SetupRewardButtonImages();
 		SetupTestControls();
+	}
+
+	private void SetupRewardButtonImages()
+	{
+		// The old animated icons used disabled Images on the button roots.
+		// Enable the replacement sprites even in an already-loaded Home scene.
+		foreach (var button in new[] { btDailyLogin, btBattlePass })
+		{
+			if (button == null || button.image == null)
+				continue;
+
+			button.image.enabled = true;
+			button.image.overrideSprite = null;
+			button.image.color = Color.white;
+			button.image.preserveAspect = true;
+			button.image.canvasRenderer.SetAlpha(1f);
+		}
+	}
+
+	private void OnDisable()
+	{
+		ResetPlayTransition();
 	}
 
 	private void SetupTestControls()
@@ -196,12 +230,13 @@ public class HomeScript : MonoBehaviour
 
 	public void MaxInspector()
 	{
-		MaxSdk.ShowMediationDebugger();
+		AdmobInspector();
 	}
 
 	private void Awake()
 	{
 		instance = this;
+		QuestNotif();
 		Popup[] array = UnityEngine.Object.FindObjectsByType<Popup>(FindObjectsInactive.Include, FindObjectsSortMode.None);
 		for (int i = 0; i < array.Length; i++)
 		{
@@ -223,43 +258,69 @@ public class HomeScript : MonoBehaviour
 	private void Start()
 	{
 		PiggySetup();
-		if (QuestManager.instance.isInit)
-		{
-			QuestNotif();
-		}
 		if (GameConfig.isGameLoaded)
 		{
 			GameConfig.ShowCollapseBannerAd();
-			HomeUI(firstLoad: false);
+			if (LoadingCamera.instance != null && LoadingCamera.instance.IsHomeReturnTransition)
+				AnimateReturnHomeEntrance();
+			else
+				HomeUI(firstLoad: false);
 		}
+	}
+
+	private void AnimateReturnHomeEntrance()
+	{
+		AudioManager.instance.PlayBGMHome();
+		var icons = GetHomeExitIcons();
+		if (canvasBlocker != null)
+		{
+			canvasBlocker.SetActive(true);
+			canvasBlocker.transform.SetAsLastSibling();
+		}
+		homeEntranceSequence = DOTween.Sequence().SetUpdate(true);
+		float stagger = icons.Count > 1 ? 0.3f / (icons.Count - 1) : 0f;
+		for (int i = 0; i < icons.Count; i++)
+		{
+			var icon = icons[i];
+			icon.DOKill();
+			var targetScale = icon.localScale == Vector3.zero ? Vector3.one : icon.localScale;
+			icon.localScale = Vector3.zero;
+			homeEntranceSequence.Insert(i * stagger,
+				icon.DOScale(targetScale, 0.45f).SetEase(Ease.OutBack));
+		}
+		homeEntranceSequence.OnComplete(() =>
+		{
+			homeEntranceSequence = null;
+			OnCompleteHomeUI();
+		});
 	}
 
 	public void HomeUI(bool firstLoad = true)
 	{
-		StartCoroutine(HomeAnim(firstLoad));
+		ResetPlayTransition();
+		if (homeAnimation != null)
+			StopCoroutine(homeAnimation);
+		homeAnimation = StartCoroutine(HomeAnim(firstLoad));
 	}
 
 	private void HomeSetup()
 	{
+		SetupRewardButtonImages();
 		SetupTestControls();
 		UpdateInfo();
 		int currentLevel = GameConfig.GetCurrentLevel();
 		txPlayButton.text = ((currentLevel > 1) ? ("level " + currentLevel) : "play!!!");
 		btSettings.gameObject.SetActive(value: true);
 		btMap.gameObject.SetActive(currentLevel >= 11);
-		btQuest.gameObject.SetActive(currentLevel >= 11);
+		QuestNotif();
 		btDailyLogin.gameObject.SetActive(currentLevel >= 5);
 		btFreeGold.gameObject.SetActive(currentLevel >= 8);
 		btPiggyBank.gameObject.SetActive(currentLevel >= Common.config_unlock_piggybank);
-		btRank.gameObject.SetActive(currentLevel >= Common.config_unlock_rank && UnityAuthentication.IsLeaderboard());
+		btRank.gameObject.SetActive(currentLevel >= Common.config_unlock_rank);
 		btEvent.gameObject.SetActive(currentLevel >= 15 && EventManager.instance.isEvent);
 		btBattlePass.gameObject.SetActive(currentLevel >= Common.config_unlock_battlepass);
 		btChallengeLevel.gameObject.SetActive(currentLevel >= Common.config_unlock_dailychallenge);
-		ExpandableButtonMenu[] array = UnityEngine.Object.FindObjectsByType<ExpandableButtonMenu>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-		for (int i = 0; i < array.Length; i++)
-		{
-			array[i].RefreshChildButtonAvailability();
-		}
+		SetupStandaloneHomeFeatures();
 		GameObject[] array2 = eventIcons;
 		for (int i = 0; i < array2.Length; i++)
 		{
@@ -282,6 +343,65 @@ public class HomeScript : MonoBehaviour
 		default:
 			txBtEvent.text = "";
 			break;
+		}
+	}
+
+	private void SetupStandaloneHomeFeatures()
+	{
+		if (homeFeatureRow == null)
+		{
+			var avatar = (RectTransform)btEditPlayer.transform;
+			var menu = btSettings.GetComponentInParent<ExpandableButtonMenu>(true);
+			if (menu == null) return;
+			var menuRect = (RectTransform)menu.transform;
+			homeFeatureRow = new GameObject("Home feature row", typeof(RectTransform)).GetComponent<RectTransform>();
+			homeFeatureRow.gameObject.layer = avatar.gameObject.layer;
+			homeFeatureRow.SetParent(avatar.parent, false);
+			homeFeatureRow.anchorMin = avatar.anchorMin;
+			homeFeatureRow.anchorMax = avatar.anchorMax;
+			homeFeatureRow.anchoredPosition = avatar.anchoredPosition;
+			homeFeatureRow.sizeDelta = Vector2.zero;
+
+			// Move the whole profile, including its nameplate, to the old menu slot.
+			avatar.SetParent(menuRect.parent, false);
+			avatar.anchorMin = menuRect.anchorMin;
+			avatar.anchorMax = menuRect.anchorMax;
+			avatar.anchoredPosition = menuRect.anchoredPosition;
+			menu.ReleaseButtonsForStandaloneLayout();
+			foreach (var button in new[] { btSettings, btQuest, btMap, btRank })
+			{
+				if (button != null) button.transform.SetParent(homeFeatureRow, false);
+			}
+			menu.gameObject.SetActive(false);
+		}
+
+		btSettings.gameObject.SetActive(true);
+		var backgroundIconSize = ((RectTransform)btMap.transform).sizeDelta;
+		foreach (var button in new[] { btSettings, btRank })
+		{
+			var rect = (RectTransform)button.transform;
+			// These 256x234 sprites have different transparent margins. Match the
+			// visible artwork height to Background's 208px, rather than the canvas.
+			float artworkScale = button == btSettings ? 208f / 183f : 208f / 197f;
+			rect.sizeDelta = backgroundIconSize * artworkScale;
+			if (button.image != null) button.image.preserveAspect = true;
+		}
+		var features = new[]
+		{
+			new { Button = btSettings, Level = int.MinValue },
+			new { Button = btQuest, Level = 0 },
+			new { Button = btMap, Level = 11 },
+			new { Button = btRank, Level = Common.config_unlock_rank }
+		};
+		int index = 0;
+		foreach (var feature in features.OrderBy(feature => feature.Level))
+		{
+			if (feature.Button == null || !feature.Button.gameObject.activeSelf) continue;
+			var rect = (RectTransform)feature.Button.transform;
+			rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+			float spacing = Mathf.Max(150f, backgroundIconSize.x * (208f / 183f) + 12f);
+			rect.anchoredPosition = new Vector2(index++ * spacing, 0);
+			rect.SetAsLastSibling();
 		}
 	}
 
@@ -410,6 +530,8 @@ public class HomeScript : MonoBehaviour
 
 	private void OnCompleteHomeUI()
 	{
+		if (startingLevel)
+			return;
 		btDailyLogin.onClick.AddListener(delegate
 		{
 			OnDailyLogin();
@@ -441,10 +563,6 @@ public class HomeScript : MonoBehaviour
 		btPiggyBank.onClick.AddListener(delegate
 		{
 			OnOpenPiggyBank();
-		});
-		btQuest.onClick.AddListener(delegate
-		{
-			OnOpenQuest();
 		});
 		btRank.onClick.AddListener(delegate
 		{
@@ -494,6 +612,8 @@ public class HomeScript : MonoBehaviour
 
 	public void Play()
 	{
+		if (startingLevel)
+			return;
 		GameConfig.reviveCount = 0;
 		GameConfig.loseCount = 0;
 		GameConfig.boosterCount = 0;
@@ -520,12 +640,13 @@ public class HomeScript : MonoBehaviour
 			}
 			GameConfig.isTesting = false;
 		}
-		PoolManager.instance.ReleaseAllObjects();
-		LoadingCamera.instance.StartLoad(GameConfig.gameScene);
+		AnimateHomeExit();
 	}
 
 	public void PlayChallenge()
 	{
+		if (startingLevel)
+			return;
 		GameConfig.reviveCount = 0;
 		GameConfig.loseCount = 0;
 		GameConfig.boosterCount = 0;
@@ -539,8 +660,149 @@ public class HomeScript : MonoBehaviour
 		{
 			GameConfig.isTesting = false;
 		}
-		PoolManager.instance.ReleaseAllObjects();
-		LoadingCamera.instance.StartLoad(GameConfig.gameScene);
+		AnimateHomeExit();
+	}
+
+	private void AnimateHomeExit()
+	{
+		startingLevel = true;
+		if (homeAnimation != null)
+		{
+			StopCoroutine(homeAnimation);
+			homeAnimation = null;
+		}
+		if (levelInput != null)
+			levelInput.DeactivateInputField();
+		if (canvasBlocker != null)
+		{
+			canvasBlocker.SetActive(true);
+			canvasBlocker.transform.SetAsLastSibling();
+		}
+
+		Canvas.ForceUpdateCanvases();
+		var icons = GetHomeExitIcons();
+		var style = (PlayExitStyle)UnityEngine.Random.Range(0, 5);
+		bool staggered = style == PlayExitStyle.StaggeredEdges;
+		float duration = Mathf.Max(0.1f, playExitDuration);
+		float slideDuration = icons.Count > 1 ? duration * 0.4f : duration;
+		float stagger = icons.Count > 1 ? (duration - slideDuration) / (icons.Count - 1) : 0f;
+		var groupOffset = staggered ? Vector3.zero : GetHomeGroupExitOffset(icons, style);
+		playExitSequence = DOTween.Sequence().SetUpdate(true);
+		playExitSequence.AppendInterval(duration);
+		for (int i = 0; i < icons.Count; i++)
+		{
+			var icon = icons[i];
+			icon.DOKill();
+			homeIconPositions[icon] = icon.localPosition;
+			var destination = staggered ? GetUIExitPosition(icon) : icon.position + groupOffset;
+			playExitSequence.Insert(i * stagger,
+				icon.DOMove(destination, slideDuration).SetEase(Ease.InBack));
+		}
+		playExitSequence.OnComplete(() =>
+		{
+			playExitSequence = null;
+			PoolManager.instance.ReleaseAllObjects();
+			LoadingCamera.instance.StartLoad(GameConfig.gameScene);
+		});
+	}
+
+	private List<RectTransform> GetHomeExitIcons()
+	{
+		var candidates = new List<Transform>();
+		// Also resolve the logo in scenes that were already open before this field was added.
+		if (homeLogo == null && btPlay != null && btPlay.transform.parent != null)
+			homeLogo = btPlay.transform.parent.Cast<Transform>().OfType<RectTransform>()
+				.FirstOrDefault(rect => rect.name.StartsWith("logo", StringComparison.OrdinalIgnoreCase));
+		if (homeLogo != null)
+			candidates.Add(homeLogo);
+		foreach (var button in new[] { btSettings, btShop, btDailyLogin, btEvent, btBattlePass,
+			btMap, btQuest, btFreeGold, btPiggyBank, btRank, btEditPlayer, btChallengeLevel, btPlay })
+		{
+			if (button != null)
+				candidates.Add(button.transform);
+		}
+		if (topBarScript != null && topBarScript.goldsCounter != null)
+			candidates.Add(topBarScript.goldsCounter.transform);
+		if (levelInput != null)
+			candidates.Add(levelInput.transform);
+		foreach (var graphic in new Graphic[] { imgFrame, imgAvatar, imgFlag, txDisplayName })
+		{
+			if (graphic != null)
+				candidates.Add(graphic.transform);
+		}
+		foreach (var menu in UnityEngine.Object.FindObjectsByType<ExpandableButtonMenu>(FindObjectsSortMode.None))
+		{
+			if (menu.gameObject.scene == gameObject.scene)
+				candidates.Add(menu.transform);
+		}
+
+		// Animate each visible group once so child icons do not move twice with their parent.
+		var icons = candidates.OfType<RectTransform>().Where(icon => icon.gameObject.activeInHierarchy)
+			.Distinct().ToList();
+		return icons.Where(icon => !icons.Any(parent => parent != icon && icon.IsChildOf(parent)))
+			.OrderByDescending(icon => icon.position.y).ThenBy(icon => icon.position.x).ToList();
+	}
+
+	private static Vector3 GetHomeGroupExitOffset(List<RectTransform> icons, PlayExitStyle style)
+	{
+		if (icons.Count == 0)
+			return Vector3.zero;
+		var canvasRect = (RectTransform)icons[0].GetComponentInParent<Canvas>().rootCanvas.transform;
+		var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRect, icons[0]);
+		for (int i = 1; i < icons.Count; i++)
+			bounds.Encapsulate(RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRect, icons[i]));
+		var screen = canvasRect.rect;
+		Vector3 direction;
+		float distance;
+		switch (style)
+		{
+			case PlayExitStyle.Up: direction = Vector3.up; distance = screen.yMax - bounds.min.y; break;
+			case PlayExitStyle.Down: direction = Vector3.down; distance = bounds.max.y - screen.yMin; break;
+			case PlayExitStyle.Left: direction = Vector3.left; distance = bounds.max.x - screen.xMin; break;
+			case PlayExitStyle.Right: direction = Vector3.right; distance = screen.xMax - bounds.min.x; break;
+			default: return Vector3.zero;
+		}
+		// A shared displacement preserves the layout and takes even the last icon fully offscreen.
+		return canvasRect.TransformVector(direction * (Mathf.Max(0f, distance) + 80f));
+	}
+
+	// Edge: -1 = nearest, 0 = left, 1 = right, 2 = up, 3 = down.
+	internal static Vector3 GetUIExitPosition(RectTransform icon, int exitEdge = -1)
+	{
+		var canvas = icon.GetComponentInParent<Canvas>().rootCanvas;
+		var canvasRect = (RectTransform)canvas.transform;
+		var bounds = RectTransformUtility.CalculateRelativeRectTransformBounds(canvasRect, icon);
+		var screen = canvasRect.rect;
+		const float margin = 80f;
+		var distances = new[] { bounds.max.x - screen.xMin, screen.xMax - bounds.min.x,
+			screen.yMax - bounds.min.y, bounds.max.y - screen.yMin };
+		var directions = new[] { Vector3.left, Vector3.right, Vector3.up, Vector3.down };
+		int edge = exitEdge;
+		if (edge < 0)
+		{
+			edge = 0;
+			for (int i = 1; i < distances.Length; i++)
+			{
+				if (distances[i] < distances[edge])
+					edge = i;
+			}
+		}
+		return icon.position + canvasRect.TransformVector(directions[edge] * (Mathf.Max(0f, distances[edge]) + margin));
+	}
+
+	private void ResetPlayTransition()
+	{
+		homeEntranceSequence?.Kill(false);
+		homeEntranceSequence = null;
+		playExitSequence?.Kill();
+		playExitSequence = null;
+		foreach (var item in homeIconPositions)
+		{
+			if (item.Key != null)
+				item.Key.localPosition = item.Value;
+		}
+		homeIconPositions.Clear();
+		startingLevel = false;
 	}
 
 	public void ChallengeLevelNotif()
@@ -743,12 +1005,21 @@ public class HomeScript : MonoBehaviour
 
 	public void OnOpenQuest()
 	{
-		questPopup.Open();
+		// Retained for serialized UnityEvents from older scenes; Quest has been removed.
+		QuestNotif();
 	}
 
 	public void QuestNotif()
 	{
-		questNotif.SetActive(QuestManager.GetDailyClaimAble() || QuestManager.GetAllTimeClaimAble());
+		if (btQuest != null)
+		{
+			btQuest.interactable = false;
+			btQuest.gameObject.SetActive(false);
+		}
+		if (questNotif != null)
+			questNotif.SetActive(false);
+		if (questPopup != null && questPopup.panel != null)
+			questPopup.panel.SetActive(false);
 	}
 
 	public void OnOpenRank()

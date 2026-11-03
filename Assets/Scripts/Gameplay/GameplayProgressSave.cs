@@ -69,6 +69,8 @@ public class GameplayProgressData
     public List<int> itemSpriteIndexes = new();
     public List<int> undoSortingIndexes = new();
     public List<GameplayTileProgressData> tiles = new();
+    // Optional extension; legacy version-1 saves do not need migration.
+    public ModeProgressData modeProgress;
 }
 
 [Serializable]
@@ -90,4 +92,7 @@ public class GameplayTileProgressData
     public bool linkUnlinked;
     public bool randomRevealed;
     public int iceCounter;
+    public int modeKind;
+    public int bombMoves;
+    public bool bombResolved;
 }

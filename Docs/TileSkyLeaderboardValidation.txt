@@ -1,0 +1,1 @@
+PASS: actual prefab rendered at 1080x1920; Tile Sky assets loaded; setup is idempotent; sample rows and pinned player styled; All Time and Challenge tabs switch. Preview uses sample data and does not call leaderboard services.
