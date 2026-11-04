@@ -1,0 +1,27 @@
+// This file is generated. Do not modify by hand.
+// XML documentation file not found. To check if public methods have XML comments,
+// make sure the XML doc file is present and located next to the scraped dll
+namespace Unity.Services.Leaderboards.Settings
+{
+    public class LeaderboardsEditorGameService : Unity.Services.Core.Editor.IEditorGameService
+    {
+        public Unity.Services.Core.Editor.IEditorGameServiceEnabler Enabler { get; }
+        public bool HasDashboard { get; }
+        public Unity.Services.Core.Editor.IEditorGameServiceIdentifier Identifier { get; }
+        public string Name { get; }
+        public bool RequiresCoppaCompliance { get; }
+        public LeaderboardsEditorGameService() {}
+        public string GetFormattedDashboardUrl();
+    }
+
+    public class LeaderboardsSettingsProvider : Unity.Services.Core.Editor.EditorGameServiceSettingsProvider
+    {
+        protected override string Description { get; }
+        protected override Unity.Services.Core.Editor.IEditorGameService EditorGameService { get; }
+        protected override string Title { get; }
+        public LeaderboardsSettingsProvider(UnityEditor.SettingsScope scopes) {}
+        [UnityEditor.SettingsProvider] public static UnityEditor.SettingsProvider CreateSettingsProvider();
+        protected override UnityEngine.UIElements.VisualElement GenerateServiceDetailUI();
+        public override void OnActivate(string searchContext, UnityEngine.UIElements.VisualElement rootElement);
+    }
+}

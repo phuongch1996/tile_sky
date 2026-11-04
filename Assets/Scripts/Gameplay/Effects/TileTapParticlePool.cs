@@ -112,9 +112,13 @@ public class TileTapParticlePool : MonoBehaviour
         shape.radiusThickness = 0.62f;
 
         ParticleSystem.VelocityOverLifetimeModule velocity = particle.velocityOverLifetime;
-        velocity.enabled = true;
+        velocity.enabled = false;
         velocity.space = ParticleSystemSimulationSpace.Local;
+        // Unity requires all orbital axes to share a curve mode, even zero axes.
+        velocity.orbitalX = new ParticleSystem.MinMaxCurve(0f, 0f);
+        velocity.orbitalY = new ParticleSystem.MinMaxCurve(0f, 0f);
         velocity.orbitalZ = new ParticleSystem.MinMaxCurve(-0.75f, 0.75f);
+        velocity.enabled = true;
 
         ParticleSystem.RotationOverLifetimeModule rotation = particle.rotationOverLifetime;
         rotation.enabled = true;

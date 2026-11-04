@@ -1,0 +1,40 @@
+<engine:UXML xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:engine="UnityEngine.UIElements" xmlns:editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="False">
+    <Style src="project://database/Packages/com.unity.services.leaderboards/Editor/Authoring/UI/Assets/DateTime.uss?fileID=7433441132597879392&amp;guid=f21fe0e0240e84afa942b93f1aa3e74d&amp;type=3#DateTime" />
+    <engine:VisualElement name="DateTime" class="row">
+        <engine:VisualElement name="ContainerLabels" style="flex-grow: 1;">
+            <engine:Label text="Date" name="LabelDate" class="label" />
+            <engine:Label text="Time" name="LabelTime" class="label" />
+        </engine:VisualElement>
+        <engine:VisualElement name="Values" class="align-end">
+            <engine:VisualElement name="YearMonthDay" class="row">
+                <engine:VisualElement name="ColumnYear" style="flex-grow: 1;">
+                    <engine:Label text="Year" name="LabelYear" class="column-label" />
+                    <engine:DropdownField name="DropdownYear" class="dropdown" />
+                </engine:VisualElement>
+                <engine:VisualElement name="ColumnMonth" style="flex-grow: 1;">
+                    <engine:Label text="Month" name="LabelMonth" class="column-label" />
+                    <engine:DropdownField name="DropdownMonth" class="dropdown" />
+                </engine:VisualElement>
+                <engine:VisualElement name="ColumnDay" style="flex-grow: 1;">
+                    <engine:Label text="Day" name="LabelDay" class="column-label" />
+                    <engine:DropdownField name="DropdownDay" class="dropdown" />
+                </engine:VisualElement>
+            </engine:VisualElement>
+            <engine:VisualElement class="spacer" style="flex-grow: 1;" />
+            <engine:VisualElement name="HourMinuteSecond" class="row">
+                <engine:VisualElement name="ColumnHours" style="flex-grow: 1;">
+                    <engine:Label text="Hour" name="LabelHour" class="column-label" />
+                    <engine:DropdownField name="DropdownHour" class="dropdown" />
+                </engine:VisualElement>
+                <engine:VisualElement name="ColumnMinute" style="flex-grow: 1;">
+                    <engine:Label text="Minute" name="LabelMinute" class="column-label" />
+                    <engine:DropdownField name="DropdownMinute" class="dropdown" />
+                </engine:VisualElement>
+                <engine:VisualElement name="ColumnSecond" style="flex-grow: 1;">
+                    <engine:Label text="Second" name="LabelSecond" class="column-label" />
+                    <engine:DropdownField name="DropdownSecond" class="dropdown" />
+                </engine:VisualElement>
+            </engine:VisualElement>
+        </engine:VisualElement>
+    </engine:VisualElement>
+</engine:UXML>

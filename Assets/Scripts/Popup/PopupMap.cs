@@ -22,6 +22,7 @@ public class PopupMap : Popup
     }
     public override void Open()
     {
+        HomeAlignedBackButton.Configure(btClose, HomeScript.instance ? HomeScript.instance.btSettings : null);
         //fadeIgnore = new();
         maps = new();
         //if (GameConfig.bgTypeDefault == 0)

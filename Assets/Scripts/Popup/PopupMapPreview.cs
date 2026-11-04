@@ -67,6 +67,7 @@ public class PopupMapPreview : Popup
     }
     public override void Open()
     {
+        HomeAlignedBackButton.Configure(btCancel, HomeScript.instance ? HomeScript.instance.btSettings : null);
         base.Open();
     }
     public override void Close()

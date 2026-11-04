@@ -13,11 +13,13 @@ MonoBehaviour:
   m_Name: BGSprites
   m_EditorClassIdentifier: 
   bgSprites:
-  - bg: {fileID: -7857424510872589897, guid: 6edeeed2ae16a774fbf8431c284a29a0, type: 3}
-    title: ChatGPT Image 15_08_21 12 thg 9, 2026_0
-  - bg: {fileID: -9080445754447832829, guid: 0c2abdd9e2905414693a2138efcd4683, type: 3}
-    title: ChatGPT Image 15_15_51 12 thg 9, 2026_0
-  - bg: {fileID: 5183154109176060344, guid: 698f4f8a00e945343a39006c9a9b828f, type: 3}
-    title: ChatGPT Image 15_31_43 12 thg 9, 2026_0
-  - bg: {fileID: 3484870710771818531, guid: c46312e6a7a3ec34ab1f9f0ac6eb49b3, type: 3}
-    title: ChatGPT Image 15_36_38 12 thg 9, 2026_0
+  - bg: {fileID: 21300000, guid: fc19098fc8bc4f129b652e8178fe9929, type: 3}
+    title: Meadow
+  - bg: {fileID: 21300000, guid: 3d08787efba349e99c8d23171ffde3e2, type: 3}
+    title: Enchanted Lake
+  - bg: {fileID: 21300000, guid: 2718ded5e624457795903536d37e322d, type: 3}
+    title: Sky Island
+  - bg: {fileID: 21300000, guid: 7425a4aaa6084e02973eddae5c16b047, type: 3}
+    title: Island Ruins
+  - bg: {fileID: 21300000, guid: 8d1105b8019e40b9900987f07db45300, type: 3}
+    title: Paradise

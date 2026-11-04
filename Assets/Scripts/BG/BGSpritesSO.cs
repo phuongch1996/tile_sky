@@ -11,7 +11,7 @@ public class BGSpritesSO : ScriptableObject
     {
         foreach (var bg in bgSprites)
         {
-            if (bg.bg != null)
+            if (bg.bg != null && string.IsNullOrWhiteSpace(bg.title))
                 bg.title = bg.bg.name;
         }
     }

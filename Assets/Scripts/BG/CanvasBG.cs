@@ -41,13 +41,14 @@ public class CanvasBG : MonoBehaviour
         var rect = GetComponent<RectTransform>().rect;
         foreach (Image img in images)
         {
-            if (img)
+            if (img && img.sprite && rect.width > 0 && rect.height > 0)
             {
                 var bgRect = img.sprite.rect;
-                if ((rect.width / rect.height) < (bgRect.width / bgRect.height))
-                    img.GetComponent<RectTransform>().sizeDelta = new Vector2(rect.width * 2, rect.height);
+                float aspect = bgRect.width / bgRect.height;
+                if ((rect.width / rect.height) < aspect)
+                    img.rectTransform.sizeDelta = new Vector2(rect.height * aspect, rect.height);
                 else
-                    img.GetComponent<RectTransform>().sizeDelta = new Vector2(rect.width, rect.width * 2);
+                    img.rectTransform.sizeDelta = new Vector2(rect.width, rect.width / aspect);
             }
         }
     }

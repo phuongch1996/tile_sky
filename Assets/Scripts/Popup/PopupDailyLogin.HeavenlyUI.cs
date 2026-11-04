@@ -38,9 +38,9 @@ public partial class PopupDailyLogin
         txNextReward.richText = true;
         nextRewardGO = txNextReward.gameObject;
         PrepareDailyButton(btClose, new Vector2(125, 125), new Vector2(938, 418), null, null);
-        PrepareDailyButton(btClaim, new Vector2(655.36f, 245.76f), new Vector2(512, 1822.72f), actionArt, "CLAIM");
+        PrepareDailyButton(btClaim, new Vector2(655.36f, 245.76f), new Vector2(512, 1822.72f), actionArt, "Claim");
         PrepareFreeDailyClaim(atlas);
-        PrepareDailyButton(btAds, new Vector2(655.36f, 245.76f), new Vector2(512, 1822.72f), actionArt, "RECLAIM");
+        PrepareDailyButton(btAds, new Vector2(655.36f, 245.76f), new Vector2(512, 1822.72f), actionArt, "Reclaim");
 
         var boosters = new Sprite[3];
         for (int i = 0; i < boosters.Length; i++)
@@ -116,6 +116,9 @@ public partial class PopupDailyLogin
 
     void PrepareDailyButton(Button button, Vector2 size, Vector2 center, Sprite sprite, string label)
     {
+        // The original action labels use Free Royalty, matching Battle Pass Claim.
+        // The timer uses a different font and must not be the action-label template.
+        var labelTemplate = button.GetComponentInChildren<TextMeshProUGUI>(true);
         button.transform.SetParent(heavenlyDailyRoot, false);
         PlaceDailyRect((RectTransform)button.transform, size, center);
         foreach (Transform child in button.transform) child.gameObject.SetActive(false);
@@ -129,8 +132,18 @@ public partial class PopupDailyLogin
         image.enabled = image.raycastTarget = true;
         if (label != null)
         {
-            var text = DailyLabel(txNextReward, "Action label", button.transform,
-                new Vector2(400, 100), new Vector2(size.x * 0.59f, size.y * 0.48f), 64);
+            var text = DailyLabel(labelTemplate ? labelTemplate : txNextReward, "Action label", button.transform,
+                new Vector2(400, 100), size * 0.5f, 64);
+            if (labelTemplate)
+                text.fontSharedMaterial = labelTemplate.fontSharedMaterial;
+            text.fontStyle = FontStyles.Normal;
+            text.margin = Vector4.zero;
+            text.alignment = TextAlignmentOptions.Midline;
+            // Reclaim keeps the baked video icon; center its text in the remaining space.
+            var rect = text.rectTransform;
+            rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 0.5f);
+            // Center on the green button face, above the artwork's lower shadow/padding.
+            rect.anchoredPosition = new Vector2(button == btAds ? size.x * 0.09f : 0, size.y * 0.06f);
             text.text = label;
             text.outlineColor = new Color32(14, 62, 33, 255);
         }
@@ -155,8 +168,6 @@ public partial class PopupDailyLogin
             image.raycastTarget = false;
             half.SetAsFirstSibling();
         }
-        var label = btClaim.GetComponentInChildren<TextMeshProUGUI>();
-        PlaceDailyRect(label.rectTransform, new Vector2(400, 100), size * 0.5f);
     }
 
     void FitHeavenlyDailyUI()

@@ -1,0 +1,13 @@
+<ui:UXML
+    xmlns:ui="UnityEngine.UIElements"
+    xmlns="UnityEngine.UIElements"
+    xmlns:fba="Unity.Services.Leaderboards.Editor.Authoring.Shared.UI.DeploymentConfigInspectorFooter"
+    editor-extension-mode="True">
+    <Style src="project://database/Packages/com.unity.services.leaderboards/Editor/Authoring/UI/Assets/LeaderboardConfigAssetInspector.uss" />
+    <ui:VisualElement name="ContainerConfig"/>
+    <ui:VisualElement name="ContainerApplyRevert" class="apply-revert">
+        <ui:Button name="ApplyButton" text="Apply" class="grow-button"/>
+        <ui:Button name="RevertButton" text="Revert" class="grow-button"/>
+    </ui:VisualElement>
+    <fba:DeploymentConfigInspectorFooter />
+</ui:UXML>

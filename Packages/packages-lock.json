@@ -8,14 +8,13 @@
       "hash": "91bb0b64274699bf7befc0d4f8f49243164aad9d"
     },
     "com.coffee.ui-particle": {
-      "version": "https://github.com/mob-sakai/ParticleEffectForUGUI.git",
+      "version": "file:com.coffee.ui-particle",
       "depth": 0,
-      "source": "git",
+      "source": "embedded",
       "dependencies": {
         "com.unity.ugui": "1.0.0",
         "com.unity.modules.particlesystem": "1.0.0"
-      },
-      "hash": "04c1ca72cde82318e11eb1281dc4c3d314a2e68c"
+      }
     },
     "com.madsbangh.easybuttons": {
       "version": "https://github.com/madsbangh/EasyButtons.git#upm",
@@ -226,6 +225,31 @@
       "source": "builtin",
       "dependencies": {}
     },
+    "com.unity.microsoft.gdk": {
+      "version": "1.7.1",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.microsoft.gdk.discovery": "1.3.0"
+      },
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.microsoft.gdk.discovery": {
+      "version": "1.3.0",
+      "depth": 1,
+      "source": "registry",
+      "dependencies": {},
+      "url": "https://packages.unity.com"
+    },
+    "com.unity.microsoft.gdk.tools": {
+      "version": "1.7.0",
+      "depth": 0,
+      "source": "registry",
+      "dependencies": {
+        "com.unity.microsoft.gdk.discovery": "1.3.0"
+      },
+      "url": "https://packages.unity.com"
+    },
     "com.unity.mobile.android-logcat": {
       "version": "1.4.7",
       "depth": 0,
@@ -352,14 +376,13 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.services.leaderboards": {
-      "version": "2.3.3",
+      "version": "file:com.unity.services.leaderboards",
       "depth": 0,
-      "source": "registry",
+      "source": "embedded",
       "dependencies": {
-        "com.unity.services.core": "1.15.1",
-        "com.unity.services.authentication": "3.3.3"
-      },
-      "url": "https://packages.unity.com"
+        "com.unity.services.authentication": "3.3.3",
+        "com.unity.services.core": "1.15.1"
+      }
     },
     "com.unity.shadergraph": {
       "version": "17.6.0",
