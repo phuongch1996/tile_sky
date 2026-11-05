@@ -695,11 +695,20 @@ public partial class GameController : MonoBehaviour
             return;
 
         List<Sprite> allSprites = LevelManager.instance.tileSpritesSO.GetAllSprites();
+        if (allSprites.Count == 0)
+            return;
         List<Sprite> restoredSprites = new();
+        HashSet<int> restoredIndexes = new();
         foreach (int spriteIndex in data.itemSpriteIndexes)
         {
-            if (spriteIndex >= 0 && spriteIndex < allSprites.Count)
-                restoredSprites.Add(allSprites[spriteIndex]);
+            if (spriteIndex < 0)
+                continue;
+            // Keep saved tile-type positions intact when the artwork catalog shrinks.
+            int index = spriteIndex % allSprites.Count;
+            while (restoredIndexes.Count < allSprites.Count && restoredIndexes.Contains(index))
+                index = (index + 1) % allSprites.Count;
+            restoredIndexes.Add(index);
+            restoredSprites.Add(allSprites[index]);
         }
 
         if (restoredSprites.Count > 0)
@@ -1245,9 +1254,8 @@ public partial class GameController : MonoBehaviour
     {
         yield return new WaitUntil(() => itemTiles.Count == 0);
         gameState = GAME_STATE.WIN;
-        //gameTextScript.Clear();
-        Instantiate(clearAnim, clearAnim.transform.parent).SetActive(true);
-        yield return new WaitForSeconds(1.05f);
+        yield return new WaitUntil(() => !isClearAnim);
+        yield return StartCoroutine(PlayClearAnim(true));
         if (!GameConfig.isChallengeLevel)
             GameScript.instance.Win();
         else
@@ -2013,18 +2021,28 @@ public partial class GameController : MonoBehaviour
         likeAnimActive = 0;
         isLikeAnim = false;
     }
-    public GameObject clearAnim;
+    // Retained for existing scene references; clear visuals now use TrayClearEffect.
+    [HideInInspector] public GameObject clearAnim;
     bool clearAnimPlay;
     bool isClearAnim;
-    IEnumerator PlayClearAnim()
+    IEnumerator PlayClearAnim(bool force = false)
     {
-        if (!clearAnimPlay || isClearAnim)
+        if ((!force && !clearAnimPlay) || isClearAnim || slotParent == null || slotTransformList == null)
             yield break;
+
+        var positions = slotTransformList.Take(SlotCount)
+            .Where(slot => slot != null)
+            .Select(slot => slotParent.InverseTransformPoint(slot.position)).ToList();
+        if (positions.Count == 0)
+            yield break;
+
         isClearAnim = true;
-        clearAnim.SetActive(true);
-        yield return new WaitForSeconds(5);
-        clearAnim.SetActive(false);
         clearAnimPlay = false;
+        var root = new GameObject("Tray Clear Fragments and Bounce");
+        root.transform.SetParent(slotParent, false);
+        root.transform.localPosition = new Vector3(0f, 0f, -1f);
+        root.AddComponent<TrayClearEffect>().Initialize(positions);
+        yield return new WaitForSeconds(TrayClearEffect.Duration);
         isClearAnim = false;
     }
     public PoolObjectSpriteRenderer comboAnim;
@@ -2308,14 +2326,6 @@ public partial class GameController : MonoBehaviour
         yield return new WaitForSeconds(0.5f * Match3DurationMultiplier);
 
         AudioManager.instance.PlaySFXOneShot(AudioManager.SFX.BREAK);
-        Tween rocketTween = FinalMatchRocketFx.Play(
-            tiles,
-            slotParent != null ? slotParent : transform,
-            Match3FxSortingLayer,
-            Match3FxSortingOrder + 200);
-        if (rocketTween != null)
-            yield return rocketTween.WaitForCompletion();
-        else
         {
             List<GameObject> fxs = new();
             yield return PlayTrayMeteorMatchFx(tiles, fxs);
