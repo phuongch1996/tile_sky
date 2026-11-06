@@ -33,7 +33,7 @@ public sealed class TileModeMarker : MonoBehaviour
 
     void Refresh()
     {
-        if (kind == TileModeKind.None || tile == null || tile.item == null)
+        if (kind == TileModeKind.None || kind == TileModeKind.Coin || tile == null || tile.item == null)
         {
             if (label != null) label.gameObject.SetActive(false);
             return;
@@ -56,7 +56,6 @@ public sealed class TileModeMarker : MonoBehaviour
             TileModeKind.Poison => "POISON",
             TileModeKind.Bomb => bombResolved ? "BOMB OFF" : "BOMB " + bombMoves,
             TileModeKind.Winning => "TARGET",
-            TileModeKind.Coin => "COIN",
             _ => ""
         };
         label.color = kind switch

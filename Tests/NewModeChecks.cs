@@ -120,6 +120,18 @@ internal static class NewModeChecks
             "Existing negative tile types collide with new objectives");
         Check(NewModeRules.IsSpecialType(13, -3) && NewModeRules.IsSpecialType(14, -4), "Special tile rules wrong");
 
+        Check(NewModeRules.CoinTileCount(90, 14) == 39, "Coin targets consumed every ordinary triple");
+        Check(NewModeRules.CoinTileCount(120, 18) == 51, "Oversized coin target was not bounded");
+        Check(NewModeRules.CoinTileCount(0, 14) == 9, "Default coin target changed");
+        Check(NewModeRules.CoinTileCount(9, 1) == 0 && NewModeRules.CoinTileCount(9, 0) == 0,
+            "Tiny boards must use the ordinary clear-board fallback");
+        foreach (var coinLevel in activeLevels.Where(level => level.mode == 14))
+        {
+            int coins = NewModeRules.CoinTileCount(coinLevel.param, coinLevel.tileCount / 3);
+            Check(coinLevel.param == 0 || coinLevel.param == 9, "Legacy coin parameter was not migrated");
+            Check(coins == 9 && coins < coinLevel.tileCount, "Coin level does not retain ordinary tiles");
+        }
+
         var random = new Random(3721);
         for (int run = 0; run < 250; run++)
         {

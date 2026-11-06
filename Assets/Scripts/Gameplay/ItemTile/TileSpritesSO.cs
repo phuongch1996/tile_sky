@@ -7,6 +7,7 @@ public class TileSpritesSO : ScriptableObject
     public List<Sprite> itemSprites;
     public List<Sprite> itemSprites2;
     public Sprite rainbowSprite;
+    public Sprite goldSprite;
     public Sprite bgSprite;
     public Sprite fogSprite;
     public List<ColorTileSprites> itemColorSprites;

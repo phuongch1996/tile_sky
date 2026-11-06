@@ -40,7 +40,10 @@ Giữ `data`, `tileCount`, `itemTypeCount`, `mode`, `param` đang dùng. `bombMo
 | 11 | Số bomb mỗi tầng; mặc định 1 | `bombMoves` mặc định 5. Chỉ bomb lộ trên board giảm lượt; tile vừa được chọn không giảm. Bomb về 0 kích hoạt một lần, ép thêm một tile thường nếu còn chỗ. Thu thập/ghép bomb trước khi về 0 tránh kích hoạt. Thắng/thua theo luật cũ |
 | 12 | Số khay mục tiêu; mặc định 3, giới hạn số tầng không rỗng | Mỗi tầng được chọn có một khay 2×2 dưới tile. Mở tất cả khay để thắng; phần tile còn lại tự thu dọn. Khay đã mở giữ trạng thái khi Undo |
 | 13 | Số đợt TARGET; mặc định 3 | Mỗi đợt là 3 tile chung một loại được chuyển thành TARGET. Ghép đủ đợt để thắng. Nếu không còn một bộ ba đầy đủ trên board để tạo đợt tiếp theo, tiếp tục dọn board theo luật thường |
-| 14 | Số tile COIN; mặc định 9, làm tròn xuống bộ ba, tối thiểu một bộ, giới hạn số triple có sẵn | Ghép hết COIN để thắng, rồi tự thu dọn tile còn lại. COIN là mục tiêu màn chơi, không tự cộng thêm tiền ngoài phần thưởng thắng hiện tại |
+| 14 | Số tile vàng; mặc định 9, làm tròn xuống bộ ba, luôn chừa ít nhất một bộ ba thường; bàn không đủ hai bộ dùng luật dọn bàn | Ghép hết tile vàng để thắng, rồi tự thu dọn tile còn lại. Dùng icon vàng, không hiển thị nhãn COIN. Không tự cộng thêm tiền ngoài phần thưởng thắng hiện tại |
+
+Các level X0 đã đổi tham số cũ 90/120 sang 9 tile vàng trong cả CSV và Levels.asset.
+Save mode 14 có tham số khác cấu hình hiện tại sẽ khởi tạo lại bàn khi vào level; vàng và tiến trình mở khóa không bị reset.
 
 Bomb đếm một lượt mỗi lần chọn tay và một lượt mỗi lần dùng Hint; các tile bị ép lên khay không tự giảm thêm lượt.
 Undo không hoàn lại lượt bomb đã tiêu. Countdown, trạng thái bomb đã kích hoạt, số đợt TARGET và khay đã mở được lưu.

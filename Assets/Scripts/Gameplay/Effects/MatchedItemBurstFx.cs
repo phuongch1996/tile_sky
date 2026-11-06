@@ -157,7 +157,7 @@ public class MatchedItemBurstFx : MonoBehaviour
         if (tile == null)
             return false;
 
-        if (tile.IsEventTile)
+        if (tile.IsEventTile && tile.eventTileExtend.EventUp)
         {
             sourceRenderer = FirstSprite(tile.eventTileExtend.goldPieces, false);
             if (sourceRenderer != null)

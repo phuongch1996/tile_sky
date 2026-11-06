@@ -36,8 +36,10 @@ public class EventTileExtend : PoolObject
     public void SetCounter()
     {
         glow.gameObject.SetActive(false);
-        eventTileList.Add(itemTile);
+        if (!eventTileList.Contains(itemTile))
+            eventTileList.Add(itemTile);
         counter = 4;
+        foreach (var piece in goldPieces) piece.gameObject.SetActive(true);
         ResetGoldPiecesVisual();
     }
     public void RestoreCounter(int value)
@@ -46,30 +48,31 @@ public class EventTileExtend : PoolObject
         if (!eventTileList.Contains(itemTile))
             eventTileList.Add(itemTile);
 
-        counter = Mathf.Clamp(value, 0, goldPieces.Length);
+        // Retain the serialized counter for compatibility; partial damage no longer exists.
+        counter = value > 0 ? 4 : 0;
         ResetGoldPiecesVisual();
-        for (int i = 0; i < goldPieces.Length; i++)
-            goldPieces[i].gameObject.SetActive(i < counter);
+        foreach (var piece in goldPieces) piece.gameObject.SetActive(true);
+        gameObject.SetActive(counter > 0);
     }
-    public void ReduceCounter()
+    public bool TryCollect()
     {
-        Debug.Log("reduce counter");
-        if (counter == 0)
-            return;
-        if (itemTile.state == ITEMTILE_STATE.TOUCHABLE)
-        {
-            int index = --counter;
-            goldPieces[index].gameObject.SetActive(false);
-            //Spine.Unity.SkeletonAnimation vaporizeFx = Instantiate(GameController.instance.vaporizeAnim, transform);
-            //var vaporizeFx = PoolManager.instance.GetObject<PoolObjectSpine>(GameController.instance.vaporizeAnim, transform, 0.5f);
-            //vaporizeFx.transform.localPosition = Vector3.zero;
-            goldParticle.Play(true);
-            ResetGoldPiecesVisual();
-            itemTile.sprites.transform.DOKill();
-            itemTile.sprites.transform.localScale = Vector3.one;
-            itemTile.sprites.transform.localRotation = Quaternion.identity;
-            itemTile.sprites.transform.DOPunchScale(Vector3.one * 0.1f, 0.5f);//.OnComplete(() => Destroy(vaporizeFx.gameObject));
-        }
+        if (!EventUp) return false;
+        counter = 0;
+        EventCounter(true);
+        return true;
+    }
+
+    public void UndoCollection()
+    {
+        if (EventUp) return;
+        transform.DOKill(false);
+        isCounterAnimating = false;
+        transform.SetParent(itemTile.sprites, false);
+        transform.localPosition = Vector3.zero;
+        gameObject.SetActive(true);
+        goldParticle.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+        SetCounter();
+        EventCounter(false);
     }
 
     public void ResetGoldPiecesVisual()

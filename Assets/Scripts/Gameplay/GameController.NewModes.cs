@@ -131,8 +131,9 @@ public partial class GameController
             return false;
         }
         tile.tileType = type;
-        // Reuse an existing item sprite; the badge gives the objective its identity.
-        var sprite = itemSpritesUsing[0];
+        var sprite = type == NewModeRules.CoinTileType
+            ? LevelManager.instance.tileSpritesSO.goldSprite
+            : itemSpritesUsing[0];
         tile.item.sprite = sprite;
         float edge = Mathf.Max(sprite.rect.width, sprite.rect.height);
         tile.item.size = new Vector2(sprite.rect.width / edge, sprite.rect.height / edge) * 0.825f;

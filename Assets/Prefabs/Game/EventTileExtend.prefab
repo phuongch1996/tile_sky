@@ -20253,7 +20253,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   poolTfm: {fileID: 0}
-  ungoldItemSprite: {fileID: 6883030276159185215, guid: 1e4069ff61028864cb072f01e96434b7, type: 3}
+  ungoldItemSprite: {fileID: 21300000, guid: 3a45294718c048d694a1bdda02695a44, type: 3}
   goldPieces:
   - {fileID: 1456817633094325095}
   - {fileID: 3166917590453560700}

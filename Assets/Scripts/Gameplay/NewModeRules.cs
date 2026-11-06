@@ -17,7 +17,8 @@ public static class NewModeRules
     public static int CoinTileCount(int parameter, int availableTriples)
     {
         int requested = parameter > 0 ? Math.Max(1, parameter / 3) : 3;
-        return Math.Min(requested, Math.Max(0, availableTriples)) * 3;
+        // Leave at least one ordinary triple for the early-win objective to clear.
+        return Math.Min(requested, Math.Max(0, availableTriples - 1)) * 3;
     }
 
     public static bool IsSpecialType(int mode, int type) =>

@@ -419,20 +419,6 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
         }
         if (state == ITEMTILE_STATE.TOUCHABLE || state == ITEMTILE_STATE.HOVERING)
         {
-            if (IsEventTile)
-            {
-                if (eventTileExtend.EventUp)
-                {
-                    EventTileExtend.EventCounter(true);
-                    //GameUI.instance.GoldTileUpdate(eventTileExtend);
-                    GameScript.instance.GoldTileUpdate(eventTileExtend);
-                    eventTileExtend.counter = 0;
-                    //Spine.Unity.SkeletonAnimation vaporizeFx = Instantiate(GameController.instance.vaporizeAnim, transform);
-                    //var vaporizeFx = PoolManager.instance.GetObject<PoolObjectSpine>(GameController.instance.vaporizeAnim, transform, 0.5f);
-                    //vaporizeFx.transform.localPosition = Vector3.zero;
-                    eventTileExtend.goldParticle.Play(true);
-                }
-            }
             InvokeUpAsButton();
         }
     }
@@ -471,8 +457,6 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
                 AudioManager.instance.PlaySFXOneShot(AudioManager.SFX.TAP);
         }
 
-        foreach (var eventTile in EventTileExtend.eventTileList)
-            eventTile.eventTileExtend.ReduceCounter();
         if (GameConfig.vib)
             GameConfig.VibratePop();
         //AudioManager.instance.PlaySFXOneShot(AudioManager.SFX.TAP);
@@ -489,6 +473,12 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
 
     public virtual void MoveTileToSlot(bool delay = false)
     {
+        // All collection paths (tap, Hint and automatic moves) reveal the same star.
+        if (IsEventTile && eventTileExtend.TryCollect())
+        {
+            GameScript.instance.GoldTileUpdate(eventTileExtend);
+            eventTileExtend.goldParticle.Play(true);
+        }
         if (GameConfig.gameMode == GAME_MODE.tile_freeze)
             IceTileVariant.UnfreezeNeighbours(this);
 
@@ -645,7 +635,7 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
         if (state == ITEMTILE_STATE.SLOTTED)
         {
             if (IsEventTile)
-                eventTileExtend.counter = 0;
+                eventTileExtend.UndoCollection();
             GameController.instance.gameState = GAME_STATE.UNDO;
             gameObject.transform.SetParent(GameController.instance.floorTransformList[floor - 1]);
             StopTileTrail(true);

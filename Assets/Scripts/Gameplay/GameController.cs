@@ -570,6 +570,9 @@ public partial class GameController : MonoBehaviour
             return false;
         if (data.gameMode != (int)GameConfig.gameMode)
             return false;
+        // Rebuild obsolete coin boards after correcting the level's target count.
+        if (gameMode == GAME_MODE.tile_gold_2 && data.parameter != leveljson.param)
+            return false;
         if (HasNewMode && data.modeProgress == null)
             return false;
         if (HasNewMode && data.modeProgress.trays != null && data.modeProgress.trays.Any(tray =>
@@ -793,7 +796,8 @@ public partial class GameController : MonoBehaviour
         if (tileProgress.isEventTile && isGoldTile && GameConfig.gameMode != GAME_MODE.tile_gold)
         {
             item.SetEventTile();
-            item.eventTileExtend.RestoreCounter(tileProgress.eventCounter);
+            // Legacy partial coatings are restored whole on the board, never in the tray.
+            item.eventTileExtend.RestoreCounter(tileProgress.slottedIndex >= 0 ? 0 : 4);
         }
         else if (tileProgress.isRainbow)
         {
@@ -1488,11 +1492,6 @@ public partial class GameController : MonoBehaviour
         yield return new WaitForEndOfFrame();
         OnNewModeHintStarted(suggestTiles);
 
-        foreach (var eventTile in EventTileExtend.eventTileList)
-        {
-            eventTile.eventTileExtend.ReduceCounter();
-            yield return null;
-        }
         if (TryGetHintMergeTiles(suggestTiles, out List<ItemTile> hintMergeTiles))
         {
             if (GameConfig.gameMode == GAME_MODE.tile_freeze)

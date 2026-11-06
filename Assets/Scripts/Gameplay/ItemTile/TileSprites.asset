@@ -11,6 +11,7 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: ca9034abab6456143aecc1d5ce9de952, type: 3}
   m_Name: TileSprites
+  goldSprite: {fileID: 21300000, guid: fd7fc9d6ef5946dba32be4b9dba73a4c, type: 3}
   m_EditorClassIdentifier: 
   itemSprites:
   - {fileID: 21300000, guid: d70e8bec27a44254af1afd3936fb6353, type: 3}
@@ -44,7 +45,6 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 18350da7a26949f2828205cb3c277307, type: 3}
   - {fileID: 21300000, guid: 35d34942dfcb442f9dd73f52e5cb1b59, type: 3}
   - {fileID: 21300000, guid: 48db0df558e54e0397f06fec7ec030bd, type: 3}
-  - {fileID: 21300000, guid: 3a45294718c048d694a1bdda02695a44, type: 3}
   - {fileID: 21300000, guid: d7fb1a0845b8454d872aea26906a5fb1, type: 3}
   - {fileID: 21300000, guid: 24dfa90a07044876b62ee16a940a63bb, type: 3}
   - {fileID: 21300000, guid: d068b019d543426290c428eeb5dc3609, type: 3}
@@ -88,7 +88,6 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 18350da7a26949f2828205cb3c277307, type: 3}
   - {fileID: 21300000, guid: 35d34942dfcb442f9dd73f52e5cb1b59, type: 3}
   - {fileID: 21300000, guid: 48db0df558e54e0397f06fec7ec030bd, type: 3}
-  - {fileID: 21300000, guid: 3a45294718c048d694a1bdda02695a44, type: 3}
   - {fileID: 21300000, guid: d7fb1a0845b8454d872aea26906a5fb1, type: 3}
   - {fileID: 21300000, guid: 24dfa90a07044876b62ee16a940a63bb, type: 3}
   - {fileID: 21300000, guid: d068b019d543426290c428eeb5dc3609, type: 3}
