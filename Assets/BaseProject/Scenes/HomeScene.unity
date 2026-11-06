@@ -11488,7 +11488,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -5597500024025550351, guid: 5ada589ce35d02840a6974579d655303, type: 3}
+  m_Sprite: {fileID: 21300000, guid: fd7fc9d6ef5946dba32be4b9dba73a4c, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -12253,9 +12253,9 @@ MonoBehaviour:
   - {fileID: 21300000, guid: 3404909e2545b51489f35d1225ee6e8c, type: 3}
   - {fileID: 21300000, guid: 943e0d85c451e614abe38f9b57b0e7e8, type: 3}
   goldSprites:
-  - {fileID: 7022884558154076834, guid: 314d6964e025a9a488047ea2f3e8a3a3, type: 3}
-  - {fileID: -20479217534241763, guid: dee6f233d6514be4a8bd568c7d3cb1f9, type: 3}
-  - {fileID: 2642053492378982893, guid: d2650120b2282a743a05f8f2109482ef, type: 3}
+  - {fileID: 21300000, guid: fd7fc9d6ef5946dba32be4b9dba73a4c, type: 3}
+  - {fileID: 21300000, guid: fd7fc9d6ef5946dba32be4b9dba73a4c, type: 3}
+  - {fileID: 21300000, guid: fd7fc9d6ef5946dba32be4b9dba73a4c, type: 3}
   currentDailyChallengeVersionId: 
   dailyChallengeTestDayOfYear: 0
 --- !u!1 &1163094459
@@ -15128,7 +15128,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -20479217534241763, guid: dee6f233d6514be4a8bd568c7d3cb1f9, type: 3}
+  m_Sprite: {fileID: 21300000, guid: fd7fc9d6ef5946dba32be4b9dba73a4c, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -27340,7 +27340,7 @@ PrefabInstance:
     - target: {fileID: 2663876381625005741, guid: 19a925ec70c88be4e8123a81ba7a9694, type: 3}
       propertyPath: m_Sprite
       value: 
-      objectReference: {fileID: -5597500024025550351, guid: 5767f08172ba20040bd6e637a39d5076, type: 3}
+      objectReference: {fileID: 21300000, guid: fd7fc9d6ef5946dba32be4b9dba73a4c, type: 3}
     - target: {fileID: 6238576345288689487, guid: 19a925ec70c88be4e8123a81ba7a9694, type: 3}
       propertyPath: m_fontSize
       value: 60

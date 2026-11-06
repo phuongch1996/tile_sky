@@ -14,7 +14,7 @@ public partial class PopupFreeGold
     void EnsureHeavenlyFreeGoldUI()
     {
         if (freeGoldArt) return;
-        var sprite = Resources.Load<Sprite>("HeavenlyFreeGold/PanelClean");
+        var sprite = Resources.Load<Sprite>("HeavenlyFreeGold/PanelClean-v2");
         var buttons = Resources.Load<Texture2D>("HeavenlyFreeGold/Buttons");
         if (!sprite || !buttons) return;
 

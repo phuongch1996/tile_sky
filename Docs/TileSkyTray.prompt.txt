@@ -1,0 +1,13 @@
+Tool: built-in image_gen (transparent_background: true)
+Reference 1: Assets/Tile Space/Gameplay/Untitled-17.png (geometry template)
+Reference 2: Assets/Art/HomeTileFlex/Icon-Settings.png (style reference)
+Output: Assets/Art/TileSky/SkyTray.png
+
+Prompt:
+Use case: precise-object-edit. Create a production-ready transparent PNG replacement for Image 1, a very wide horizontal 7-slot tile-matching game tray for Tile Sky. Image 1 is the GEOMETRY TEMPLATE: preserve its exact overall canvas aspect ratio 1451:302, outer silhouette footprint, all SEVEN rounded-square wells, their exact centers, widths, heights, spacing and horizontal alignment. Wells occupy x approximately [52..240], [245..432], [439..627], [632..820], [825..1013], [1018..1206], [1212..1399] and y [45..232] in the reference. Preserve these exact seven slot silhouettes and placement. Keep empty wells clean for readable item tiles. Image 2 is STYLE REFERENCE ONLY for polished glossy cyan/blue mobile game UI. Redesign the tray as a friendly heavenly sky artifact: replace thick yellow/gold trim with a luminous pale cyan / turquoise bevel, white pearly highlights, a blue lower bevel, calm medium-deep azure recessed wells with fine lighter blue edge lines and very subtle small four-point star glints at the exact well centers. Tiny restrained white cloud accents only within the existing left and right end-cap footprint, with no extra space taken from the wells. Premium cheerful cartoon 2D/soft 3D, crisp clean edges, front orthographic UI view, no perspective change. Avoid gold, metallic yellow, heavy dark navy, wood, stone, characters, text, numbers, watermark. No backdrop, genuine transparent alpha outside the tray. Exactly seven wells, no extra wells. Keep overall size and all wells geometrically identical to the first reference; restyle materials and colors only. Return only the complete isolated horizontal tray graphic, tightly on the same wide canvas.
+
+Unity import:
+The generated PNG has a 2171 x 724 canvas. Its sprite rect is x=0, y=136, width=2171, height=452 (Unity bottom-left coordinates), excluding transparent padding. GameScene keeps the existing sliced SpriteRenderer size of 8.1 x 1.7, its transform, the backing, and every slot transform. The original art remains available.
+
+Alignment correction:
+The generated well centers differ slightly from the old artwork. GameScene's seven slot anchors now follow the measured well borders (source pixel x pairs: 93/364, 377/649, 659/937, 945/1222, 1235/1510, 1518/1793, 1803/2076; top/bottom y: 204/477). ItemTile uses these anchors directly, ignoring disabled legacy slot sprite bounds, and fits each tile background within 92% of a conservative 1.01 x 1.02 inner well. The tray renderer's overall size remains unchanged.

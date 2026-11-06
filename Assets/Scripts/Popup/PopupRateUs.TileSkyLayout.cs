@@ -46,24 +46,7 @@ public partial class PopupRateUs
 
         var reward = (RectTransform)goldsGO.transform;
         PlaceRateRect(reward, root, new Vector2(145, 70), new Vector2(-45, -103.3333f));
-        var amount = goldsGO.GetComponent<TextMeshProUGUI>();
-        if (amount)
-        {
-            amount.alignment = TextAlignmentOptions.Center;
-            amount.enableAutoSizing = true;
-            amount.fontSizeMin = 48;
-            amount.fontSizeMax = 68;
-            amount.color = Color.white;
-            amount.raycastTarget = false;
-            amount.margin = Vector4.zero;
-        }
-        var coin = goldsGO.GetComponentInChildren<Image>(true);
-        if (coin)
-        {
-            PlaceRateRect(coin.rectTransform, reward, new Vector2(100, 80), new Vector2(118, 0));
-            coin.preserveAspect = true;
-            coin.raycastTarget = false;
-        }
+        goldsGO.SetActive(false);
         PlaceRateRect((RectTransform)btRate.transform, root, new Vector2(450, 115), new Vector2(0, -198.3333f));
         PlaceRateRect((RectTransform)btClose.transform, root, new Vector2(110, 110), new Vector2(410, 250));
 

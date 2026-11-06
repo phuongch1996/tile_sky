@@ -69,8 +69,7 @@ public partial class PopupRateUs : Popup
             bt.interactable = true;
             bt.onClick.RemoveAllListeners();
         }
-        //goldsGO.SetActive(PlayerPrefs.GetInt(ratingKey, 0) == 0);
-        goldsGO.SetActive(!HasRating());
+        goldsGO.SetActive(false);
         txRateDesc.text = "Are you enjoying Tile Space?\nLeave us a 5 stars rating";
         SetStars(4);
         base.Open();

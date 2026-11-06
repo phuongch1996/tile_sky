@@ -1,0 +1,7 @@
+Tool: built-in image_gen; transparent_background: true
+Edit target: Assets/Resources/HeavenlyFreeGold/PanelClean.png
+Coin reference: Assets/Art/HomeTileFlex/Icon-Gold.png
+Output: Assets/Resources/HeavenlyFreeGold/PanelClean-v2.png
+
+Prompt:
+Use case: precise-object-edit. Image 1 is an existing Tile Sky mobile game's Free Gold popup panel bitmap and is the EDIT TARGET. Image 2 is the EXACT NEW GOLD COIN design to insert. Change only the old plain coin pile illustration in the upper central panel, approximately x=380..755, y=230..668 of the 1158x1360 reference canvas, replacing it with ONE large upright gold coin that matches Image 2 exactly: circular coin, gold rim, raised five-point star at center and laurel branches below. Fit the entire new coin and its soft shadow within the previous illustration footprint, centered horizontally above the X150 label, with comfortable separation from text. Keep ALL other artwork, composition, outline, panel proportions, existing transparent background and all text completely unchanged: FREE GOLD, X150, RESET EVERYDAY. Preserve the empty lower half for live UI controls, white cloud and gold trim, blue gradient, header, decorative stars, halo and wings. Do not add any text, additional coins, decorations or backdrop. No crop, no change to overall canvas proportions. Transparent PNG with real alpha.

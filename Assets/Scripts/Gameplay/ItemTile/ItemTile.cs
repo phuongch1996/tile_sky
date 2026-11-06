@@ -6,7 +6,10 @@ using UnityEngine.EventSystems;
 
 public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
 {
-    static readonly Vector3 SlottedScale = Vector3.one * 1.1f;
+    const float SlottedScale = 1.1f * 0.95f;
+    // Inner well dimensions measured from SkyTray's imported rect, in tray units.
+    static readonly Vector2 SlottedCellSize = new Vector2(1.01f, 1.02f);
+    const float SlottedCellFill = 0.92f;
     const float SlotFlyDuration = 0.34f;
     const int RocketFlameTextureWidth = 192;
     const int RocketFlameTextureHeight = 96;
@@ -527,20 +530,23 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
             return;
 
         gameObject.transform.SetParent(slotTransform, true);
+        Vector3 slotScale = GetSlottedScale(slotTransform);
+        Vector3 slotPosition = GetSlottedPosition(slotScale);
+        transform.localRotation = Quaternion.identity;
         Debug.Log(transform.parent);
         sprites.transform.DOKill();
         sprites.transform.DOLocalMove(Vector3.zero, 0);
         sprites.transform.DOLocalRotate(Vector3.zero, 0);
         sprites.transform.DOScale(Vector3.one, 0.35f).SetEase(Ease.OutBack);
-        gameObject.transform.DOScale(delay ? Vector3.one * 1.75f : SlottedScale, 0.35f);
+        gameObject.transform.DOScale(delay ? slotScale * (1.75f / SlottedScale) : slotScale, 0.35f);
         //gameObject.transform.DOMove(MovePos(PlayTestController.instance.slotTransformList[_slotted].transform.position), 0.25f)
         Vector3 halfLocalPos = gameObject.transform.localPosition / 2;
         Vector3 curveLocation = halfLocalPos + (halfLocalPos.x < 0 ? new Vector3(halfLocalPos.y, -halfLocalPos.x) : new Vector3(-halfLocalPos.y, halfLocalPos.x)) / 4;
         StartTileTrail();
-        gameObject.transform.DOLocalPath(new Vector3[] { curveLocation, Vector3.zero }, SlotFlyDuration, PathType.CatmullRom).SetDelay(delay ? 0.35f : 0)
+        gameObject.transform.DOLocalPath(new Vector3[] { curveLocation, slotPosition }, SlotFlyDuration, PathType.CatmullRom).SetDelay(delay ? 0.35f : 0)
             .OnStart(() =>
             {
-                gameObject.transform.DOScale(SlottedScale, SlotFlyDuration);
+                gameObject.transform.DOScale(slotScale, SlotFlyDuration);
                 //GameScript.instance.PowerUpsInteractable();
             })
             .OnComplete(() =>
@@ -576,6 +582,29 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
                 GameScript.instance.PowerUpsInteractable();
             });
     }
+    Vector3 GetSlottedScale(Transform slot)
+    {
+        // Fit the background inside the painted well, preserving its proportions.
+        Vector3 scale = slot.localScale;
+        float size = Mathf.Min(Mathf.Abs(scale.x), Mathf.Abs(scale.y)) * SlottedScale;
+        Vector3 backgroundSize = Vector3.Scale(bg.localBounds.size, bg.transform.localScale);
+        if (backgroundSize.x > 0f && backgroundSize.y > 0f)
+            size = Mathf.Min(size, SlottedCellSize.x * SlottedCellFill / backgroundSize.x,
+                SlottedCellSize.y * SlottedCellFill / backgroundSize.y);
+        return new Vector3(size / Mathf.Max(Mathf.Abs(scale.x), 0.0001f),
+            size / Mathf.Max(Mathf.Abs(scale.y), 0.0001f),
+            size / Mathf.Max(Mathf.Abs(scale.z), 0.0001f));
+    }
+
+    Vector3 GetSlottedPosition(Vector3 scale)
+    {
+        // Slot anchors follow the painted wells; disabled legacy slot sprites have other pivots.
+        Vector3 tileCenter = sprites.InverseTransformPoint(bg.transform.TransformPoint(bg.localBounds.center));
+        Vector3 position = -Vector3.Scale(tileCenter, scale);
+        position.z = 0f;
+        return position;
+    }
+
     void SlottedMove(int i)
     {
         if (state == ITEMTILE_STATE.SLOTTED)
@@ -587,13 +616,15 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
             sprites.transform.DOLocalMove(Vector3.zero, 0);
             sprites.transform.DOLocalRotate(Vector3.zero, 0);
             sprites.transform.localScale = Vector3.one;
-            gameObject.transform.DOScale(SlottedScale, 0.05f);
             Transform slotTransform = GameController.instance.GetSlotTransform(i);
             if (slotTransform == null)
                 return;
 
             gameObject.transform.SetParent(slotTransform, true);
-            gameObject.transform.DOLocalMove(Vector3.zero, 0.2f).OnComplete(() =>
+            transform.localRotation = Quaternion.identity;
+            Vector3 slotScale = GetSlottedScale(slotTransform);
+            gameObject.transform.DOScale(slotScale, 0.05f);
+            gameObject.transform.DOLocalMove(GetSlottedPosition(slotScale), 0.2f).OnComplete(() =>
             {
                 if (GameController.instance.match3Items.Contains(this))
                     GameController.instance.Remove3Match(this);
@@ -620,10 +651,9 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
             return;
 
         gameObject.transform.SetParent(slotTransform, false);
-        gameObject.transform.position = slotTransform.position;
-        gameObject.transform.localPosition = Vector3.zero;
         gameObject.transform.localRotation = Quaternion.identity;
-        gameObject.transform.localScale = SlottedScale;
+        gameObject.transform.localScale = GetSlottedScale(slotTransform);
+        gameObject.transform.localPosition = GetSlottedPosition(transform.localScale);
         SetSortingLayer("Slotted");
         SetSortingOrder(i);
         if (!is2Up)
