@@ -5116,7 +5116,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 310286281}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -10515,7 +10515,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 588695590}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
@@ -14660,7 +14660,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 2579681243058633325, guid: b791033f19b727c42aa70be333749c45, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 27cdb31d1485477d921cdb0d4a823f85, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -19900,7 +19900,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 2579681243058633325, guid: b791033f19b727c42aa70be333749c45, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 27cdb31d1485477d921cdb0d4a823f85, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -20251,6 +20251,7 @@ MonoBehaviour:
   txGoldTileCounter: {fileID: 2023455061}
   comboCountGO: {fileID: 131091048}
   txComboCounter: {fileID: 384526788}
+  objectiveTrayFrame: {fileID: 1572592411}
   challengeTimerGO: {fileID: 2124132247}
   txChallengeTimer: {fileID: 1444238779}
   timer: 0
@@ -29140,6 +29141,7 @@ MonoBehaviour:
   fadeIgnore: []
   maskableList: []
   showTopBar: 0
+  tutorialFrameSprite: {fileID: 21300000, guid: 81d3fb8abc8e417781f83d42c6bbb095, type: 3}
   tutorials:
   - {fileID: 479443149}
   - {fileID: 105088277}
@@ -33069,7 +33071,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 2579681243058633325, guid: b791033f19b727c42aa70be333749c45, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 27cdb31d1485477d921cdb0d4a823f85, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -34717,7 +34719,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 5327445567416267867, guid: dc5736b33d84d1a499dc420a3ebc972e, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 48c9537c507840c2b68f93670259456a, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1
@@ -36095,7 +36097,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 2579681243058633325, guid: b791033f19b727c42aa70be333749c45, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 27cdb31d1485477d921cdb0d4a823f85, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

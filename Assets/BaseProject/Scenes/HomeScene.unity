@@ -1085,6 +1085,7 @@ MonoBehaviour:
   - {fileID: 184377154}
   loadProgress: {fileID: 209993630}
   txLoadProgress: {fileID: 184377154}
+  loadingStarSprite: {fileID: 21300000, guid: 3fa09b8ce24c0db4ba055023516f98ca, type: 3}
   graphicRaycaster: {fileID: 115983229}
   txLoadingDesc: {fileID: 883303519}
   videoPlayer: {fileID: 1455674470}
@@ -2018,10 +2019,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 1356074239}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0.5}
-  m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 110}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 65}
+  m_SizeDelta: {x: 0, y: 80}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &184377154
 MonoBehaviour:
@@ -2043,7 +2044,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 
+  m_text: Loading 0%
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e1c44b8c4cd0f4b4ab0227fc7a484d8d, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: 69d8955c2f4ac194485912d93bc96b5f, type: 2}
@@ -2070,12 +2071,12 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 90
-  m_fontSizeBase: 90
+  m_fontSize: 54
+  m_fontSizeBase: 54
   m_fontWeight: 400
   m_enableAutoSizing: 1
   m_fontSizeMin: 18
-  m_fontSizeMax: 90
+  m_fontSizeMax: 54
   m_fontStyle: 0
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
@@ -15837,7 +15838,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 8b8726b1f3525e74d881948da90e3237, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 5eab8778647b41b5bc58331e150f8077, type: 3}
   m_Type: 0
   m_PreserveAspect: 1
   m_FillCenter: 1

@@ -101,6 +101,8 @@ public class GameScript : MonoBehaviour
     private void Awake()
     {
         instance = this;
+        PrepareTrayCounter(goldTileCountGO.GetComponent<RectTransform>(), new Vector2(260f, 130f));
+        PrepareTrayCounter(comboCountGO.GetComponent<RectTransform>(), new Vector2(260f, 130f));
         foreach (var popup in FindObjectsByType<Popup>(FindObjectsInactive.Include, FindObjectsSortMode.None))
         {
             popup.SetupTweenCallback();
@@ -195,6 +197,8 @@ public class GameScript : MonoBehaviour
     [Space]
     public GameObject comboCountGO;
     public TextMeshProUGUI txComboCounter;
+    [SerializeField] private SpriteRenderer objectiveTrayFrame;
+    private RectTransform modeObjectiveCounter;
     [Space]
     public GameObject challengeTimerGO;
     public TextMeshProUGUI txChallengeTimer;
@@ -233,16 +237,31 @@ public class GameScript : MonoBehaviour
     {
         txLevel.text = $"Level {GameConfig.level}";
         int diff = LevelManager.instance.GetLevelDifficulty(GameConfig.level);
-        levelTagGO.SetActive(diff != 0 || GameConfig.gameMode == GAME_MODE.tile_gold);
-        txLevelTag.text = diff switch
+        levelTagGO.SetActive(false);
+        // Apply this at runtime as well as in the scene so loaded UI state
+        // cannot bring back the level frame or difficulty banner.
+        if (levelGO.TryGetComponent<Image>(out var levelFrame))
+            levelFrame.enabled = false;
+        levelTagImg.enabled = false;
+        Color32 outlineColor = diff switch
         {
-            1 => "Hard!",
-            2 => "Super Hard!",
-            _ => "Gold level!"
+            1 => new Color32(220, 35, 45, 255),
+            2 => new Color32(140, 45, 200, 255),
+            _ => new Color32(25, 65, 125, 255)
         };
-        levelTagImg.sprite = levelTagSprites[diff];
+        StyleLevelText(txLevel, outlineColor);
         levelGO.SetActive(true);
-        levelGO.transform.parent.GetComponent<RectTransform>().anchoredPosition = new Vector2(0, levelTagGO.activeSelf ? 30 : 0);
+        levelGO.transform.parent.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
+    }
+
+    private static void StyleLevelText(TextMeshProUGUI text, Color32 outlineColor)
+    {
+        text.color = Color.white;
+        text.outlineColor = outlineColor;
+        text.outlineWidth = 0.175f;
+        // The original material uses a red outline texture. Use white so the
+        // per-text outline color also renders correctly for Super Hard levels.
+        text.fontMaterial.SetTexture("_OutlineTex", Texture2D.whiteTexture);
     }
     public void ChallengeText()
     {
@@ -273,6 +292,55 @@ public class GameScript : MonoBehaviour
     public void OnEventCounter(int count, int total)
     {
         txGoldTileCounter.text = $"{count}/{total}";
+    }
+
+    private void LateUpdate()
+    {
+        if (!IsLevelEntering && !IsReturningHome)
+            PositionTrayCounters();
+    }
+
+    public void RegisterModeObjectiveCounter(RectTransform counter)
+    {
+        modeObjectiveCounter = counter;
+        PrepareTrayCounter(counter, new Vector2(850f, 64f));
+        PositionTrayCounters();
+    }
+
+    private void PrepareTrayCounter(RectTransform counter, Vector2 size)
+    {
+        if (objectiveTrayFrame == null || counter == null)
+            return;
+        // Keep counters independent of the level label and its visibility.
+        counter.SetParent(levelGO.transform.parent, false);
+        counter.anchorMin = counter.anchorMax = new Vector2(0.5f, 0.5f);
+        counter.pivot = new Vector2(0.5f, 0f);
+        counter.sizeDelta = size;
+    }
+
+    private void PositionTrayCounters()
+    {
+        if (objectiveTrayFrame == null || Camera.main == null)
+            return;
+        var parent = (RectTransform)levelGO.transform.parent;
+        var canvas = parent.GetComponentInParent<Canvas>();
+        var uiCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        Bounds trayBounds = objectiveTrayFrame.bounds;
+        Vector2 screenPoint = Camera.main.WorldToScreenPoint(new Vector3(
+            trayBounds.center.x, trayBounds.max.y, trayBounds.center.z));
+        if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(parent, screenPoint, uiCamera, out var point))
+            return;
+
+        Vector2 position = point + Vector2.up * 8f;
+        var goldCounter = (RectTransform)goldTileCountGO.transform;
+        var comboCounter = (RectTransform)comboCountGO.transform;
+        goldCounter.anchoredPosition = position;
+        comboCounter.anchoredPosition = position;
+        if (modeObjectiveCounter != null)
+        {
+            float extraHeight = goldTileCountGO.activeSelf || comboCountGO.activeSelf ? 130f : 0f;
+            modeObjectiveCounter.anchoredPosition = position + Vector2.up * extraHeight;
+        }
     }
     int GetCurrentEventTarget()
     {
@@ -673,6 +741,8 @@ public class GameScript : MonoBehaviour
         if (IsReturningHome || IsLevelEntering)
             return;
 
+        PositionTrayCounters();
+
         var buttons = FindObjectsByType<Button>(FindObjectsSortMode.None)
             .Where(button => button.gameObject.scene == gameObject.scene &&
                 button.GetComponentInParent<Popup>() == null);
@@ -728,6 +798,8 @@ public class GameScript : MonoBehaviour
             if (counter != null && counter.activeInHierarchy)
                 elements.Add(counter.transform);
         }
+        if (modeObjectiveCounter != null && modeObjectiveCounter.gameObject.activeInHierarchy)
+            elements.Add(modeObjectiveCounter);
         if (topBarScript != null && topBarScript.goldsCounter != null && topBarScript.goldsCounter.activeInHierarchy)
             elements.Add(topBarScript.goldsCounter.transform);
         return elements;

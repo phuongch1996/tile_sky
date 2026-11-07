@@ -15,6 +15,7 @@ public class PopupTutorial : Popup
         "7 => GAME_MODE.tile_fog\n" +
         "//8 => GAME_MODE.tile_color")]
     public GameObject[] tutorials;
+    [SerializeField] private Sprite tutorialFrameSprite;
     public Button btPanel;
     public GameObject addSlotPopup;
     public GameObject hardPopup;
@@ -34,8 +35,7 @@ public class PopupTutorial : Popup
     {
         foreach (var tut in tutorials)
             tut.SetActive(false);
-        if (modeTutorial != null)
-            modeTutorial.gameObject.SetActive(false);
+        HideOptionalPopup(newModePanel);
         HideOptionalPopup(addSlotPopup);
         HideOptionalPopup(hardPopup);
         HideOptionalPopup(superHardPopup);
@@ -53,24 +53,35 @@ public class PopupTutorial : Popup
         Open();
     }
     TextMeshProUGUI modeTutorial;
+    TextMeshProUGUI modeTutorialTitle;
+    GameObject newModePanel;
 
     void OpenNewModeTutorial(int mode)
     {
         if (modeTutorial == null)
         {
+            newModePanel = new GameObject("New mode tutorial", typeof(RectTransform), typeof(Image));
+            newModePanel.transform.SetParent(box, false);
             var go = new GameObject("New mode instructions", typeof(TextMeshProUGUI));
-            go.transform.SetParent(tutorials[0].transform.parent, false);
+            go.transform.SetParent(newModePanel.transform, false);
             modeTutorial = go.GetComponent<TextMeshProUGUI>();
             modeTutorial.font = txHard != null ? txHard.font : TMP_Settings.defaultFontAsset;
             modeTutorial.fontSize = 42;
             modeTutorial.alignment = TextAlignmentOptions.Center;
             modeTutorial.raycastTarget = false;
             var rect = modeTutorial.rectTransform;
-            rect.anchorMin = new Vector2(0.08f, 0.15f);
-            rect.anchorMax = new Vector2(0.92f, 0.85f);
+            rect.anchorMin = new Vector2(0.12f, 0.3f);
+            rect.anchorMax = new Vector2(0.88f, 0.72f);
             rect.offsetMin = rect.offsetMax = Vector2.zero;
+            var titleObject = new GameObject("Mode title", typeof(TextMeshProUGUI));
+            titleObject.transform.SetParent(newModePanel.transform, false);
+            modeTutorialTitle = titleObject.GetComponent<TextMeshProUGUI>();
+            modeTutorialTitle.font = modeTutorial.font;
+            modeTutorialTitle.alignment = TextAlignmentOptions.Center;
+            modeTutorialTitle.raycastTarget = false;
+            modeTutorialTitle.rectTransform.anchorMin = modeTutorialTitle.rectTransform.anchorMax = new Vector2(0.5f, 1f);
         }
-        modeTutorial.text = mode switch
+        string instructions = mode switch
         {
             9 => "LIMITED TRAY\n\nSome tray slots are locked. Match triples before the remaining slots fill up.",
             10 => "POISON\n\nMatching a POISON triple sends one random ordinary tile to your tray, then shuffles the board.",
@@ -80,7 +91,10 @@ public class PopupTutorial : Popup
             14 => "COIN TILES\n\nMatch every COIN triple to win. Remaining tiles clear automatically.",
             _ => ""
         };
-        modeTutorial.gameObject.SetActive(true);
+        int separator = instructions.IndexOf("\n\n", System.StringComparison.Ordinal);
+        modeTutorialTitle.text = separator < 0 ? instructions : instructions.Substring(0, separator);
+        modeTutorial.text = separator < 0 ? "" : instructions.Substring(separator + 2);
+        newModePanel.SetActive(true);
         Open();
     }
     const string hard = "hard_";
@@ -99,7 +113,7 @@ public class PopupTutorial : Popup
     }
     public void OpenHardPopup()
     {
-        if (modeTutorial != null) modeTutorial.gameObject.SetActive(false);
+        HideOptionalPopup(newModePanel);
         foreach (var tut in tutorials)
             tut.SetActive(false);
         HideOptionalPopup(addSlotPopup);
@@ -111,7 +125,7 @@ public class PopupTutorial : Popup
     }
     public void OpenSuperHardPopup()
     {
-        if (modeTutorial != null) modeTutorial.gameObject.SetActive(false);
+        HideOptionalPopup(newModePanel);
         foreach (var tut in tutorials)
             tut.SetActive(false);
         HideOptionalPopup(addSlotPopup);
@@ -136,10 +150,58 @@ public class PopupTutorial : Popup
     }
     public override void Open()
     {
+        foreach (var tutorial in tutorials)
+            ApplySettingsFrame(tutorial);
+        ApplySettingsFrame(hardPopup);
+        ApplySettingsFrame(superHardPopup);
+        ApplySettingsFrame(newModePanel);
+        closePanel = false;
+        CancelInvoke(nameof(ClosePanel));
+        box.DOKill();
+        box.localScale = Vector3.one;
         btPanel.onClick.RemoveAllListeners();
         btPanel.interactable = true;
         Invoke(nameof(ClosePanel), 5);
         base.Open();
+    }
+
+    private void ApplySettingsFrame(GameObject tutorial)
+    {
+        if (tutorial == null || tutorialFrameSprite == null)
+            return;
+
+        var frame = tutorial.GetComponent<Image>();
+        frame.sprite = tutorialFrameSprite;
+        frame.type = Image.Type.Simple;
+        frame.preserveAspect = false;
+        frame.color = Color.white;
+        var rect = (RectTransform)tutorial.transform;
+        rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.sizeDelta = new Vector2(1000f, 1000f * tutorialFrameSprite.rect.height / tutorialFrameSprite.rect.width);
+        var parentRect = (RectTransform)rect.parent;
+        float scale = Mathf.Min(1f, parentRect.rect.width * 0.92f / rect.rect.width,
+            parentRect.rect.height * 0.8f / rect.rect.height);
+        rect.localScale = Vector3.one * scale;
+
+        foreach (var text in tutorial.GetComponentsInChildren<TextMeshProUGUI>(true))
+        {
+            text.color = Color.white;
+            text.outlineColor = new Color32(15, 45, 125, 255);
+            text.outlineWidth = 0.18f;
+            text.fontMaterial.SetTexture("_OutlineTex", Texture2D.whiteTexture);
+            if (text.transform.parent == rect && text.rectTransform.anchorMin.y > 0.8f)
+            {
+                var titleRect = text.rectTransform;
+                titleRect.anchorMin = titleRect.anchorMax = new Vector2(0.5f, 0.84f);
+                titleRect.pivot = new Vector2(0.5f, 0.5f);
+                titleRect.anchoredPosition = Vector2.zero;
+                titleRect.sizeDelta = new Vector2(400f, 100f);
+                text.enableAutoSizing = true;
+                text.fontSizeMin = 28f;
+                text.fontSizeMax = 64f;
+            }
+        }
     }
     bool closePanel;
     void ClosePanel()
@@ -152,6 +214,8 @@ public class PopupTutorial : Popup
     }
     public override void Close()
     {
+        CancelInvoke(nameof(ClosePanel));
+        box.DOKill();
         base.Close();
         if (GameScript.instance)
             GameScript.instance.ContinueGame();

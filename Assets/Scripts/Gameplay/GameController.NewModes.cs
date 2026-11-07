@@ -376,6 +376,8 @@ public partial class GameController
             rect.pivot = source.rectTransform.pivot;
             rect.anchoredPosition = source.rectTransform.anchoredPosition + Vector2.down * 75;
             rect.sizeDelta = new Vector2(850, 64);
+            if (gameMode is GAME_MODE.tile_tray or GAME_MODE.tile_winning or GAME_MODE.tile_gold_2)
+                GameScript.instance.RegisterModeObjectiveCounter(rect);
         }
         UpdateModeObjective();
     }

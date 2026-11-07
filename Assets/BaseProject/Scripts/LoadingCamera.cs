@@ -19,6 +19,9 @@ public class LoadingCamera : MonoBehaviour
     public List<MaskableGraphic> maskableGraphics;
     public Image loadProgress;
     public TextMeshProUGUI txLoadProgress;
+    [SerializeField] private Sprite loadingStarSprite;
+    private Image loadingStar;
+    private readonly List<Image> rainbowTrail = new();
     public GraphicRaycaster graphicRaycaster;
 #if UNITY_IOS
     readonly static bool disableLoadingStart = true;
@@ -52,6 +55,8 @@ public class LoadingCamera : MonoBehaviour
         DontDestroyOnLoad(gameObject);
         txLoadingDesc.text = GameConfig.GetRandom(loadingDesc);
         loadProgress.fillAmount = 0;
+        SetupLoadingStar();
+        UpdateLoadingProgress();
         graphicRaycaster.enabled = true;
         videoPlayer.prepareCompleted += (video) =>
         {
@@ -122,13 +127,76 @@ public class LoadingCamera : MonoBehaviour
     {
         loadProgress.DOKill();
         loadProgress.DOFillAmount(1, MaxInitialLoadingDuration)
+            .SetEase(Ease.Linear)
             .SetUpdate(true)
             .OnUpdate(UpdateLoadingProgress);
+    }
+
+    private void SetupLoadingStar()
+    {
+        if (loadingStarSprite == null)
+            return;
+
+        for (int i = 0; i < 7; i++)
+        {
+            var trail = CreateLoadingStar($"Rainbow Trail {i + 1}", 28f + i * 4f);
+            trail.color = Color.HSVToRGB(i / 7f, 0.65f, 1f);
+            rainbowTrail.Add(trail);
+        }
+        loadingStar = CreateLoadingStar("Loading Star", 110f);
+        Canvas.ForceUpdateCanvases();
+        UpdateLoadingStar();
+    }
+
+    private Image CreateLoadingStar(string name, float size)
+    {
+        var starObject = new GameObject(name, typeof(RectTransform), typeof(Image));
+        starObject.layer = loadProgress.gameObject.layer;
+        starObject.transform.SetParent(loadProgress.transform, false);
+        var star = starObject.GetComponent<Image>();
+        star.sprite = loadingStarSprite;
+        star.preserveAspect = true;
+        star.raycastTarget = false;
+        star.rectTransform.sizeDelta = Vector2.one * size;
+        maskableGraphics.Add(star);
+        return star;
+    }
+
+    private void LateUpdate()
+    {
+        UpdateLoadingStar();
+    }
+
+    private void UpdateLoadingStar()
+    {
+        if (loadingStar == null)
+            return;
+
+        float progress = Mathf.Clamp01(loadProgress.fillAmount);
+        float time = Time.unscaledTime;
+        var rect = loadingStar.rectTransform;
+        rect.anchorMin = rect.anchorMax = new Vector2(progress, 0.5f);
+        rect.anchoredPosition = Vector2.zero;
+        rect.localRotation = Quaternion.Euler(0, 0, Mathf.Sin(time * 4f) * 15f);
+        rect.localScale = Vector3.one * (1f + Mathf.Sin(time * 6f) * 0.08f);
+
+        float width = loadProgress.rectTransform.rect.width;
+        for (int i = 0; i < rainbowTrail.Count; i++)
+        {
+            var trail = rainbowTrail[i];
+            float distance = (7 - i) * 17f;
+            trail.gameObject.SetActive(progress * width >= distance);
+            var trailRect = trail.rectTransform;
+            trailRect.anchorMin = trailRect.anchorMax = new Vector2(progress, 0.5f);
+            trailRect.anchoredPosition = new Vector2(-distance, Mathf.Sin(time * 7f - i * 0.6f) * 7f);
+            trailRect.localRotation = Quaternion.Euler(0, 0, time * 60f + i * 25f);
+        }
     }
 
     void UpdateLoadingProgress()
     {
         txLoadProgress.text = $"Loading {(int)(loadProgress.fillAmount * 100)}%";
+        UpdateLoadingStar();
     }
 
     IEnumerator CompleteLoadingAfterTimeout()
@@ -187,8 +255,13 @@ public class LoadingCamera : MonoBehaviour
             loadFinished = true;
         else yield break;
         loadProgress.DOKill();
-        loadProgress.fillAmount = 1;
+        // Even if initialization finishes early, let the star pull the bar
+        // all the way to 100% before dismissing the loading screen.
+        yield return loadProgress.DOFillAmount(1f, Mathf.Max(0.1f, (1f - loadProgress.fillAmount) * 0.5f))
+            .SetEase(Ease.Linear).SetUpdate(true)
+            .OnUpdate(UpdateLoadingProgress).WaitForCompletion();
         UpdateLoadingProgress();
+        yield return new WaitForSecondsRealtime(0.12f);
         EventManager.instance.GetEventTimer();
         txLoadingDesc.gameObject.SetActive(false);
         GameConfig.SetBannerType();
@@ -339,10 +412,12 @@ public class LoadingCamera : MonoBehaviour
             Application.backgroundLoadingPriority = ThreadPriority.Low;
             graphicRaycaster.enabled = true;
             loadProgress.fillAmount = 0;
-            txLoadProgress.text = $"Loading {(int)(loadProgress.fillAmount * 100)}%";
+            UpdateLoadingProgress();
             SetAlpha(1);
             loadProgress.DOFillAmount(1, LoadTime)
-                .OnUpdate(() => txLoadProgress.text = $"Loading {(int)(loadProgress.fillAmount * 100)}%")
+                .SetEase(Ease.Linear)
+                .SetUpdate(true)
+                .OnUpdate(UpdateLoadingProgress)
                 .OnComplete(() =>
                 {
                     StartCoroutine(LoadYourAsyncScene(sceneToLoad));

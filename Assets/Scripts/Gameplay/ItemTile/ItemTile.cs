@@ -542,7 +542,7 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
         //gameObject.transform.DOMove(MovePos(PlayTestController.instance.slotTransformList[_slotted].transform.position), 0.25f)
         Vector3 halfLocalPos = gameObject.transform.localPosition / 2;
         Vector3 curveLocation = halfLocalPos + (halfLocalPos.x < 0 ? new Vector3(halfLocalPos.y, -halfLocalPos.x) : new Vector3(-halfLocalPos.y, halfLocalPos.x)) / 4;
-        StartTileTrail();
+        StopTileTrail(true);
         gameObject.transform.DOLocalPath(new Vector3[] { curveLocation, slotPosition }, SlotFlyDuration, PathType.CatmullRom).SetDelay(delay ? 0.35f : 0)
             .OnStart(() =>
             {
@@ -578,7 +578,6 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
                         GameController.instance.SaveProgress();
                     }
                 }
-                DOVirtual.DelayedCall(SlotFlyDuration, () => StopTileTrail(true));
                 GameScript.instance.PowerUpsInteractable();
             });
     }
@@ -809,18 +808,6 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
     float AppearDuration(float duration)
     {
         return duration * GameController.instance.TileAppearDurationMultiplier;
-    }
-
-    void StartTileTrail()
-    {
-        TrailRenderer trail = EnsureTileTrail();
-        if (trail != null)
-        {
-            trail.Clear();
-            trail.emitting = true;
-        }
-
-        StartSlotRocketFlame();
     }
 
     void StopTileTrail(bool clearNow = false)
