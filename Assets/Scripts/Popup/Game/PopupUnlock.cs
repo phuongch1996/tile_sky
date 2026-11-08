@@ -6,6 +6,8 @@ public class PopupUnlock : Popup
 {
     public Button btGoToFeature;
     public Button btNextLevel;
+    Sprite greenButtonFace;
+    Sprite orangeButtonFace;
     public GameObject[] features;
     readonly string[] featureDesc = new string[]
     {
@@ -40,9 +42,62 @@ public class PopupUnlock : Popup
     }
     public override void Open()
     {
+        ApplyWinButtons();
         btGoToFeature.onClick.RemoveAllListeners();
         btNextLevel.onClick.RemoveAllListeners();
         base.Open();
+    }
+
+    void ApplyWinButtons()
+    {
+        if (!greenButtonFace || !orangeButtonFace)
+        {
+            var atlas = Resources.Load<Texture2D>("HeavenlyWin/Buttons");
+            if (!atlas) return;
+            greenButtonFace = CreateButtonFace(atlas, true);
+            orangeButtonFace = CreateButtonFace(atlas, false);
+        }
+        StyleUnlockButton(btGoToFeature, orangeButtonFace);
+        StyleUnlockButton(btNextLevel, greenButtonFace);
+    }
+
+    static Sprite CreateButtonFace(Texture2D atlas, bool green)
+    {
+        var rect = new Rect(atlas.width * 0.11f, atlas.height * (green ? 0.51f : 0.01f),
+            atlas.width * 0.78f, atlas.height * 0.48f);
+        return Sprite.Create(atlas, rect, new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect);
+    }
+
+    static void StyleUnlockButton(Button button, Sprite face)
+    {
+        ((RectTransform)button.transform).sizeDelta = new Vector2(580, 205);
+        button.image.sprite = face;
+        button.image.type = Image.Type.Simple;
+        button.image.preserveAspect = false;
+        button.image.color = Color.white;
+        button.targetGraphic = button.image;
+        button.transition = Selectable.Transition.ColorTint;
+        var colors = ColorBlock.defaultColorBlock;
+        colors.pressedColor = new Color(0.85f, 0.85f, 0.85f, 1);
+        button.colors = colors;
+        foreach (var label in button.GetComponentsInChildren<TextMeshProUGUI>(true))
+        {
+            var rect = label.rectTransform;
+            rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+            rect.anchoredPosition = new Vector2(0, 7);
+            rect.sizeDelta = new Vector2(520, 150);
+            label.enableAutoSizing = true;
+            label.fontSizeMin = 40;
+            label.fontSizeMax = 80;
+            label.alignment = TextAlignmentOptions.Center;
+            label.raycastTarget = false;
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (greenButtonFace) Destroy(greenButtonFace);
+        if (orangeButtonFace) Destroy(orangeButtonFace);
     }
     public override void Close()
     {

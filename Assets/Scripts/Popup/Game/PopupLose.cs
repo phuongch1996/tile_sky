@@ -3,7 +3,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PopupLose : Popup
+public partial class PopupLose : Popup
 {
     public GameObject canRevive;
     public GameObject noRevive;
@@ -28,22 +28,27 @@ public class PopupLose : Popup
             //btHome.onClick.AddListener(() => Home());
             if (lose1.activeSelf)
             {
-                imgCounterFill.DOFillAmount(0, 5).OnUpdate(() =>
-                {
-                    //txTimeCounter.text = Mathf.RoundToInt((1 - imgCounterFill.fillAmount) * 5).ToString();
-                    txTimeCounter.text = Mathf.RoundToInt(imgCounterFill.fillAmount * 5).ToString();
-                    float y = Mathf.Cos(Mathf.Deg2Rad * imgCounterFill.fillAmount * 360);
-                    float x = Mathf.Sin(Mathf.Deg2Rad * imgCounterFill.fillAmount * 360);
-                    fxTfm.anchoredPosition = new Vector2(-x * 270, y * 270);
-                }).OnComplete(() =>
+                imgCounterFill.DOFillAmount(1, 5).SetEase(Ease.Linear)
+                    .OnUpdate(UpdateReviveCountdown).OnComplete(() =>
                 {
                     Restart();
                 });
             }
         });
     }
+
+    void UpdateReviveCountdown()
+    {
+        float progress = imgCounterFill.fillAmount;
+        txTimeCounter.text = Mathf.Clamp(Mathf.FloorToInt(progress * 5) + 1, 1, 5).ToString();
+        float angle = progress * Mathf.PI * 2;
+        fxTfm.anchoredPosition = new Vector2(Mathf.Sin(angle), Mathf.Cos(angle)) * 270;
+    }
     public override void Open()
     {
+        EnsureHeavenlyLose();
+        FitHeavenlyLose();
+        imgCounterFill.DOKill();
         btReviveGold.onClick.RemoveAllListeners();
         btReviveAds.onClick.RemoveAllListeners();
         btRestart.onClick.RemoveAllListeners();
@@ -64,8 +69,8 @@ public class PopupLose : Popup
             showTopBar = true;
             lose1.SetActive(true);
             canRevive.SetActive(true);
-            imgCounterFill.fillAmount = 1;
-            txTimeCounter.text = "5";
+            imgCounterFill.fillAmount = 0;
+            txTimeCounter.text = "1";
         }
         else
         {
@@ -111,5 +116,10 @@ public class PopupLose : Popup
     {
         imgCounterFill.DOKill();
         GameScript.instance.Home();
+    }
+
+    void OnDisable()
+    {
+        if (imgCounterFill) imgCounterFill.DOKill();
     }
 }

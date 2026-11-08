@@ -1,0 +1,6 @@
+Tool: built-in image_gen.imagegen; transparent_background=true.
+References: Assets/Art/TileSky/BoosterUndo.png; Assets/Resources/TileSkyShop/Panel.png.
+Asset: Assets/Resources/TileSkyShop/BuyButton.png.
+The three supplied booster images are reused via serialized sprite references; their bitmap files are unchanged.
+
+Use case: stylized-concept. Asset type: production Unity mobile game purchase button sprite, transparent PNG. Make one SINGLE empty horizontal pill button in polished Tile Sky casual game style, matching the provided pastel rainbow glass booster and golden sky shop panel references. Wide 3.4:1 silhouette, glossy emerald-to-mint green glass face with luminous pale aqua upper reflection, elegant slim warm gold and ivory bevel rim, small soft white cloud curls at the far left and right corners only, tiny star glints confined to the rim. The green button must remain clearly green, much more dimensional and jewel-like than a flat rounded rectangle. Center 70 percent must be plain uninterrupted green for live coin icon and numeric price drawn by Unity. Straight front view, symmetrical rounded capsule, silhouette fills canvas with minimal transparent padding under 3 percent. No text, no letters, no numbers, no coin, no icons, no wings sticking far outside silhouette, no full-scene background. Genuine transparent background.

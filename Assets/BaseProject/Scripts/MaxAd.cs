@@ -394,6 +394,7 @@ public class MaxAd : MonoBehaviour
 
     private void OnRewardedAdFailedToDisplayEvent(string adUnitId, MaxSdkBase.ErrorInfo errorInfo, MaxSdkBase.AdInfo adInfo)
     {
+        AdmobAd.instance.NotifyRewardedAdFinished();
         Invoke(nameof(LoadRewardedAd), 2);
     }
 
@@ -403,6 +404,7 @@ public class MaxAd : MonoBehaviour
 
     private void OnRewardedAdHiddenEvent(string adUnitId, MaxSdkBase.AdInfo adInfo)
     {
+        AdmobAd.instance.NotifyRewardedAdFinished();
         Time.timeScale = 1;
         GameConfig.SetDisableCommonAd(false);
         if (Common.rewarded_reset_capping_time)

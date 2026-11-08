@@ -3,19 +3,25 @@ using Spine.Unity;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
-public class PopupWin : Popup
+public partial class PopupWin : Popup
 {
     public Button btNext;
     public Button btHome;
-    public TextMeshProUGUI txHomeRewardMultiplier;
+    [FormerlySerializedAs("txHomeRewardMultiplier")]
+    public TextMeshProUGUI txAdReward;
+    [SerializeField] Image adRewardIcon;
+    [SerializeField] Sprite[] adRewardBoosterIcons;
     //public SkeletonGraphic[] stars;
     //int starsGain;
     int coinsGain;
-    const int MinHomeRewardMultiplier = 10;
-    const int MaxHomeRewardMultiplier = 15;
-    int homeRewardMultiplier;
+    public const int RewardAdType = 9;
+    // Indices 0..2 are Back, Hint, Shuffle; the remaining entries are gold.
+    static readonly int[] AdRewardAmounts = { 1, 1, 1, 50, 75, 100, 125 };
+    int adRewardIndex;
+    bool rewardAdPending;
     bool homeRewardClaimed;
     public bool openWin = false;
     bool levelProgress;
@@ -90,6 +96,8 @@ public class PopupWin : Popup
 
     public override void Open()
     {
+        EnsureHeavenlyWin();
+        FitHeavenlyWin();
         PlayOpenThenRun();
 
         if (BattlePassManager.instance.isBattlePass)
@@ -124,10 +132,25 @@ public class PopupWin : Popup
             coinsGain = GoldTileVariant.goldCount;
 
         homeRewardClaimed = false;
-        homeRewardMultiplier = Random.Range(MinHomeRewardMultiplier, MaxHomeRewardMultiplier + 1);
-        if (txHomeRewardMultiplier != null)
-            txHomeRewardMultiplier.text = $"x{homeRewardMultiplier}";
+        rewardAdPending = false;
+        btHome.interactable = true;
+        btNext.interactable = true;
+        adRewardIndex = Random.Range(0, AdRewardAmounts.Length);
+        if (txAdReward != null)
+            txAdReward.text = $"x{AdRewardAmounts[adRewardIndex]}";
+        if (adRewardIcon != null)
+        {
+            adRewardIcon.sprite = adRewardIndex < 3
+                ? adRewardBoosterIcons[adRewardIndex]
+                : UnityAuthentication.instance.GetGoldSprite(AdRewardAmounts[adRewardIndex]);
+            if (heavenlyWin)
+                adRewardIcon.rectTransform.sizeDelta = Vector2.one * (adRewardIndex < 3 ? 117 : 130);
+        }
         txCoinsGain.text = $"{coinsGain}";
+        txCoinsGain.gameObject.SetActive(true);
+        if (levelGoldIcon != null)
+            levelGoldIcon.sprite = UnityAuthentication.instance.GetGoldSprite(coinsGain);
+        ShowGoldReward(coinsGain);
         AudioManager.instance.PlaySFXOneShot(AudioManager.SFX.WIN);
 
         btHome.onClick.RemoveAllListeners();
@@ -140,7 +163,10 @@ public class PopupWin : Popup
     }
     void Win1()
     {
-        GameScript.instance.TopBarUpdateGolds(txCoinsGain.transform, coinsGain, GameConfig.gameMode != GAME_MODE.tile_gold ? 1 : 10);
+        if (heavenlyWin)
+            PlayGoldReward(coinsGain);
+        else
+            GameScript.instance.TopBarUpdateGolds(txCoinsGain.transform, coinsGain, GameConfig.gameMode != GAME_MODE.tile_gold ? 1 : 10);
         bool progressFull = false;
         progressGO.SetActive(levelProgress);
         var (isPiggyBank, timeLeft) = TimeManager.instance.TimeEndPiggyBank();
@@ -162,28 +188,9 @@ public class PopupWin : Popup
         {
             int progress = GameConfig.level - bonusLevelRange.start;
             int count = bonusLevelRange.end - bonusLevelRange.start + 1;
-            for (int i = 2; i < count; i++)
-            {
-                GameObject seg = Instantiate(secondSegment, secondSegment.transform.parent);
-                progressSegments.Add(seg.transform.GetChild(0).GetComponent<Image>());
-            }
-            for (int i = 0; i < progressSegments.Count; i++)
-            {
-                if (i < progress)
-                    progressSegments[i].gameObject.SetActive(true);
-                else if (i == progress)
-                {
-                    progressSegments[i].gameObject.SetActive(true);
-                    progressSegments[i].fillAmount = 0;
-                }
-                else
-                    progressSegments[i].gameObject.SetActive(false);
-            }
-            //DOTween.To(() => progressSegments[progress].fillAmount, x => progressSegments[progress].fillAmount = x, 1, 0.5f).SetDelay(0.5f);
-            progressSegments[progress].DOFillAmount(1, 0.5f).SetDelay(0.5f);
-            int levelLeft = count - progress - 1;
-            progressFull = levelLeft == 0;
-            txProgress.text = $"Only {levelLeft} Level{(levelLeft > 1 ? "s" : "")} Left";
+            int completed = Mathf.Clamp(progress + 1, 0, count);
+            progressFull = completed == count;
+            txProgress.text = $"{completed}/{count}";
         }
         if (piggyGO.activeSelf)
         {
@@ -275,7 +282,8 @@ public class PopupWin : Popup
             PlayOpenThenRun();
         }).OnComplete(() =>
         {
-            txCoinsGain.gameObject.SetActive(false);
+            if (!heavenlyWin)
+                txCoinsGain.gameObject.SetActive(false);
             foreach (var graph in piggyGO.GetComponentsInChildren<MaskableGraphic>(false))
                 graph.DOFade(0, 0.5f);
             if (progressFull)
@@ -334,10 +342,14 @@ public class PopupWin : Popup
             graphic.DOFade(a, 0.5f);
         }
         //win2GO.transform.DOScale(1, 0).OnComplete(() => win2GO.SetActive(true));
-        win2GO.transform.DOScale(1, 0.5f).OnStart(() => win2GO.SetActive(true))
+        win2GO.transform.DOScale(1, 0.5f).OnStart(() =>
+        {
+            win2GO.SetActive(true);
+            StartGiftIdle();
+        })
             .OnComplete(() =>
             {
-                btHome.onClick.AddListener(() => OnHomeRewardAdsClick());
+                btHome.onClick.AddListener(OnRandomRewardAdsClick);
                 btNext.onClick.AddListener(() => Next());
             });
     }
@@ -349,8 +361,11 @@ public class PopupWin : Popup
     {
         GameScript.instance.Home();
     }
-    void OnHomeRewardAdsClick()
+    void OnRandomRewardAdsClick()
     {
+        if (rewardAdPending)
+            return;
+
         if (homeRewardClaimed)
         {
             Home();
@@ -363,27 +378,45 @@ public class PopupWin : Popup
             return;
         }
 
+        rewardAdPending = true;
         btHome.interactable = false;
-        GameConfig.ShowRewardedAd(9);
+        btNext.interactable = false;
+        GameConfig.ShowRewardedAd(RewardAdType);
     }
-    public void ClaimHomeRewardAds()
+    public void OnRewardAdFinished()
+    {
+        rewardAdPending = false;
+        if (!homeRewardClaimed)
+        {
+            btHome.interactable = true;
+            btNext.interactable = true;
+        }
+    }
+
+    public void ClaimRandomRewardAds()
     {
         if (homeRewardClaimed)
             return;
 
         homeRewardClaimed = true;
-        int bonusCoins = coinsGain * (homeRewardMultiplier - 1);
-        txCoinsGain.gameObject.SetActive(true);
-        txCoinsGain.text = $"{bonusCoins}";
-
-        if (bonusCoins <= 0)
+        rewardAdPending = false;
+        int amount = AdRewardAmounts[adRewardIndex];
+        if (adRewardIndex < 3)
         {
+            GameConfig.AddPowerUps(amount, adRewardIndex);
             Home();
             return;
         }
 
-        int coinFlyValue = GameConfig.gameMode != GAME_MODE.tile_gold ? Mathf.Max(1, bonusCoins / 20) : 10;
-        GameScript.instance.TopBarUpdateGolds(txCoinsGain.transform, bonusCoins, coinFlyValue, () =>
+        if (heavenlyWin)
+        {
+            PlayGoldReward(amount, Home);
+            return;
+        }
+
+        txCoinsGain.gameObject.SetActive(true);
+        txCoinsGain.text = $"{amount}";
+        GameScript.instance.TopBarUpdateGolds(txCoinsGain.transform, amount, Mathf.Max(1, amount / 20), () =>
         {
             txCoinsGain.gameObject.SetActive(false);
             Home();

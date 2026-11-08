@@ -1079,9 +1079,9 @@ public class AdmobAd : MonoBehaviour
                 case 8:
                     HomeScript.instance.battlePassPopup.AdsClaim();
                     break;
-                case 9:
+                case PopupWin.RewardAdType:
                     if (GameScript.instance)
-                        GameScript.instance.winPopup.ClaimHomeRewardAds();
+                        GameScript.instance.winPopup.ClaimRandomRewardAds();
                     break;
                 default:
                     break;
@@ -1103,6 +1103,12 @@ public class AdmobAd : MonoBehaviour
         }
 
         // Inform the UI that the ad is not ready.
+    }
+
+    public void NotifyRewardedAdFinished()
+    {
+        if (TYPE_REWARD == PopupWin.RewardAdType && GameScript.instance && GameScript.instance.winPopup)
+            GameScript.instance.winPopup.OnRewardAdFinished();
     }
 
     /// <summary>
@@ -1193,6 +1199,7 @@ public class AdmobAd : MonoBehaviour
             try
             {
                 Debug.Log("Rewarded ad full screen content closed.");
+                NotifyRewardedAdFinished();
                 Debug.Log("excecute in update");
                 GameConfig.SetDisableCommonAd(false);
                 if (Common.rewarded_reset_capping_time)
@@ -1211,6 +1218,7 @@ public class AdmobAd : MonoBehaviour
             {
                 Debug.LogError("Rewarded ad failed to open full screen content with error : "
                     + error.GetMessage());
+                NotifyRewardedAdFinished();
             }
             catch (Exception ex)
             {

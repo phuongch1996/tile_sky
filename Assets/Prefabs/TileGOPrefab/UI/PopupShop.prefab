@@ -5774,6 +5774,10 @@ MonoBehaviour:
   - {fileID: 7554475770939395046}
   maskableList: []
   showTopBar: 1
+  tileSkyShopBoosters:
+  - {fileID: 21300000, guid: 909c582ee99e45acaa9d74bceee1059f, type: 3}
+  - {fileID: 21300000, guid: bb4d6016bab24568afec39f8c20a9628, type: 3}
+  - {fileID: 21300000, guid: eab1cfbc1fbb4ac98e53e983d6d6f17f, type: 3}
   iapButtonRemoveAds: {fileID: 6867936298194881076}
   txValueRemoveAds:
   - {fileID: 3535180937391551811}

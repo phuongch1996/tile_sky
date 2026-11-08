@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Purchasing;
 using UnityEngine.UI;
 
-public class PopupShop : Popup
+public partial class PopupShop : Popup
 {
     public CodelessIAPButton iapButtonRemoveAds;
     public TextMeshProUGUI[] txValueRemoveAds;
@@ -38,59 +38,60 @@ public class PopupShop : Popup
     bool isInit = false;
     private void Awake0()
     {
+        EnsureTileSkyShop();
         if (isInit) return;
         iapButtonRemoveAds.productId = IAPManager.tilespace_removeads;
         iapButtonRemoveAds.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonRemoveAds.GetComponentInChildren<TextMeshProUGUI>().text = GameConfig.GetLocalizedPrice(IAPManager.tilespace_removeads);
+        iapButtonRemoveAds.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_removeads);
         IAPValues iapRemoveAds = IAPManager.GetIAPValues(IAPManager.tilespace_removeads);
         goldImgRemoveAds.sprite = UnityAuthentication.instance.GetGoldSprite(iapRemoveAds.goldAm);
-        txValueRemoveAds[0].text = $"x{iapRemoveAds.goldAm}";
+        txValueRemoveAds[0].text = iapRemoveAds.goldAm.ToString();
         txValueRemoveAds[1].text = $"x{iapRemoveAds.boostersAm}";
 
         iapButtonFirstPack.productId = IAPManager.tilespace_firstpack;
         iapButtonFirstPack.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonFirstPack.GetComponentInChildren<TextMeshProUGUI>().text = GameConfig.GetLocalizedPrice(IAPManager.tilespace_firstpack);
+        iapButtonFirstPack.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_firstpack);
         IAPValues iapFirstPack = IAPManager.GetIAPValues(IAPManager.tilespace_firstpack);
         goldImgFirstPack.sprite = UnityAuthentication.instance.GetGoldSprite(iapFirstPack.goldAm);
-        txValueFirstPack[0].text = $"x{iapFirstPack.goldAm}";
+        txValueFirstPack[0].text = iapFirstPack.goldAm.ToString();
         txValueFirstPack[1].text = $"x{iapFirstPack.boostersAm}";
 
         iapButtonMegaPack.productId = IAPManager.tilespace_megapack;
         iapButtonMegaPack.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonMegaPack.GetComponentInChildren<TextMeshProUGUI>().text = GameConfig.GetLocalizedPrice(IAPManager.tilespace_megapack);
+        iapButtonMegaPack.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_megapack);
         IAPValues iapMegaPack = IAPManager.GetIAPValues(IAPManager.tilespace_megapack);
         goldImgMegaPack.sprite = UnityAuthentication.instance.GetGoldSprite(iapMegaPack.goldAm);
-        txValueMegaPack[0].text = $"x{iapMegaPack.goldAm}";
+        txValueMegaPack[0].text = iapMegaPack.goldAm.ToString();
         txValueMegaPack[1].text = $"x{iapMegaPack.boostersAm}";
 
         iapButtonUltiPack.productId = IAPManager.tilespace_ultipack;
         iapButtonUltiPack.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonUltiPack.GetComponentInChildren<TextMeshProUGUI>().text = GameConfig.GetLocalizedPrice(IAPManager.tilespace_ultipack);
+        iapButtonUltiPack.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_ultipack);
         IAPValues iapUltiPack = IAPManager.GetIAPValues(IAPManager.tilespace_ultipack);
         goldImgUltiPack.sprite = UnityAuthentication.instance.GetGoldSprite(iapUltiPack.goldAm);
-        txValueUltiPack[0].text = $"x{iapUltiPack.goldAm}";
+        txValueUltiPack[0].text = iapUltiPack.goldAm.ToString();
         txValueUltiPack[1].text = $"x{iapUltiPack.boostersAm}";
 
         iapButtonGold1.productId = IAPManager.tilespace_gold1;
         iapButtonGold1.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonGold1.GetComponentInChildren<TextMeshProUGUI>().text = GameConfig.GetLocalizedPrice(IAPManager.tilespace_gold1);
+        iapButtonGold1.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_gold1);
         IAPValues iapGold1 = IAPManager.GetIAPValues(IAPManager.tilespace_gold1);
         goldImgGold1.sprite = UnityAuthentication.instance.GetGoldSprite(iapGold1.goldAm);
-        txValueGold1.text = $"x{iapGold1.goldAm}";
+        txValueGold1.text = iapGold1.goldAm.ToString();
 
         iapButtonGold2.productId = IAPManager.tilespace_gold2;
         iapButtonGold2.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonGold2.GetComponentInChildren<TextMeshProUGUI>().text = GameConfig.GetLocalizedPrice(IAPManager.tilespace_gold2);
+        iapButtonGold2.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_gold2);
         IAPValues iapGold2 = IAPManager.GetIAPValues(IAPManager.tilespace_gold2);
         goldImgGold2.sprite = UnityAuthentication.instance.GetGoldSprite(iapGold2.goldAm);
-        txValueGold2.text = $"x{iapGold2.goldAm}";
+        txValueGold2.text = iapGold2.goldAm.ToString();
 
         iapButtonGold3.productId = IAPManager.tilespace_gold3;
         iapButtonGold3.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonGold3.GetComponentInChildren<TextMeshProUGUI>().text = GameConfig.GetLocalizedPrice(IAPManager.tilespace_gold3);
+        iapButtonGold3.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_gold3);
         IAPValues iapGold3 = IAPManager.GetIAPValues(IAPManager.tilespace_gold3);
         goldImgGold3.sprite = UnityAuthentication.instance.GetGoldSprite(iapGold3.goldAm);
-        txValueGold3.text = $"x{iapGold3.goldAm}";
+        txValueGold3.text = iapGold3.goldAm.ToString();
 
         txPricesBooster[0].text = $"{GameConfig.powerPrices[0]}";
         txPricesBooster[1].text = $"{GameConfig.powerPrices[1]}";
@@ -106,37 +107,46 @@ public class PopupShop : Popup
     private void OnEnable()
     {
         GameConfig.OnPowerUpsChange += UpdateBoosterCount;
+        GameConfig.OnGoldChange += UpdateShopGold;
     }
     private void OnDisable()
     {
         GameConfig.OnPowerUpsChange -= UpdateBoosterCount;
+        GameConfig.OnGoldChange -= UpdateShopGold;
     }
     void UpdateBoosterCount()
     {
         var boosterCount = GameConfig.GetPowerUps();
-        txBoostersCount[0].text = $"{boosterCount[0]}";
-        txBoostersCount[1].text = $"{boosterCount[1]}";
-        txBoostersCount[2].text = $"{boosterCount[2]}";
+        for (int i = 0; i < 3; i++)
+            txBoostersCount[i].text = shopArt ? $"Owned: {boosterCount[i]}" : $"{boosterCount[i]}";
         if (txBoostersCount.Length > 3 && txBoostersCount[3])
             txBoostersCount[3].text = "";
     }
     public override void SetupTweenCallback()
     {
+        EnsureTileSkyShop();
         SetupTweenCallback(() =>
         {
             btClose.onClick.AddListener(() => Close());
-            for (int i = 0; i < btBuyBoosters.Length; i++)
+            for (int i = 0; i < Mathf.Min(3, btBuyBoosters.Length); i++)
                 SetBoosterButton(btBuyBoosters[i], i);
         });
     }
     public override void Open()
     {
         Awake0();
+        FitTileSkyShop();
+        UpdateShopGold(GameConfig.GetGold(), false);
         foreach (Button bt in btBuyBoosters)
             bt.onClick.RemoveAllListeners();
         btClose.onClick.RemoveAllListeners();
         UpdateBoosterCount();
         iapRect.anchoredPosition = Vector2.zero;
+        if (shopScroll)
+        {
+            shopScroll.StopMovement();
+            shopScroll.verticalNormalizedPosition = 1f;
+        }
         base.Open();
     }
     public override void Close()
