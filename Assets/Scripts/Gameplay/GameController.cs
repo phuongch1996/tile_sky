@@ -482,7 +482,6 @@ public partial class GameController : MonoBehaviour
             mergeFxObject.transform.SetParent(effectsParent, false);
             tripleTileMergeFx = mergeFxObject.AddComponent<TripleTileMergeFx>();
         }
-        tripleTileMergeFx.SetBoomParticlePrefab(tripleMergeBoomParticlePrefab);
 
         CaptureSlotParentBaseScale();
     }
@@ -1502,7 +1501,6 @@ public partial class GameController : MonoBehaviour
             yield return Remove3MatchWithHint(hintMergeTiles);
             if (GameConfig.gameMode == GAME_MODE.tile_freeze)
                 StartCoroutine(CheckFullFreeze());
-            yield return new WaitForSeconds(0.35f);
             ResumeAfterModeHint();
             SaveProgress();
             yield break;
@@ -2141,11 +2139,11 @@ public partial class GameController : MonoBehaviour
         return fallbackFxs;
     }
 
-    IEnumerator PlayTrayMeteorMatchFx(List<ItemTile> tiles, List<GameObject> fxs)
+    IEnumerator PlayTraySkyMatchFx(List<ItemTile> tiles)
     {
         EnsureTileEffects();
 
-        const float nextMeteorDelay = 0.25f * Match3DurationMultiplier;
+        const float nextBloomDelay = 0.25f * Match3DurationMultiplier;
         Transform parent = slotParent != null ? slotParent : transform;
         List<ItemTile> orderedTiles = tiles
             .Where(tile => tile != null)
@@ -2156,17 +2154,17 @@ public partial class GameController : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             ItemTile tile = orderedTiles[i];
-            StartCoroutine(PlaySingleTrayMeteorBreakFx(tile, parent, fxs, i, () => completedCount++));
+            StartCoroutine(PlaySingleTraySkyMatchFx(tile, parent, i, () => completedCount++));
 
             if (i < count - 1)
-                yield return new WaitForSeconds(nextMeteorDelay);
+                yield return new WaitForSeconds(nextBloomDelay);
         }
 
         while (completedCount < count)
             yield return null;
     }
 
-    IEnumerator PlaySingleTrayMeteorBreakFx(ItemTile tile, Transform parent, List<GameObject> fxs, int sequenceIndex, Action onComplete)
+    IEnumerator PlaySingleTraySkyMatchFx(ItemTile tile, Transform parent, int sequenceIndex, Action onComplete)
     {
         if (tile == null)
         {
@@ -2178,26 +2176,20 @@ public partial class GameController : MonoBehaviour
         visual?.DOKill();
         Tween pulseTween = visual?.DOScale(1.14f, 0.05f * Match3DurationMultiplier).SetEase(Ease.OutQuad);
 
-        Tween meteorTween = MeteorImpactFx.Play(
+        Tween bloomTween = MeteorImpactFx.Play(
             tile.transform.position,
             parent,
             Match3FxSortingLayer,
             Match3FxSortingOrder + 120 + sequenceIndex * 20,
             sequenceIndex);
-        if (meteorTween != null)
-            yield return meteorTween.WaitForCompletion();
+        if (bloomTween != null)
+            yield return bloomTween.WaitForCompletion();
         else
             yield return new WaitForSeconds(0.22f * Match3DurationMultiplier);
 
         pulseTween?.Kill();
-        GameObject itemBurstFx = MatchedItemBurstFx.Play(
-            tile,
-            parent,
-            Match3FxSortingLayer,
-            Match3FxSortingOrder + sequenceIndex * 40);
-        fxs.Add(itemBurstFx != null ? itemBurstFx : SpawnMatch3Fx(tile.transform.position));
-
-        visual?.DOScale(0f, 0.08f * Match3DurationMultiplier).SetEase(Ease.InBack);
+        // The bloom supplies the stars; softly shrink the tile away without debris.
+        visual?.DOScale(0f, 0.14f * Match3DurationMultiplier).SetEase(Ease.InSine);
         onComplete?.Invoke();
     }
 
@@ -2206,7 +2198,7 @@ public partial class GameController : MonoBehaviour
         if (itemTiles.Count == 3)
         {
             gameState = GAME_STATE.WIN;
-            StartCoroutine(OnWin(tiles));
+            StartCoroutine(OnWin(tiles, useHintMergeFx));
             yield break;
         }
         bool is2Up = tiles.Exists(x => x.is2Up);
@@ -2226,20 +2218,13 @@ public partial class GameController : MonoBehaviour
         List<GameObject> fxs = new();
         if (useHintMergeFx && tripleTileMergeFx != null)
         {
-            Tween mergeTween = tripleTileMergeFx.Play(tiles, () =>
-            {
-                for (int i = 0; i < tiles.Count; i++)
-                {
-                    Transform visual = TileOnRuntimeFx.VisualRoot(tiles[i]);
-                    visual?.DOScale(0, 0.1f * Match3DurationMultiplier);
-                }
-            }, false, false);
+            Tween mergeTween = tripleTileMergeFx.Play(tiles);
             if (mergeTween != null)
                 yield return mergeTween.WaitForCompletion();
         }
         else
         {
-            yield return PlayTrayMeteorMatchFx(tiles, fxs);
+            yield return PlayTraySkyMatchFx(tiles);
         }
         //if (tiles[0].TryGetComponent(out GoldTileVariant goldVarient) && goldVarient.tileType == -1)
         //{
@@ -2255,7 +2240,8 @@ public partial class GameController : MonoBehaviour
         //    brokenAnimScript.BrokenTile(color, tiles[1].transform.position);
         //}
         itemTiles.RemoveAll(x => tiles.Contains(x));
-        yield return new WaitForSeconds(0.25f * Match3DurationMultiplier);
+        if (!useHintMergeFx)
+            yield return new WaitForSeconds(0.25f * Match3DurationMultiplier);
         for (int i = tiles.Count - 1; i >= 0; i--)
         {
             ItemTile item = tiles[i];
@@ -2282,6 +2268,13 @@ public partial class GameController : MonoBehaviour
             StartCoroutine(Up2());
         if (isRainbow)
             StartCoroutine(Rainbow());
+        if (useHintMergeFx)
+        {
+            // Return directly to MoveSuggestTiles, which releases Hint's lock once.
+            // Legacy FX cleanup must not hold input after the 1.2-second animation.
+            if (playClearAnim) StartCoroutine(PlayClearAnim());
+            yield break;
+        }
         //isRemove3Match = false;
         GameScript.instance.PowerUpsInteractable();
         yield return new WaitForSeconds(0.25f * Match3DurationMultiplier);
@@ -2296,8 +2289,18 @@ public partial class GameController : MonoBehaviour
         }
         yield return null;
     }
-    IEnumerator OnWin(List<ItemTile> tiles)
+    IEnumerator OnWin(List<ItemTile> tiles, bool useHintMergeFx = false)
     {
+        if (useHintMergeFx)
+        {
+            EnsureTileEffects();
+            AudioManager.instance.PlaySFXOneShot(AudioManager.SFX.BREAK);
+            Tween hintTween = tripleTileMergeFx.Play(tiles);
+            if (hintTween != null) yield return hintTween.WaitForCompletion();
+            ClearWinningTiles(tiles);
+            yield return new WaitForSeconds(0.2f * Match3DurationMultiplier);
+            yield break;
+        }
         Transform slot0 = GetSlotTransform(0);
         Transform slot3 = GetSlotTransform(3);
         Transform slot4 = GetSlotTransform(4);
@@ -2327,13 +2330,20 @@ public partial class GameController : MonoBehaviour
         AudioManager.instance.PlaySFXOneShot(AudioManager.SFX.BREAK);
         {
             List<GameObject> fxs = new();
-            yield return PlayTrayMeteorMatchFx(tiles, fxs);
+            yield return PlayTraySkyMatchFx(tiles);
             for (int i = 0; i < fxs.Count; i++)
             {
                 if (fxs[i] != null)
                     Destroy(fxs[i]);
             }
         }
+        ClearWinningTiles(tiles);
+        yield return new WaitForSeconds(0.2f * Match3DurationMultiplier);
+        yield return null;
+    }
+
+    void ClearWinningTiles(List<ItemTile> tiles)
+    {
         for (int i = tiles.Count - 1; i >= 0; i--)
         {
             ItemTile item = tiles[i];
@@ -2342,8 +2352,6 @@ public partial class GameController : MonoBehaviour
             match3Items.Remove(item);
             item.gameObject.SetActive(false);
         }
-        yield return new WaitForSeconds(0.2f * Match3DurationMultiplier);
-        yield return null;
     }
 
     public void SaveProgress()

@@ -1,0 +1,6 @@
+Tool: built-in image_gen, transparent background.
+Output: Assets/Resources/TileSkyLoading/ShootingStar.png
+Use: ten animated shooting stars on the loading screen.
+
+Final prompt:
+Create a single polished 2D mobile game UI sprite for a dreamy sky-themed tile puzzle. Transparent background, landscape 3:1 canvas. ONE shooting star, horizontal: luminous elegant four-point star head near LEFT quarter, tapering long silky trail extends toward RIGHT edge. Pearl-white core, warm pale gold inner star, turquoise and lavender outer glow, delicate cyan-to-lilac fading tail. The head is distinctly a bright four-point celestial sparkle, NOT a five-point cartoon character. Smooth clean illustrated gradients, refined soft bloom, crisp readable silhouette at small phone size. Center vertically, generous transparent margin all sides, entire star and full tail inside canvas. No text, face, eyes, rock, flame, extra objects, mockup, or background. Actual alpha transparency. Asset only.

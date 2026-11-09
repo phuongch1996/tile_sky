@@ -1,0 +1,7 @@
+Tool: built-in image_gen (transparent background).
+Input: Assets/Resources/HeavenlyDaily/Panel.png
+Output: Assets/Resources/HeavenlyDaily/PanelWithoutClose.png
+Usage: Only the small area behind the close button is used from the edited atlas.
+
+Final prompt:
+Edit target: supplied Daily Reward UI atlas. Make the smallest possible localized edit: REMOVE ONLY the red circular white-X close button at the upper right of the blue panel. Reconstruct the blue panel and its light lavender border naturally underneath that one button, keeping the exact same panel outer shape. Keep ALL other pixels, UI card positions, header text DAILY REWARD, gift, stars, clock, empty blue cards, golden card and bottom green video button at exactly their original positions, scale, colors, and detail. Preserve full original atlas framing and 1:2 aspect ratio and alpha transparency. No new text or objects. The result is the same UI atlas with just its close button erased, for independently animating a separate close button in Unity.

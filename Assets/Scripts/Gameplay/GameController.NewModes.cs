@@ -429,9 +429,10 @@ public partial class GameController
 
     void ResumeAfterModeHint()
     {
-        if (!HasNewMode || (!newModeClearing && gameState != GAME_STATE.WIN &&
-            gameState != GAME_STATE.WIN_POPUP && gameState != GAME_STATE.LOSE && gameState != GAME_STATE.LOSE_POPUP))
+        // Release only Hint's lock, preserving pause, win/lose and mode-transition states.
+        if (gameState == GAME_STATE.SUGGEST && !newModeClearing)
             gameState = GAME_STATE.PLAYING;
+        GameScript.instance.PowerUpsInteractable();
     }
 }
 

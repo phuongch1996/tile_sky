@@ -1,251 +1,145 @@
+using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
+// Retain the component name/GUID for existing references; the visual is now sky magic.
 public class MeteorImpactFx : MonoBehaviour
 {
-    const string RealisticMeteorResourcePath = "MeteorImpactRealistic";
-    const float RealisticMeteorSourceAngle = -135f;
-    const int MeteorTextureSize = 112;
-    const int TrailTextureWidth = 288;
-    const int TrailTextureHeight = 104;
-    const float Match3DurationMultiplier = 7f / 8f;
-    const float FallDuration = 0.32f * Match3DurationMultiplier;
-    const float ImpactDuration = 0.08f * Match3DurationMultiplier;
+    const float GatherDuration = 0.32f * 7f / 8f;
+    const float ReleaseDuration = 0.08f * 7f / 8f;
+    readonly List<Tween> tweens = new();
+    readonly List<Material> materials = new();
+    Material lightMaterial;
 
-    static Sprite meteorSprite;
-    static Sprite trailSprite;
-    static bool usesRealisticMeteorSprite;
-
-    public static Tween Play(Vector3 targetPosition, Transform parent, string sortingLayerName, int sortingOrder, int sequenceIndex = 0)
+    public static Tween Play(Vector3 targetPosition, Transform parent, string sortingLayerName,
+        int sortingOrder, int sequenceIndex = 0)
     {
-        GameObject effectObject = new("Meteor Impact Fx");
-        if (parent != null)
-            effectObject.transform.SetParent(parent, false);
-
-        MeteorImpactFx effect = effectObject.AddComponent<MeteorImpactFx>();
-        return effect.PlayInternal(targetPosition, sortingLayerName, sortingOrder, sequenceIndex);
+        var go = new GameObject("Sky Match - Starlight Bloom");
+        if (parent) go.transform.SetParent(parent, false);
+        go.transform.position = targetPosition;
+        return go.AddComponent<MeteorImpactFx>().PlayBloom(sortingLayerName, sortingOrder, sequenceIndex);
     }
 
-    Tween PlayInternal(Vector3 targetPosition, string sortingLayerName, int sortingOrder, int sequenceIndex)
+    Tween PlayBloom(string layer, int order, int index)
     {
-        EnsureSprites();
+        lightMaterial = new Material(Shader.Find("Sprites/Default")) { name = "Sky Match Light" };
+        materials.Add(lightMaterial);
+        Color sky = new Color(0.35f, 0.91f, 1f);
+        Color gold = new Color(1f, 0.88f, 0.4f);
+        var cyanRibbon = CreateRibbon("Turquoise light ribbon", sky, layer, order, 0);
+        var goldRibbon = CreateRibbon("Golden light ribbon", gold, layer, order + 1, 180);
+        foreach (var ribbon in new[] { cyanRibbon, goldRibbon })
+        {
+            ribbon.transform.localScale = Vector3.one * 1.25f;
+            tweens.Add(ribbon.transform.DOScale(0.48f, GatherDuration).SetEase(Ease.InSine));
+            tweens.Add(ribbon.transform.DOLocalRotate(new Vector3(0, 0,
+                ribbon.transform.localEulerAngles.z + 110), GatherDuration, RotateMode.FastBeyond360).SetEase(Ease.OutSine));
+        }
 
-        Vector3 startOffset = GetStartOffset(sequenceIndex);
-        transform.position = targetPosition + startOffset;
-        Vector2 fallDirection = ((Vector2)(targetPosition - transform.position)).normalized;
-        float fallAngle = Mathf.Atan2(fallDirection.y, fallDirection.x) * Mathf.Rad2Deg;
+        var star = new GameObject("Wishing star", typeof(MeshFilter), typeof(MeshRenderer));
+        star.transform.SetParent(transform, false);
+        star.transform.localScale = Vector3.zero;
+        star.GetComponent<MeshFilter>().sharedMesh = TileOnRuntimeFx.StarParticleMesh();
+        var starRenderer = star.GetComponent<MeshRenderer>();
+        var starMaterial = new Material(lightMaterial) { color = gold };
+        materials.Add(starMaterial);
+        starRenderer.sharedMaterial = starMaterial;
+        starRenderer.sortingLayerName = layer;
+        starRenderer.sortingOrder = order + 3;
+        tweens.Add(star.transform.DOScale(0.55f, GatherDuration).SetEase(Ease.OutBack));
+        tweens.Add(star.transform.DOLocalRotate(new Vector3(0, 0, 35 + index * 12), GatherDuration));
 
-        if (usesRealisticMeteorSprite)
-            return PlayRealisticMeteor(targetPosition, fallAngle, sortingLayerName, sortingOrder);
-
-        transform.rotation = Quaternion.Euler(0f, 0f, fallAngle);
-
-        GameObject trailObject = new("Meteor Trail");
-        trailObject.transform.SetParent(transform, false);
-        trailObject.transform.localPosition = new Vector3(-0.08f, 0f, 0f);
-        trailObject.transform.localScale = new Vector3(1.5f, 0.95f, 1f);
-
-        SpriteRenderer trailRenderer = trailObject.AddComponent<SpriteRenderer>();
-        trailRenderer.sprite = trailSprite;
-        trailRenderer.color = new Color(1f, 0.58f, 0.1f, 0.96f);
-        trailRenderer.sortingLayerName = sortingLayerName;
-        trailRenderer.sortingOrder = sortingOrder;
-
-        GameObject coreTrailObject = new("Meteor White Heat Trail");
-        coreTrailObject.transform.SetParent(transform, false);
-        coreTrailObject.transform.localPosition = new Vector3(-0.04f, 0.01f, 0f);
-        coreTrailObject.transform.localScale = new Vector3(1.28f, 0.38f, 1f);
-
-        SpriteRenderer coreTrailRenderer = coreTrailObject.AddComponent<SpriteRenderer>();
-        coreTrailRenderer.sprite = trailSprite;
-        coreTrailRenderer.color = new Color(1f, 0.95f, 0.62f, 0.74f);
-        coreTrailRenderer.sortingLayerName = sortingLayerName;
-        coreTrailRenderer.sortingOrder = sortingOrder + 1;
-
-        GameObject meteorObject = new("Meteor");
-        meteorObject.transform.SetParent(transform, false);
-        meteorObject.transform.localScale = new Vector3(0.74f, 0.68f, 1f);
-        meteorObject.transform.localRotation = Quaternion.Euler(0f, 0f, -fallAngle);
-
-        SpriteRenderer meteorRenderer = meteorObject.AddComponent<SpriteRenderer>();
-        meteorRenderer.sprite = meteorSprite;
-        meteorRenderer.color = Color.white;
-        meteorRenderer.sortingLayerName = sortingLayerName;
-        meteorRenderer.sortingOrder = sortingOrder + 2;
-
-        ParticleSystem impactParticle = TileOnRuntimeFx.CreateBurstParticle(
-            transform,
-            "Meteor Impact Sparks",
-            new Color(1f, 0.48f, 0.08f, 1f),
-            36,
-            0.5f,
-            0.3f,
-            0.04f,
-            0.14f,
-            2.45f,
-            sortingLayerName,
-            sortingOrder + 3);
-        impactParticle.transform.localPosition = Vector3.zero;
+        var dust = CreateSkyDust("Rising stardust", sky, 14, layer, order + 4);
+        var glints = CreateSkyDust("Golden wishes", gold, 7, layer, order + 5);
+        var halo = CreateRibbon("Soft expanding halo", sky, layer, order + 2, 0, true);
+        halo.gameObject.SetActive(false);
 
         Sequence sequence = DOTween.Sequence()
-            .Append(transform.DOMove(targetPosition, FallDuration).SetEase(Ease.InQuad))
-            .Join(transform.DOScale(1.08f, FallDuration).SetEase(Ease.OutQuad))
-            .Join(trailRenderer.DOFade(0.78f, FallDuration * 0.65f).SetLoops(2, LoopType.Yoyo))
-            .Join(coreTrailRenderer.DOFade(0.52f, FallDuration * 0.55f).SetLoops(2, LoopType.Yoyo))
-            .Join(meteorObject.transform.DORotate(new Vector3(0f, 0f, -fallAngle - 95f), FallDuration, RotateMode.FastBeyond360).SetEase(Ease.Linear))
+            .AppendInterval(GatherDuration)
             .AppendCallback(() =>
             {
-                meteorRenderer.enabled = false;
-                trailRenderer.enabled = false;
-                coreTrailRenderer.enabled = false;
-                impactParticle.Play(true);
+                cyanRibbon.enabled = goldRibbon.enabled = false;
+                dust.Play(true);
+                glints.Play(true);
+                halo.gameObject.SetActive(true);
+                halo.transform.localScale = Vector3.one * 0.4f;
+                tweens.Add(halo.transform.DOScale(1.45f, 0.38f).SetEase(Ease.OutCubic));
+                tweens.Add(DOTween.To(() => 0.65f, alpha => SetRibbonAlpha(halo, sky, alpha), 0, 0.38f));
+                tweens.Add(star.transform.DOScale(0, 0.18f).SetEase(Ease.InSine));
             })
-            .AppendInterval(ImpactDuration)
-            .OnComplete(() => Destroy(gameObject))
+            .AppendInterval(ReleaseDuration)
+            // Clear the tile now; the dust finishes independently.
+            .OnComplete(() => Destroy(gameObject, 0.85f))
             .SetTarget(gameObject);
-
+        tweens.Add(sequence);
         return sequence;
     }
 
-    Tween PlayRealisticMeteor(Vector3 targetPosition, float fallAngle, string sortingLayerName, int sortingOrder)
+    LineRenderer CreateRibbon(string objectName, Color color, string layer, int order, float angle, bool fullRing = false)
     {
-        transform.rotation = Quaternion.Euler(0f, 0f, fallAngle - RealisticMeteorSourceAngle);
-        transform.localScale = Vector3.one * 0.82f;
-
-        GameObject meteorObject = new("Realistic Meteor");
-        meteorObject.transform.SetParent(transform, false);
-
-        SpriteRenderer meteorRenderer = meteorObject.AddComponent<SpriteRenderer>();
-        meteorRenderer.sprite = meteorSprite;
-        meteorRenderer.color = new Color(1f, 1f, 1f, 0f);
-        meteorRenderer.sortingLayerName = sortingLayerName;
-        meteorRenderer.sortingOrder = sortingOrder + 2;
-
-        ParticleSystem impactParticle = TileOnRuntimeFx.CreateBurstParticle(
-            transform,
-            "Meteor Impact Sparks",
-            new Color(1f, 0.48f, 0.08f, 1f),
-            48,
-            0.55f,
-            0.34f,
-            0.05f,
-            0.18f,
-            2.85f,
-            sortingLayerName,
-            sortingOrder + 3);
-        impactParticle.transform.localPosition = Vector3.zero;
-
-        Sequence sequence = DOTween.Sequence()
-            .Append(transform.DOMove(targetPosition, FallDuration).SetEase(Ease.InSine))
-            .Join(transform.DOScale(1.08f, FallDuration).SetEase(Ease.OutSine))
-            .Join(meteorRenderer.DOFade(0.98f, 0.06f).SetEase(Ease.OutSine))
-            .AppendCallback(() =>
-            {
-                meteorRenderer.enabled = false;
-                impactParticle.Play(true);
-            })
-            .AppendInterval(ImpactDuration)
-            .OnComplete(() => Destroy(gameObject))
-            .SetTarget(gameObject);
-
-        return sequence;
-    }
-
-    static Vector3 GetStartOffset(int sequenceIndex)
-    {
-        float horizontal = -2.35f + sequenceIndex * 0.08f;
-        return new Vector3(horizontal, 3.85f, 0f);
-    }
-
-    static void EnsureSprites()
-    {
-        if (meteorSprite == null)
+        var go = new GameObject(objectName, typeof(LineRenderer));
+        go.transform.SetParent(transform, false);
+        go.transform.localRotation = Quaternion.Euler(0, 0, angle);
+        var line = go.GetComponent<LineRenderer>();
+        line.sharedMaterial = lightMaterial;
+        line.useWorldSpace = false;
+        line.positionCount = 40;
+        line.loop = fullRing;
+        line.numCapVertices = 4;
+        line.widthMultiplier = fullRing ? 0.045f : 0.065f;
+        line.widthCurve = new AnimationCurve(new Keyframe(0, 0), new Keyframe(0.5f, 1), new Keyframe(1, 0));
+        line.sortingLayerName = layer;
+        line.sortingOrder = order;
+        SetRibbonAlpha(line, color, 0.8f);
+        for (int i = 0; i < line.positionCount; i++)
         {
-            meteorSprite = Resources.Load<Sprite>(RealisticMeteorResourcePath);
-            usesRealisticMeteorSprite = meteorSprite != null;
+            float phase = i / (float)(fullRing ? line.positionCount : line.positionCount - 1);
+            float radians = phase * Mathf.PI * (fullRing ? 2 : 1.45f);
+            line.SetPosition(i, new Vector3(Mathf.Cos(radians) * 0.75f, Mathf.Sin(radians) * 0.5f, 0));
         }
-
-        if (usesRealisticMeteorSprite)
-            return;
-
-        if (meteorSprite == null)
-            meteorSprite = CreateMeteorSprite();
-        if (trailSprite == null)
-            trailSprite = CreateTrailSprite();
+        return line;
     }
 
-    static Sprite CreateMeteorSprite()
+    static void SetRibbonAlpha(LineRenderer line, Color color, float alpha)
     {
-        Texture2D texture = new(MeteorTextureSize, MeteorTextureSize, TextureFormat.RGBA32, false)
-        {
-            name = "Runtime Realistic Meteor Texture",
-            wrapMode = TextureWrapMode.Clamp,
-            filterMode = FilterMode.Bilinear
-        };
-
-        Vector2 center = new((MeteorTextureSize - 1) * 0.5f, (MeteorTextureSize - 1) * 0.5f);
-        for (int y = 0; y < MeteorTextureSize; y++)
-        {
-            for (int x = 0; x < MeteorTextureSize; x++)
-            {
-                Vector2 delta = new(x - center.x, y - center.y);
-                float distance = delta.magnitude / (MeteorTextureSize * 0.5f);
-                float noise = Mathf.PerlinNoise(x * 0.12f, y * 0.12f);
-                float rockMask = 1f - Mathf.SmoothStep(0.5f + noise * 0.08f, 0.72f + noise * 0.08f, distance);
-                float flameMask = Mathf.Clamp01(1f - Mathf.SmoothStep(0.58f + noise * 0.08f, 0.96f, distance));
-
-                Color rock = Color.Lerp(new Color(0.12f, 0.08f, 0.06f, 1f), new Color(0.42f, 0.3f, 0.22f, 1f), noise);
-                Color ember = Color.Lerp(new Color(0.86f, 0.08f, 0.01f, 1f), new Color(1f, 0.9f, 0.32f, 1f), Mathf.Clamp01((distance - 0.4f) * 3.4f + noise * 0.45f));
-                Color color = Color.Lerp(ember, rock, rockMask);
-                color.a = Mathf.Max(rockMask, flameMask * 0.92f);
-
-                if (delta.x < -MeteorTextureSize * 0.08f && distance < 0.46f)
-                    color = Color.Lerp(color, new Color(1f, 0.82f, 0.28f, 1f), 0.34f);
-                if (distance < 0.2f)
-                    color = Color.Lerp(color, new Color(0.08f, 0.055f, 0.04f, 1f), 0.55f);
-
-                texture.SetPixel(x, y, color);
-            }
-        }
-
-        texture.Apply();
-        return Sprite.Create(texture, new Rect(0f, 0f, MeteorTextureSize, MeteorTextureSize), new Vector2(0.5f, 0.5f), 96f, 0, SpriteMeshType.FullRect);
+        var gradient = new Gradient();
+        gradient.SetKeys(new[] { new GradientColorKey(color, 0), new GradientColorKey(Color.white, 0.5f),
+            new GradientColorKey(color, 1) }, new[] { new GradientAlphaKey(0, 0),
+            new GradientAlphaKey(alpha, 0.5f), new GradientAlphaKey(0, 1) });
+        line.colorGradient = gradient;
     }
 
-    static Sprite CreateTrailSprite()
+    ParticleSystem CreateSkyDust(string objectName, Color color, int count, string layer, int order)
     {
-        Texture2D texture = new(TrailTextureWidth, TrailTextureHeight, TextureFormat.RGBA32, false)
-        {
-            name = "Runtime Meteor Trail Texture",
-            wrapMode = TextureWrapMode.Clamp,
-            filterMode = FilterMode.Bilinear
-        };
+        var dust = TileOnRuntimeFx.CreateBurstParticle(transform, objectName, color, count,
+            0.65f, 0.7f, 0.07f, 0.18f, 0.65f, layer, order);
+        var renderer = dust.GetComponent<ParticleSystemRenderer>();
+        materials.Add(renderer.sharedMaterial);
+        renderer.renderMode = ParticleSystemRenderMode.Mesh;
+        renderer.mesh = TileOnRuntimeFx.StarParticleMesh();
+        var main = dust.main;
+        main.startRotation = new ParticleSystem.MinMaxCurve(-Mathf.PI, Mathf.PI);
+        main.gravityModifier = -0.12f;
+        var velocity = dust.velocityOverLifetime;
+        velocity.enabled = true;
+        velocity.y = 0.65f;
+        var fade = dust.colorOverLifetime;
+        fade.enabled = true;
+        var gradient = new Gradient();
+        gradient.SetKeys(new[] { new GradientColorKey(Color.white, 0), new GradientColorKey(color, 1) },
+            new[] { new GradientAlphaKey(0, 0), new GradientAlphaKey(1, 0.12f), new GradientAlphaKey(0, 1) });
+        fade.color = gradient;
+        var size = dust.sizeOverLifetime;
+        size.enabled = true;
+        size.size = new ParticleSystem.MinMaxCurve(1, new AnimationCurve(new Keyframe(0, 0.3f),
+            new Keyframe(0.2f, 1), new Keyframe(1, 0)));
+        return dust;
+    }
 
-        Vector2 center = new(TrailTextureWidth * 0.9f, TrailTextureHeight * 0.5f);
-        for (int y = 0; y < TrailTextureHeight; y++)
-        {
-            for (int x = 0; x < TrailTextureWidth; x++)
-            {
-                float forward = Mathf.InverseLerp(0f, TrailTextureWidth - 1f, x);
-                float noise = Mathf.PerlinNoise(x * 0.035f, y * 0.16f);
-                float wave = Mathf.Sin(forward * 17f + noise * 2.5f) * (1f - forward) * 0.08f;
-                float vertical = Mathf.Abs((y - center.y) / TrailTextureHeight - wave);
-                float width = Mathf.Lerp(0.018f, 0.29f, Mathf.Pow(forward, 1.55f));
-                float body = 1f - Mathf.SmoothStep(width, width + 0.12f, vertical);
-                float hotCore = 1f - Mathf.SmoothStep(width * 0.22f, width * 0.22f + 0.035f, vertical);
-                float fade = Mathf.SmoothStep(0.0f, 0.72f, forward);
-                float tongue = Mathf.Clamp01(Mathf.PerlinNoise(x * 0.075f, y * 0.07f) * 1.5f - 0.35f);
-                float alpha = Mathf.Clamp01((body * 0.7f + hotCore * 0.65f) * fade * (0.7f + tongue * 0.42f));
-
-                Color ember = Color.Lerp(new Color(0.72f, 0.04f, 0.005f, 1f), new Color(1f, 0.38f, 0.02f, 1f), forward);
-                Color heat = Color.Lerp(ember, new Color(1f, 0.93f, 0.42f, 1f), Mathf.Clamp01(hotCore + forward * 0.32f));
-                Color color = Color.Lerp(ember, heat, Mathf.Clamp01(hotCore * 1.4f + noise * 0.18f));
-                color.a = alpha * 0.95f;
-                texture.SetPixel(x, y, color);
-            }
-        }
-
-        texture.Apply();
-        return Sprite.Create(texture, new Rect(0f, 0f, TrailTextureWidth, TrailTextureHeight), new Vector2(0.9f, 0.5f), 96f, 0, SpriteMeshType.FullRect);
+    void OnDestroy()
+    {
+        foreach (var tween in tweens) tween?.Kill();
+        foreach (var material in materials)
+            if (material) Destroy(material);
     }
 }

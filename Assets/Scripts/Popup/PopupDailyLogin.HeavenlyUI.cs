@@ -26,10 +26,9 @@ public partial class PopupDailyLogin
         heavenlyDailyRoot.anchorMin = heavenlyDailyRoot.anchorMax = new Vector2(0.5f, 0.5f);
         heavenlyDailyRoot.anchoredPosition = Vector2.zero;
         var panelArt = DailyRect("Panel art", heavenlyDailyRoot, new Vector2(1024, 1689.6f), new Vector2(512, 844.8f));
-        var panelImage = panelArt.gameObject.AddComponent<Image>();
         // Separate the action button from the panel, so existing claim/ad visibility still applies.
-        panelImage.sprite = DailySlice(atlas, new Rect(0, 0.175f, 1, 0.825f));
-        panelImage.raycastTarget = false;
+        var cleanPanel = Resources.Load<Texture2D>("HeavenlyDaily/PanelWithoutClose");
+        PrepareDailyPanel(panelArt, atlas, cleanPanel);
         var actionArt = DailySlice(atlas, new Rect(0.18f, 0.05f, 0.64f, 0.12f));
 
         txNextReward.transform.SetParent(heavenlyDailyRoot, false);
@@ -38,6 +37,7 @@ public partial class PopupDailyLogin
         txNextReward.richText = true;
         nextRewardGO = txNextReward.gameObject;
         PrepareDailyButton(btClose, new Vector2(125, 125), new Vector2(938, 418), null, null);
+        if (cleanPanel) PrepareDailyClose(atlas);
         PrepareDailyButton(btClaim, new Vector2(655.36f, 245.76f), new Vector2(512, 1822.72f), actionArt, "Claim");
         PrepareFreeDailyClaim(atlas);
         PrepareDailyButton(btAds, new Vector2(655.36f, 245.76f), new Vector2(512, 1822.72f), actionArt, "Reclaim");
@@ -112,6 +112,52 @@ public partial class PopupDailyLogin
         // Animate a wrapper so the existing box animation does not overwrite the fitted UI scale.
         box = animationRoot;
         FitHeavenlyDailyUI();
+    }
+
+    void PrepareDailyPanel(RectTransform root, Texture2D atlas, Texture2D cleanPanel)
+    {
+        if (!cleanPanel)
+        {
+            var image = root.gameObject.AddComponent<Image>();
+            image.sprite = DailySlice(atlas, new Rect(0, 0.175f, 1, 0.825f));
+            image.raycastTarget = false;
+            return;
+        }
+        // Preserve the original atlas everywhere except the small area behind the X.
+        DailyPanelPart(root, atlas, new Rect(0, 0, 1024, 340));
+        DailyPanelPart(root, atlas, new Rect(0, 500, 1024, 1189.6f));
+        DailyPanelPart(root, atlas, new Rect(0, 340, 865, 160));
+        DailyPanelPart(root, atlas, new Rect(1014, 340, 10, 160));
+        DailyPanelPart(root, cleanPanel, new Rect(865, 340, 149, 160));
+    }
+
+    static void DailyPanelPart(RectTransform root, Texture2D atlas, Rect area)
+    {
+        var rect = DailyRect("Panel section", root, area.size, area.center);
+        var image = rect.gameObject.AddComponent<Image>();
+        image.sprite = DailySlice(atlas, new Rect(area.x / 1024f, 1 - area.yMax / 2048f,
+            area.width / 1024f, area.height / 2048f));
+        image.raycastTarget = false;
+    }
+
+    void PrepareDailyClose(Texture2D atlas)
+    {
+        // The hit area stays fixed while only the circular artwork scales on press.
+        var visual = DailyRect("Close button art", btClose.transform, new Vector2(125, 125),
+            new Vector2(62.5f, 62.5f));
+        var circle = visual.gameObject.AddComponent<Image>();
+        circle.sprite = DailyRoundedMask();
+        circle.raycastTarget = false;
+        visual.gameObject.AddComponent<Mask>().showMaskGraphic = false;
+        var face = DailyRect("Red X", visual, new Vector2(125, 125), new Vector2(62.5f, 62.5f));
+        var image = face.gameObject.AddComponent<Image>();
+        image.sprite = DailySlice(atlas, new Rect(875.5f / 1024f, 1 - 480.5f / 2048f,
+            125f / 1024f, 125f / 2048f));
+        image.raycastTarget = false;
+        var press = btClose.GetComponent<ButtonAnim>();
+        if (!press) press = btClose.gameObject.AddComponent<ButtonAnim>();
+        press.tfm = visual;
+        press.bt = btClose;
     }
 
     void PrepareDailyButton(Button button, Vector2 size, Vector2 center, Sprite sprite, string label)

@@ -1,5 +1,6 @@
 using System;
 using TMPro;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class PopupMapPreview : Popup
@@ -11,6 +12,8 @@ public class PopupMapPreview : Popup
     public Button btWatchAds;
     public Button btNextLevel;
     public Button btCancel;
+    Sprite orangeButtonFace;
+    Sprite greenButtonFace;
     int bgIndex;
     int bgType;
     Action callback;
@@ -67,8 +70,44 @@ public class PopupMapPreview : Popup
     }
     public override void Open()
     {
+        ApplyWinButtonArt();
         HomeAlignedBackButton.Configure(btCancel, HomeScript.instance ? HomeScript.instance.btSettings : null);
         base.Open();
+    }
+
+    void ApplyWinButtonArt()
+    {
+        if (!orangeButtonFace || !greenButtonFace)
+        {
+            var atlas = Resources.Load<Texture2D>("HeavenlyWin/Buttons");
+            if (!atlas) return;
+            orangeButtonFace = CreateButtonFace(atlas, false);
+            greenButtonFace = CreateButtonFace(atlas, true);
+        }
+        ApplyButtonFace(btSetBG, orangeButtonFace);
+        ApplyButtonFace(btNextLevel, greenButtonFace);
+    }
+
+    static Sprite CreateButtonFace(Texture2D atlas, bool green)
+    {
+        // Use the same atlas regions as the feature-unlock screen.
+        var rect = new Rect(atlas.width * 0.11f, atlas.height * (green ? 0.51f : 0.01f),
+            atlas.width * 0.78f, atlas.height * 0.48f);
+        return Sprite.Create(atlas, rect, new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect);
+    }
+
+    static void ApplyButtonFace(Button button, Sprite face)
+    {
+        button.image.sprite = face;
+        button.image.type = Image.Type.Simple;
+        button.image.preserveAspect = false;
+        button.image.color = Color.white;
+    }
+
+    void OnDestroy()
+    {
+        if (orangeButtonFace) Destroy(orangeButtonFace);
+        if (greenButtonFace) Destroy(greenButtonFace);
     }
     public override void Close()
     {
