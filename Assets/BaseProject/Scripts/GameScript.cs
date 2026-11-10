@@ -145,7 +145,6 @@ public class GameScript : MonoBehaviour
     [Header("undo")]
     public Button btUndo;
     public Image undoImg;
-    public Image[] undoAnim;
     public Sprite[] undoSprites;
     public TextMeshProUGUI undoTxt;
     public GameObject undoCounterGO;
@@ -155,7 +154,6 @@ public class GameScript : MonoBehaviour
     [Header("shuffle")]
     public Button btShuffle;
     public Image shuffleImg;
-    public Image[] shuffleAnim;
     public Sprite[] shuffleSprites;
     public TextMeshProUGUI shuffleTxt;
     public GameObject shuffleCounterGO;
@@ -165,7 +163,6 @@ public class GameScript : MonoBehaviour
     [Header("suggest")]
     public Button btSuggest;
     public Image suggestImg;
-    public Image[] suggestAnim;
     public Sprite[] suggestSprites;
     public TextMeshProUGUI suggestTxt;
     public GameObject suggestCounterGO;
@@ -218,6 +215,7 @@ public class GameScript : MonoBehaviour
     }
     private void OnDisable()
     {
+        StopBoosterIdleAnimation();
         levelEntranceSequence?.Kill(false);
         FinishLevelEntrance();
         homeExitSequence?.Kill(false);
@@ -442,8 +440,41 @@ public class GameScript : MonoBehaviour
         comboCountGO.SetActive(true);
     }
     #region powerUI
+    static void AlignBoosterPriceBottom(GameObject priceFrame, GameObject counter)
+    {
+        var priceRect = (RectTransform)priceFrame.transform;
+        var counterRect = (RectTransform)counter.transform;
+        // The red sprite has a small transparent inset below its visible border.
+        var bottom = counterRect.TransformPoint(new Vector3(0, counterRect.rect.yMin + 2f, 0));
+        var position = priceRect.localPosition;
+        position.y = priceRect.parent.InverseTransformPoint(bottom).y
+            - priceRect.rect.yMin * priceRect.localScale.y;
+        priceRect.localPosition = position;
+    }
+
+    static void PositionBoosterAdIcon(GameObject adIcon)
+    {
+        var rect = (RectTransform)adIcon.transform;
+        rect.anchorMin = rect.anchorMax = Vector2.one;
+        rect.pivot = Vector2.one;
+        rect.anchoredPosition = Vector2.zero;
+        rect.SetAsLastSibling();
+    }
+
     void PowerUpsStrings()
     {
+        AlignBoosterPriceBottom(undoBuyCoinGO, undoCounterGO);
+        AlignBoosterPriceBottom(suggestBuyCoinGO, suggestCounterGO);
+        AlignBoosterPriceBottom(shuffleBuyCoinGO, shuffleCounterGO);
+        PositionBoosterAdIcon(undoWatchAdGO);
+        PositionBoosterAdIcon(suggestWatchAdGO);
+        PositionBoosterAdIcon(shuffleWatchAdGO);
+
+        bool showBoosters = GameConfig.level >= 2 || GameConfig.isChallengeLevel;
+        btUndo.gameObject.SetActive(showBoosters);
+        btSuggest.gameObject.SetActive(showBoosters);
+        btShuffle.gameObject.SetActive(showBoosters);
+
         var powerUps = GameConfig.GetPowerUps();
         if (GameConfig.level >= 2 || GameConfig.isChallengeLevel)
         {
@@ -617,36 +648,36 @@ public class GameScript : MonoBehaviour
 
     bool isItemsAnim;
     Coroutine itemsAnimCoroutine;
+    Tween boosterIdleTween;
+    Transform idleBoosterIcon;
+    Vector3 idleBoosterScale;
+
     public IEnumerator StartItemsAnim()
     {
         yield return new WaitForSeconds(5);
         if (isItemsAnim || GameController.instance.gameState != GAME_STATE.PLAYING)
             yield break;
-        List<Image[]> anims = new();
-        if (btShuffle.interactable)
+        List<Image> icons = new();
+        if (btUndo.isActiveAndEnabled && btUndo.interactable)
+            icons.Add(undoImg);
+        if (btShuffle.isActiveAndEnabled && btShuffle.interactable)
+            icons.Add(shuffleImg);
+        if (btSuggest.isActiveAndEnabled && btSuggest.interactable)
+            icons.Add(suggestImg);
+        if (icons.Count > 0)
         {
-            anims.Add(shuffleAnim);
-        }
-        if (btSuggest.interactable)
-        {
-            anims.Add(suggestAnim);
-        }
-        //if (btUndo.interactable)
-        //{
-        //    anims.Add(undoAnim);
-        //}
-        //List<string> animNames = new();
-        //foreach (var anim in anims)
-        //{
-        //    animNames.Add(anim[0].name);
-        //    animNames.Add(anim[1].name);
-        //}
-        //Debug.Log(string.Join("|", animNames));
-        if (anims.Count > 0)
-        {
-            Image[] usingAnims = GameConfig.GetRandom(anims.ToArray());
-            foreach (var anim in usingAnims)
-                anim.DOFade(1, 0.75f).SetLoops(-1, LoopType.Yoyo);
+            idleBoosterIcon = GameConfig.GetRandom(icons.ToArray()).transform;
+            idleBoosterScale = idleBoosterIcon.localScale;
+            boosterIdleTween = idleBoosterIcon.DOScale(idleBoosterScale * 1.15f, 0.6f)
+                .SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo)
+                .OnKill(() =>
+                {
+                    if (idleBoosterIcon != null)
+                        idleBoosterIcon.localScale = idleBoosterScale;
+                    idleBoosterIcon = null;
+                    boosterIdleTween = null;
+                    isItemsAnim = false;
+                });
             isItemsAnim = true;
         }
         GameController.instance.IdleAnimPlay();
@@ -654,25 +685,20 @@ public class GameScript : MonoBehaviour
     }
     public void EndItemsAnim()
     {
+        StopBoosterIdleAnimation();
+        if (isActiveAndEnabled)
+            itemsAnimCoroutine = StartCoroutine(StartItemsAnim());
+    }
+
+    void StopBoosterIdleAnimation()
+    {
         if (itemsAnimCoroutine != null)
         {
             StopCoroutine(itemsAnimCoroutine);
             itemsAnimCoroutine = null;
         }
+        boosterIdleTween?.Kill();
         isItemsAnim = false;
-        shuffleAnim[0].DOKill();
-        shuffleAnim[1].DOKill();
-        shuffleAnim[0].DOFade(0, 0);
-        shuffleAnim[1].DOFade(0, 0);
-        suggestAnim[0].DOKill();
-        suggestAnim[1].DOKill();
-        suggestAnim[0].DOFade(0, 0);
-        suggestAnim[1].DOFade(0, 0);
-        undoAnim[0].DOKill();
-        undoAnim[1].DOKill();
-        undoAnim[0].DOFade(0, 0);
-        undoAnim[1].DOFade(0, 0);
-        itemsAnimCoroutine = StartCoroutine(StartItemsAnim());
     }
     #endregion
 

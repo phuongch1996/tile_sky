@@ -159,7 +159,16 @@ public partial class PopupWin : Popup
         win2GO.SetActive(false);
         txNext.text = "Level " + (GameConfig.level + 1);
 
-        base.Open();
+        if (heavenlyWin)
+            OpenVictoryCelebration();
+        else
+            base.Open();
+    }
+
+    public override void Close()
+    {
+        StopVictoryCelebration();
+        base.Close();
     }
     void Win1()
     {

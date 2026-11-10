@@ -13,6 +13,13 @@ public partial class PopupWin
     RectTransform progressGift;
     Sequence goldRewardFlight;
     Sequence giftIdle;
+    RectTransform victoryHeader;
+    RectTransform victoryEffects;
+    readonly List<RectTransform> victoryConfetti = new();
+    Sequence victoryEntrance;
+    Sprite victoryGlowSprite;
+    Texture2D victoryGlowTexture;
+    Image victoryGlow;
     int pendingGoldAmount;
     readonly List<Sprite> winSprites = new();
     readonly List<Material> winTextMaterials = new();
@@ -28,6 +35,7 @@ public partial class PopupWin
         foreach (Transform child in safeArea) child.gameObject.SetActive(false);
         heavenlyWin = WinRect("Heavenly victory", safeArea, new Vector2(960, 1440), Vector2.zero);
         var header = WinRect("Victory header", heavenlyWin, new Vector2(900, 580), new Vector2(0, 410));
+        victoryHeader = header;
         var headerImage = header.gameObject.AddComponent<Image>();
         headerImage.sprite = art;
         headerImage.preserveAspect = true;
@@ -154,6 +162,120 @@ public partial class PopupWin
         GameConfig.AddGold(amount);
     }
 
+    void EnsureVictoryEffects()
+    {
+        if (victoryEffects) return;
+        victoryEffects = WinRect("Victory confetti", heavenlyWin, new Vector2(960, 1440), Vector2.zero);
+        // A soft radial light behind the existing header, using code-created UI artwork.
+        const int size = 64;
+        victoryGlowTexture = new Texture2D(size, size, TextureFormat.RGBA32, false);
+        victoryGlowTexture.wrapMode = TextureWrapMode.Clamp;
+        victoryGlowTexture.filterMode = FilterMode.Bilinear;
+        var pixels = new Color[size * size];
+        for (int y = 0; y < size; y++)
+            for (int x = 0; x < size; x++)
+            {
+                float radius = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), Vector2.one * (size * 0.5f)) / (size * 0.5f);
+                float alpha = Mathf.Pow(Mathf.Clamp01(1 - radius), 2);
+                pixels[y * size + x] = new Color(1, 0.82f, 0.25f, alpha);
+            }
+        victoryGlowTexture.SetPixels(pixels);
+        victoryGlowTexture.Apply(false, true);
+        victoryGlowSprite = Sprite.Create(victoryGlowTexture, new Rect(0, 0, size, size), Vector2.one * 0.5f);
+        var glow = WinRect("Victory golden burst", heavenlyWin, new Vector2(1120, 1000), new Vector2(0, 410));
+        glow.SetAsFirstSibling();
+        victoryGlow = glow.gameObject.AddComponent<Image>();
+        victoryGlow.sprite = victoryGlowSprite;
+        victoryGlow.raycastTarget = false;
+        for (int i = 0; i < 56; i++)
+        {
+            var piece = WinRect("Victory confetti " + i, victoryEffects, Vector2.one, Vector2.zero);
+            var image = piece.gameObject.AddComponent<Image>();
+            image.raycastTarget = false;
+            victoryConfetti.Add(piece);
+        }
+        victoryEffects.gameObject.SetActive(false);
+        glow.gameObject.SetActive(false);
+    }
+
+    void OpenVictoryCelebration()
+    {
+        StopVictoryCelebration();
+        EnsureVictoryEffects();
+        if (showTopBar)
+        {
+            if (GameScript.instance) GameScript.instance.topBarScript.Top();
+            else if (HomeScript.instance) HomeScript.instance.topBarScript.Top();
+        }
+        panel.SetActive(true);
+        victoryEffects.gameObject.SetActive(true);
+        victoryGlow.gameObject.SetActive(true);
+        victoryHeader.anchoredPosition = new Vector2(0, 340);
+        victoryHeader.localScale = Vector3.one * 0.18f;
+        victoryGlow.color = new Color(1, 1, 1, 0);
+        victoryGlow.transform.localScale = Vector3.one * 0.3f;
+        victoryEntrance = DOTween.Sequence().SetUpdate(true);
+        var shade = panel.GetComponent<Image>();
+        if (shade)
+        {
+            shade.color = new Color(0, 0, 0, 0);
+            victoryEntrance.Insert(0, shade.DOFade(0.55f, 0.25f));
+        }
+        victoryEntrance.Insert(0, victoryHeader.DOAnchorPosY(410, 0.48f).SetEase(Ease.OutCubic));
+        victoryEntrance.Insert(0, victoryHeader.DOScale(1.12f, 0.32f).SetEase(Ease.OutCubic));
+        victoryEntrance.Insert(0.32f, victoryHeader.DOScale(0.97f, 0.12f).SetEase(Ease.InOutSine));
+        victoryEntrance.Insert(0.44f, victoryHeader.DOScale(1, 0.16f).SetEase(Ease.OutSine));
+        victoryEntrance.Insert(0.12f, victoryGlow.DOFade(1, 0.2f));
+        victoryEntrance.Insert(0.12f, victoryGlow.transform.DOScale(1, 0.45f).SetEase(Ease.OutCubic));
+        victoryEntrance.Insert(0.4f, victoryGlow.DOFade(0, 1.7f));
+        Color[] colors = { new Color32(255, 202, 60, 255), new Color32(255, 88, 122, 255),
+            new Color32(89, 218, 255, 255), new Color32(184, 137, 255, 255), Color.white };
+        var random = new System.Random(1847);
+        for (int i = 0; i < victoryConfetti.Count; i++)
+        {
+            var piece = victoryConfetti[i];
+            var image = piece.GetComponent<Image>();
+            bool sparkle = i % 4 == 0;
+            piece.sizeDelta = sparkle ? new Vector2(9, 9) : new Vector2(9, 22);
+            float side = i % 2 == 0 ? -1 : 1;
+            var origin = new Vector2(side * 120, 400);
+            var apex = new Vector2(side * (180 + (float)random.NextDouble() * 380),
+                450 + (float)random.NextDouble() * 370);
+            var landing = apex + new Vector2(side * 80, -650 - (float)random.NextDouble() * 240);
+            float start = 0.26f + (float)random.NextDouble() * 0.12f;
+            piece.anchoredPosition = origin;
+            piece.localScale = Vector3.zero;
+            piece.localRotation = Quaternion.identity;
+            image.color = colors[i % colors.Length];
+            victoryEntrance.Insert(start, piece.DOScale(1, 0.12f));
+            victoryEntrance.Insert(start, piece.DOAnchorPos(apex, 0.38f).SetEase(Ease.OutQuad));
+            victoryEntrance.Insert(start + 0.38f, piece.DOAnchorPos(landing, 1.65f).SetEase(Ease.InQuad));
+            victoryEntrance.Insert(start, piece.DOLocalRotate(new Vector3(0, 0, side * (400 + i * 21)),
+                2.03f, RotateMode.FastBeyond360).SetEase(Ease.Linear));
+            victoryEntrance.Insert(start + 1.35f, image.DOFade(0, 0.65f));
+        }
+        // Match the reference's short reveal before the existing reward flow starts.
+        victoryEntrance.InsertCallback(0.65f, () => tweenCallback?.Invoke());
+        victoryEntrance.OnComplete(() =>
+        {
+            victoryEffects.gameObject.SetActive(false);
+            victoryGlow.gameObject.SetActive(false);
+        });
+    }
+
+    void StopVictoryCelebration()
+    {
+        victoryEntrance?.Kill();
+        victoryEntrance = null;
+        if (victoryEffects) victoryEffects.gameObject.SetActive(false);
+        if (victoryGlow) victoryGlow.gameObject.SetActive(false);
+        if (victoryHeader)
+        {
+            victoryHeader.localScale = Vector3.one;
+            victoryHeader.anchoredPosition = new Vector2(0, 410);
+        }
+    }
+
     void StartGiftIdle()
     {
         StopGiftIdle();
@@ -176,6 +298,7 @@ public partial class PopupWin
 
     void OnDisable()
     {
+        StopVictoryCelebration();
         goldRewardFlight?.Kill();
         // Closing during the flight still grants the earned gold exactly once.
         SettleGoldReward();
@@ -255,6 +378,9 @@ public partial class PopupWin
 
     void OnDestroy()
     {
+        victoryEntrance?.Kill();
+        if (victoryGlowSprite) Destroy(victoryGlowSprite);
+        if (victoryGlowTexture) Destroy(victoryGlowTexture);
         goldRewardFlight?.Kill();
         giftIdle?.Kill();
         foreach (var material in winTextMaterials)

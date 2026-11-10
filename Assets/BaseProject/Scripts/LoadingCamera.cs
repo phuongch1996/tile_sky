@@ -175,6 +175,16 @@ public class LoadingCamera : MonoBehaviour
         var frame = loadProgress.transform.parent.GetComponent<Image>();
         if (frame)
         {
+            const float border = 4f;
+            var fillRect = loadProgress.rectTransform;
+            var fillSize = fillRect.rect.size;
+            // Keep the colored bar's size and bring the surrounding frame close to it.
+            frame.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, fillSize.x + border * 2);
+            frame.rectTransform.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, fillSize.y + border * 2);
+            fillRect.anchorMin = Vector2.zero;
+            fillRect.anchorMax = Vector2.one;
+            fillRect.offsetMin = Vector2.one * border;
+            fillRect.offsetMax = -Vector2.one * border;
             loadingProgressGroup = frame.GetComponent<CanvasGroup>();
             if (!loadingProgressGroup) loadingProgressGroup = frame.gameObject.AddComponent<CanvasGroup>();
             loadingProgressGroup.blocksRaycasts = loadingProgressGroup.interactable = false;
