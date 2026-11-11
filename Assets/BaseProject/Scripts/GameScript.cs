@@ -196,6 +196,7 @@ public class GameScript : MonoBehaviour
     public TextMeshProUGUI txComboCounter;
     [SerializeField] private SpriteRenderer objectiveTrayFrame;
     private RectTransform modeObjectiveCounter;
+    private bool modeObjectivePinnedToTray;
     [Space]
     public GameObject challengeTimerGO;
     public TextMeshProUGUI txChallengeTimer;
@@ -249,6 +250,7 @@ public class GameScript : MonoBehaviour
         };
         StyleLevelText(txLevel, outlineColor);
         levelGO.SetActive(true);
+        RefreshLevelLabelVisibility();
         levelGO.transform.parent.GetComponent<RectTransform>().anchoredPosition = Vector2.zero;
     }
 
@@ -294,15 +296,27 @@ public class GameScript : MonoBehaviour
 
     private void LateUpdate()
     {
+        RefreshLevelLabelVisibility();
         if (!IsLevelEntering && !IsReturningHome)
             PositionTrayCounters();
     }
 
-    public void RegisterModeObjectiveCounter(RectTransform counter)
+    private void RefreshLevelLabelVisibility()
+    {
+        bool hasCounter = goldTileCountGO.activeInHierarchy || comboCountGO.activeInHierarchy ||
+            (modeObjectiveCounter != null && modeObjectiveCounter.gameObject.activeInHierarchy);
+        bool showLevel = !GameConfig.isChallengeLevel && !hasCounter;
+        if (levelTextGO.activeSelf != showLevel)
+            levelTextGO.SetActive(showLevel);
+    }
+
+    public void RegisterModeObjectiveCounter(RectTransform counter, float height = 64f, bool pinToTray = false)
     {
         modeObjectiveCounter = counter;
-        PrepareTrayCounter(counter, new Vector2(850f, 64f));
+        modeObjectivePinnedToTray = pinToTray;
+        PrepareTrayCounter(counter, new Vector2(850f, height));
         PositionTrayCounters();
+        RefreshLevelLabelVisibility();
     }
 
     private void PrepareTrayCounter(RectTransform counter, Vector2 size)
@@ -336,8 +350,27 @@ public class GameScript : MonoBehaviour
         comboCounter.anchoredPosition = position;
         if (modeObjectiveCounter != null)
         {
-            float extraHeight = goldTileCountGO.activeSelf || comboCountGO.activeSelf ? 130f : 0f;
-            modeObjectiveCounter.anchoredPosition = position + Vector2.up * extraHeight;
+            if (modeObjectivePinnedToTray)
+            {
+                // Keep the gap proportional to the tray's vertical size.
+                Vector2 objectiveScreenPoint = Camera.main.WorldToScreenPoint(new Vector3(
+                    trayBounds.center.x, trayBounds.max.y + trayBounds.size.y * 0.1f, trayBounds.center.z));
+                if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
+                    parent, objectiveScreenPoint, uiCamera, out var objectivePosition))
+                    return;
+                modeObjectiveCounter.anchoredPosition = objectivePosition;
+                if (modeObjectiveCounter.gameObject.activeInHierarchy)
+                {
+                    Vector2 eventPosition = objectivePosition + Vector2.up * (modeObjectiveCounter.rect.height + 8f);
+                    goldCounter.anchoredPosition = eventPosition;
+                    comboCounter.anchoredPosition = eventPosition;
+                }
+            }
+            else
+            {
+                float extraHeight = goldTileCountGO.activeSelf || comboCountGO.activeSelf ? 130f : 0f;
+                modeObjectiveCounter.anchoredPosition = position + Vector2.up * extraHeight;
+            }
         }
     }
     int GetCurrentEventTarget()
@@ -361,8 +394,7 @@ public class GameScript : MonoBehaviour
     {
         goldTileCountGO.SetActive(false);
         comboCountGO.SetActive(false);
-        if (!GameConfig.isChallengeLevel)
-            levelTextGO.SetActive(true);
+        RefreshLevelLabelVisibility();
     }
     public void EventGoalCounter()
     {

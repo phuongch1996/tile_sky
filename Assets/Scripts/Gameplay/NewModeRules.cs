@@ -6,13 +6,15 @@ public static class NewModeRules
 {
     public const int WinningTileType = -3; // -1 and -2 already belong to existing modes/events.
     public const int CoinTileType = -4;
+    public const int WinningStageCount = 3;
 
     public static bool IsExtendedMode(int mode) => mode >= 9 && mode <= 14;
     // Legacy CSVs include 8, which intentionally keeps its old normal-mode fallback.
     public static bool IsReadableMode(int mode) => (mode >= 0 && mode <= 8) || IsExtendedMode(mode);
     public static int LockedSlots(int parameter) => Math.Max(1, Math.Min(4, parameter <= 0 ? 1 : parameter));
     public static int BombBudget(int value) => value > 0 ? value : 5;
-    public static int TargetRounds(int parameter) => parameter > 0 ? parameter : 3;
+    public static int TargetRounds(int parameter) => WinningStageCount;
+    public static int TargetStage(int clearedRounds) => Math.Max(0, Math.Min(WinningStageCount - 1, clearedRounds));
 
     public static int CoinTileCount(int parameter, int availableTriples)
     {

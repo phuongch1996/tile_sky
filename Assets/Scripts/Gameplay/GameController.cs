@@ -95,7 +95,8 @@ public partial class GameController : MonoBehaviour
 
     const string Match3FxSortingLayer = TileOnRuntimeFx.SlottedSortingLayer;
     const int Match3FxSortingOrder = 500;
-    const float Match3DurationMultiplier = 7f / 8f;
+    public const float Match3EffectSpeed = 2f;
+    const float Match3DurationMultiplier = 7f / 8f / Match3EffectSpeed;
     public TILE_APPEAR_ANIM TileAppearAnim => tileAppearAnim;
     public float TileAppearDurationMultiplier => tileAppearDurationMultiplier;
 
@@ -2118,6 +2119,8 @@ public partial class GameController : MonoBehaviour
             Match3FxSortingLayer,
             Match3FxSortingOrder);
         fallback.transform.position = position;
+        var fallbackMain = fallback.main;
+        fallbackMain.simulationSpeed = Match3EffectSpeed;
         fallback.Play(true);
         return fallback.gameObject;
     }
@@ -2195,7 +2198,9 @@ public partial class GameController : MonoBehaviour
 
     IEnumerator Remove3Match(List<ItemTile> tiles, bool useHintMergeFx = false)
     {
-        if (itemTiles.Count == 3)
+        // Target's last triple must still advance the hatching stage and counter.
+        if (itemTiles.Count == 3 && !(gameMode == GAME_MODE.tile_winning &&
+            tiles.Any(tile => tile.tileType == NewModeRules.WinningTileType)))
         {
             gameState = GAME_STATE.WIN;
             StartCoroutine(OnWin(tiles, useHintMergeFx));

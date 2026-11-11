@@ -6,10 +6,11 @@ using UnityEngine.EventSystems;
 
 public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPointerClickHandler
 {
-    const float SlottedScale = 1.1f * 0.95f;
+    const float SlottedSizeMultiplier = 1.05f;
+    const float SlottedScale = 1.1f * 0.95f * SlottedSizeMultiplier;
     // Inner well dimensions measured from SkyTray's imported rect, in tray units.
     static readonly Vector2 SlottedCellSize = new Vector2(1.01f, 1.02f);
-    const float SlottedCellFill = 0.92f;
+    const float SlottedCellFill = 0.92f * SlottedSizeMultiplier;
     const float SlotFlyDuration = 0.34f;
     const int RocketFlameTextureWidth = 192;
     const int RocketFlameTextureHeight = 96;

@@ -87,7 +87,7 @@ public class PopupTutorial : Popup
             10 => "POISON\n\nMatching a POISON triple sends one random ordinary tile to your tray, then shuffles the board.",
             11 => "BOMB\n\nExposed bombs count down on each selection. At zero, each bomb sends one random tile to the tray. Collect a bomb before it expires.",
             12 => "UNCOVER TRAYS\n\nRemove the tiles covering every orange tray to win. Remaining tiles clear automatically.",
-            13 => "TARGET TILES\n\nMatch the TARGET triple to reveal the next target. Complete all rounds to win.",
+            13 => "TARGET TILES\n\nMatch 3 eggs to hatch bunnies. Match 3 bunnies in shells, then 3 carrot bunnies. Complete all 3 stages to win.",
             14 => "COIN TILES\n\nMatch every COIN triple to win. Remaining tiles clear automatically.",
             _ => ""
         };

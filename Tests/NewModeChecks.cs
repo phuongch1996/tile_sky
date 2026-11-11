@@ -57,6 +57,11 @@ internal static class NewModeChecks
     [MethodImpl(MethodImplOptions.NoInlining)]
     static void Run(string root)
     {
+        Check(NewModeRules.TargetRounds(0) == 3 && NewModeRules.TargetRounds(9) == 3,
+            "Target mode must finish after its three hatching stages");
+        Check(new[] { 0, 1, 2, 3, -1 }.Select(NewModeRules.TargetStage)
+                .SequenceEqual(new[] { 0, 1, 2, 2, 0 }),
+            "Target art must advance egg/shell/carrot and clamp saved stage values");
         for (int id = 0; id <= 7; id++)
         {
             Check((int)LevelManager.GetGameMode(id) == id, "Legacy enum changed: " + id);

@@ -17,6 +17,7 @@ public class PopupPiggyBank : Popup
     public TextMeshProUGUI txTimer;
     public Button btClose;
     public Button btPanel;
+    Sprite greenButtonFace;
     bool isInit;
     private void Awake0()
     {
@@ -59,11 +60,42 @@ public class PopupPiggyBank : Popup
     }
     public override void Open()
     {
+        ApplyNewGreenButton();
         Awake0();
         btClose.onClick.RemoveAllListeners();
         btPanel.onClick.RemoveAllListeners();
         SetupPiggyBank();
         base.Open();
+    }
+
+    void ApplyNewGreenButton()
+    {
+        if (!greenButtonFace)
+        {
+            var atlas = Resources.Load<Texture2D>("HeavenlyWin/Buttons");
+            if (!atlas) return;
+            var region = new Rect(atlas.width * 0.11f, atlas.height * 0.51f,
+                atlas.width * 0.78f, atlas.height * 0.48f);
+            greenButtonFace = Sprite.Create(atlas, region, new Vector2(0.5f, 0.5f),
+                100, 0, SpriteMeshType.FullRect);
+        }
+        btBuyPiggyBank.image.sprite = greenButtonFace;
+        btBuyPiggyBank.image.type = Image.Type.Simple;
+        btBuyPiggyBank.image.preserveAspect = false;
+        btBuyPiggyBank.image.color = Color.white;
+        foreach (var label in btBuyPiggyBank.GetComponentsInChildren<TextMeshProUGUI>(true))
+        {
+            label.rectTransform.anchorMin = new Vector2(0.08f, 0.18f);
+            label.rectTransform.anchorMax = new Vector2(0.92f, 0.82f);
+            label.rectTransform.offsetMin = label.rectTransform.offsetMax = Vector2.zero;
+            label.alignment = TextAlignmentOptions.Center;
+            label.raycastTarget = false;
+        }
+    }
+
+    void OnDestroy()
+    {
+        if (greenButtonFace) Destroy(greenButtonFace);
     }
     //public override void Close()
     //{

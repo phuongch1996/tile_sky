@@ -13,6 +13,12 @@ public class HomeScript : MonoBehaviour
 
 	[SerializeField, Min(0.1f)] private float playExitDuration = 1f;
 	[SerializeField] private RectTransform homeLogo;
+	[SerializeField, Min(0.1f)] private float homeLogoRotateDuration = 5f;
+	private const float HomeLogoSwayAngle = 3.5f;
+	private const float HomeLogoPulseScale = 1.04f;
+	private Tween homeLogoRotateTween;
+	private Tween homeLogoPulseTween;
+	private Vector3 homeLogoBaseScale;
 	private enum PlayExitStyle { StaggeredEdges, Up, Down, Left, Right }
 	private bool startingLevel;
 	private Sequence playExitSequence;
@@ -61,6 +67,7 @@ public class HomeScript : MonoBehaviour
 	private void OnDisable()
 	{
 		ResetPlayTransition();
+		StopHomeLogoIdleAnimation();
 	}
 
 	private void SetupTestControls()
@@ -291,8 +298,52 @@ public class HomeScript : MonoBehaviour
 		homeEntranceSequence.OnComplete(() =>
 		{
 			homeEntranceSequence = null;
+			StartHomeLogoIdleAnimation();
 			OnCompleteHomeUI();
 		});
+	}
+
+	private RectTransform ResolveHomeLogo()
+	{
+		if (homeLogo == null && btPlay != null && btPlay.transform.parent != null)
+			homeLogo = btPlay.transform.parent.Cast<Transform>().OfType<RectTransform>()
+				.FirstOrDefault(rect => rect.name.StartsWith("logo", StringComparison.OrdinalIgnoreCase));
+		return homeLogo;
+	}
+
+	private void StartHomeLogoIdleAnimation()
+	{
+		var logo = ResolveHomeLogo();
+		if (logo == null)
+			return;
+
+		StopHomeLogoIdleAnimation();
+		logo.localRotation = Quaternion.identity;
+		homeLogoBaseScale = logo.localScale == Vector3.zero ? Vector3.one : logo.localScale;
+
+		// A slow sway plus a soft breathing pulse so the already-looping
+		// Spine animation feels alive instead of sitting perfectly still.
+		float half = Mathf.Max(0.1f, homeLogoRotateDuration) * 0.5f;
+		homeLogoRotateTween = logo.DORotate(new Vector3(0f, 0f, HomeLogoSwayAngle), half)
+			.SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo).SetUpdate(true);
+		homeLogoPulseTween = logo.DOScale(homeLogoBaseScale * HomeLogoPulseScale, half)
+			.SetEase(Ease.InOutSine).SetLoops(-1, LoopType.Yoyo).SetUpdate(true);
+	}
+
+	private void StopHomeLogoIdleAnimation()
+	{
+		// Only restore the transform when an idle animation was actually running,
+		// so scene-load calls (OnEnable) never overwrite the designed scale.
+		bool wasAnimating = homeLogoRotateTween != null || homeLogoPulseTween != null;
+		homeLogoRotateTween?.Kill(false);
+		homeLogoRotateTween = null;
+		homeLogoPulseTween?.Kill(false);
+		homeLogoPulseTween = null;
+		if (wasAnimating && homeLogo != null)
+		{
+			homeLogo.localRotation = Quaternion.identity;
+			homeLogo.localScale = homeLogoBaseScale == Vector3.zero ? Vector3.one : homeLogoBaseScale;
+		}
 	}
 
 	public void HomeUI(bool firstLoad = true)
@@ -524,6 +575,7 @@ public class HomeScript : MonoBehaviour
 		btPlay.transform.DOScale(1f, 0.5f).SetDelay(delay0).SetEase(Ease.OutBack)
 			.OnComplete(delegate
 			{
+				StartHomeLogoIdleAnimation();
 				OnCompleteHomeUI();
 			});
 	}
@@ -666,6 +718,7 @@ public class HomeScript : MonoBehaviour
 	private void AnimateHomeExit()
 	{
 		startingLevel = true;
+		StopHomeLogoIdleAnimation();
 		if (homeAnimation != null)
 		{
 			StopCoroutine(homeAnimation);
@@ -710,9 +763,8 @@ public class HomeScript : MonoBehaviour
 	{
 		var candidates = new List<Transform>();
 		// Also resolve the logo in scenes that were already open before this field was added.
-		if (homeLogo == null && btPlay != null && btPlay.transform.parent != null)
-			homeLogo = btPlay.transform.parent.Cast<Transform>().OfType<RectTransform>()
-				.FirstOrDefault(rect => rect.name.StartsWith("logo", StringComparison.OrdinalIgnoreCase));
+		if (homeLogo == null)
+			ResolveHomeLogo();
 		if (homeLogo != null)
 			candidates.Add(homeLogo);
 		foreach (var button in new[] { btSettings, btShop, btDailyLogin, btEvent, btBattlePass,
@@ -792,6 +844,7 @@ public class HomeScript : MonoBehaviour
 
 	private void ResetPlayTransition()
 	{
+		StopHomeLogoIdleAnimation();
 		homeEntranceSequence?.Kill(false);
 		homeEntranceSequence = null;
 		playExitSequence?.Kill();

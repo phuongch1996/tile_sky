@@ -28,7 +28,7 @@ public partial class PopupLose : Popup
             //btHome.onClick.AddListener(() => Home());
             if (lose1.activeSelf)
             {
-                imgCounterFill.DOFillAmount(1, 5).SetEase(Ease.Linear)
+                imgCounterFill.DOFillAmount(0, 5).SetEase(Ease.Linear)
                     .OnUpdate(UpdateReviveCountdown).OnComplete(() =>
                 {
                     Restart();
@@ -40,8 +40,8 @@ public partial class PopupLose : Popup
     void UpdateReviveCountdown()
     {
         float progress = imgCounterFill.fillAmount;
-        txTimeCounter.text = Mathf.Clamp(Mathf.FloorToInt(progress * 5) + 1, 1, 5).ToString();
-        float angle = progress * Mathf.PI * 2;
+        txTimeCounter.text = Mathf.Clamp(Mathf.CeilToInt(progress * 5), 0, 5).ToString();
+        float angle = (1f - progress) * Mathf.PI * 2;
         fxTfm.anchoredPosition = new Vector2(Mathf.Sin(angle), Mathf.Cos(angle)) * 270;
     }
     public override void Open()
@@ -69,8 +69,8 @@ public partial class PopupLose : Popup
             showTopBar = true;
             lose1.SetActive(true);
             canRevive.SetActive(true);
-            imgCounterFill.fillAmount = 0;
-            txTimeCounter.text = "1";
+            imgCounterFill.fillAmount = 1;
+            txTimeCounter.text = "5";
         }
         else
         {

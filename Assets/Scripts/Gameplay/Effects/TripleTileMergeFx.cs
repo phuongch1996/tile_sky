@@ -7,9 +7,10 @@ public class TripleTileMergeFx : MonoBehaviour
 {
     const string SortingLayer = TileOnRuntimeFx.HoveringSortingLayer;
     const int SortingOrder = TileOnRuntimeFx.TileFxSortingOrder;
-    public const float Duration = 1.2f;
-    const float HighlightDuration = 0.12f;
-    const float HopStagger = 0.16f;
+    const float TimeMultiplier = 1f / GameController.Match3EffectSpeed;
+    public const float Duration = 1.2f * TimeMultiplier;
+    const float HighlightDuration = 0.12f * TimeMultiplier;
+    const float HopStagger = 0.16f * TimeMultiplier;
     readonly List<TileState> tilesInFlight = new();
     readonly List<GameObject> visuals = new();
     Sequence sequence;
@@ -89,7 +90,7 @@ public class TripleTileMergeFx : MonoBehaviour
             return null;
         }
 
-        // Stagger overlapping hops so all three clear within the 1.2-second effect.
+        // Keep the hops and their particles on the same match-effect timeline.
         sequence.Append(illuminate);
         for (int i = 0; i < tilesInFlight.Count; i++)
         {
@@ -100,31 +101,31 @@ public class TripleTileMergeFx : MonoBehaviour
             var trail = CreateLightTrail(state.tile.transform, order);
             var ring = CreatePopRing(order);
             var hop = DOTween.Sequence();
-            hop.Append(state.visual.DOScale(Vector3.Scale(state.scale, new Vector3(1.18f, 0.85f, 1)), 0.04f));
+            hop.Append(state.visual.DOScale(Vector3.Scale(state.scale, new Vector3(1.18f, 0.85f, 1)), 0.04f * TimeMultiplier));
             hop.AppendCallback(() =>
             {
                 trail.emitting = true;
                 SpawnStars(state.tile.transform.position, order, 10);
             });
-            hop.Append(state.tile.transform.DOMoveY(startY + height, 0.22f).SetEase(Ease.OutCubic));
-            hop.Join(state.visual.DOScale(state.scale * 1.18f, 0.14f).SetEase(Ease.OutBack));
-            hop.Join(state.visual.DOLocalRotateQuaternion(state.rotation * Quaternion.Euler(0, 0, i % 2 == 0 ? 9 : -9), 0.22f));
+            hop.Append(state.tile.transform.DOMoveY(startY + height, 0.22f * TimeMultiplier).SetEase(Ease.OutCubic));
+            hop.Join(state.visual.DOScale(state.scale * 1.18f, 0.14f * TimeMultiplier).SetEase(Ease.OutBack));
+            hop.Join(state.visual.DOLocalRotateQuaternion(state.rotation * Quaternion.Euler(0, 0, i % 2 == 0 ? 9 : -9), 0.22f * TimeMultiplier));
             hop.AppendCallback(() =>
             {
                 SpawnStars(state.tile.transform.position, order, 28);
                 ring.transform.position = state.tile.transform.position;
                 ring.gameObject.SetActive(true);
             });
-            hop.Append(state.tile.transform.DOMoveY(startY + height + 0.25f, 0.14f).SetEase(Ease.OutSine));
-            hop.Join(state.visual.DOScale(0, 0.14f).SetEase(Ease.InSine));
-            hop.Join(ring.transform.DOScale(1.6f, 0.14f).SetEase(Ease.OutQuad));
+            hop.Append(state.tile.transform.DOMoveY(startY + height + 0.25f, 0.14f * TimeMultiplier).SetEase(Ease.OutSine));
+            hop.Join(state.visual.DOScale(0, 0.14f * TimeMultiplier).SetEase(Ease.InSine));
+            hop.Join(ring.transform.DOScale(1.6f, 0.14f * TimeMultiplier).SetEase(Ease.OutQuad));
             hop.Join(DOTween.To(() => 0.9f, alpha =>
             {
                 var color = new Color(0.65f, 0.95f, 1, alpha);
                 ring.startColor = ring.endColor = color;
-            }, 0, 0.14f));
+            }, 0, 0.14f * TimeMultiplier));
             foreach (var highlight in state.highlights)
-                hop.Join(highlight.DOFade(0, 0.14f));
+                hop.Join(highlight.DOFade(0, 0.14f * TimeMultiplier));
             hop.AppendCallback(() => trail.emitting = false);
             sequence.Insert(HighlightDuration + i * HopStagger, hop);
         }
@@ -145,7 +146,7 @@ public class TripleTileMergeFx : MonoBehaviour
         go.transform.SetParent(tile, false);
         var trail = go.GetComponent<TrailRenderer>();
         trail.sharedMaterial = starMaterial;
-        trail.time = 0.15f;
+        trail.time = 0.15f * TimeMultiplier;
         trail.minVertexDistance = 0.02f;
         trail.startWidth = 0.24f;
         trail.endWidth = 0;
@@ -218,6 +219,7 @@ public class TripleTileMergeFx : MonoBehaviour
         renderer.renderMode = ParticleSystemRenderMode.Mesh;
         renderer.mesh = TileOnRuntimeFx.StarParticleMesh();
         var main = dust.main;
+        main.simulationSpeed = GameController.Match3EffectSpeed;
         main.startRotation = new ParticleSystem.MinMaxCurve(-Mathf.PI, Mathf.PI);
         var velocity = dust.velocityOverLifetime;
         velocity.enabled = true;
@@ -234,7 +236,7 @@ public class TripleTileMergeFx : MonoBehaviour
         size.size = new ParticleSystem.MinMaxCurve(1, AnimationCurve.EaseInOut(0, 1, 1, 0));
         visuals.Add(dust.gameObject);
         dust.Play(true);
-        Destroy(dust.gameObject, 0.5f);
+        Destroy(dust.gameObject, 0.5f * TimeMultiplier);
     }
 
     void ResetEffect(bool restoreTiles)

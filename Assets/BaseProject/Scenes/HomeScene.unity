@@ -5684,14 +5684,14 @@ MonoBehaviour:
   currentBGM: 0
   bgmList:
   - id: 1
-    audioClip: {fileID: 8300000, guid: 963b2c79e26539b47bb47f036f5abff9, type: 3}
+    audioClip: {fileID: 8300000, guid: 4bae0314a4b30cd4288faafa228317d6, type: 3}
     volume: 0.3
   - id: 11
-    audioClip: {fileID: 8300000, guid: 144de3b069741f54789d6e139bd392df, type: 3}
-    volume: 0.8
+    audioClip: {fileID: 8300000, guid: 8ccb462a9e989414d96e661d322a3cd6, type: 3}
+    volume: 0.2
   - id: 12
-    audioClip: {fileID: 8300000, guid: 144de3b069741f54789d6e139bd392df, type: 3}
-    volume: 0.8
+    audioClip: {fileID: 8300000, guid: 8ccb462a9e989414d96e661d322a3cd6, type: 3}
+    volume: 0.2
   sfxList:
   - id: 1
     audioClip: {fileID: 8300000, guid: 39ee1df8d8bada046961f01867b65b78, type: 3}

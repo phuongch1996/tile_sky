@@ -7,7 +7,7 @@ public class MatchedItemBurstFx : MonoBehaviour
 {
     const int DefaultColumns = 6;
     const int DefaultRows = 3;
-    const float Match3DurationMultiplier = 7f / 8f;
+    const float Match3DurationMultiplier = 7f / 8f / GameController.Match3EffectSpeed;
     const float Duration = 0.78f * Match3DurationMultiplier;
     const float FragmentScaleMultiplier = 1.18f;
     const float ImpactScaleMultiplier = 1.35f;

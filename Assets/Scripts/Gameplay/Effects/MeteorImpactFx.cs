@@ -5,8 +5,8 @@ using UnityEngine;
 // Retain the component name/GUID for existing references; the visual is now sky magic.
 public class MeteorImpactFx : MonoBehaviour
 {
-    const float GatherDuration = 0.32f * 7f / 8f;
-    const float ReleaseDuration = 0.08f * 7f / 8f;
+    const float GatherDuration = 0.32f * 7f / 8f / GameController.Match3EffectSpeed;
+    const float ReleaseDuration = 0.08f * 7f / 8f / GameController.Match3EffectSpeed;
     readonly List<Tween> tweens = new();
     readonly List<Material> materials = new();
     Material lightMaterial;
@@ -63,13 +63,13 @@ public class MeteorImpactFx : MonoBehaviour
                 glints.Play(true);
                 halo.gameObject.SetActive(true);
                 halo.transform.localScale = Vector3.one * 0.4f;
-                tweens.Add(halo.transform.DOScale(1.45f, 0.38f).SetEase(Ease.OutCubic));
-                tweens.Add(DOTween.To(() => 0.65f, alpha => SetRibbonAlpha(halo, sky, alpha), 0, 0.38f));
-                tweens.Add(star.transform.DOScale(0, 0.18f).SetEase(Ease.InSine));
+                tweens.Add(halo.transform.DOScale(1.45f, 0.38f / GameController.Match3EffectSpeed).SetEase(Ease.OutCubic));
+                tweens.Add(DOTween.To(() => 0.65f, alpha => SetRibbonAlpha(halo, sky, alpha), 0, 0.38f / GameController.Match3EffectSpeed));
+                tweens.Add(star.transform.DOScale(0, 0.18f / GameController.Match3EffectSpeed).SetEase(Ease.InSine));
             })
             .AppendInterval(ReleaseDuration)
             // Clear the tile now; the dust finishes independently.
-            .OnComplete(() => Destroy(gameObject, 0.85f))
+            .OnComplete(() => Destroy(gameObject, 0.85f / GameController.Match3EffectSpeed))
             .SetTarget(gameObject);
         tweens.Add(sequence);
         return sequence;
@@ -118,6 +118,7 @@ public class MeteorImpactFx : MonoBehaviour
         renderer.renderMode = ParticleSystemRenderMode.Mesh;
         renderer.mesh = TileOnRuntimeFx.StarParticleMesh();
         var main = dust.main;
+        main.simulationSpeed = GameController.Match3EffectSpeed;
         main.startRotation = new ParticleSystem.MinMaxCurve(-Mathf.PI, Mathf.PI);
         main.gravityModifier = -0.12f;
         var velocity = dust.velocityOverLifetime;

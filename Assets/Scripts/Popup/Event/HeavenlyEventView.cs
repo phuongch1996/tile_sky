@@ -26,12 +26,13 @@ public sealed class HeavenlyEventView
         TextMeshProUGUI timer, Button collect, Button collectAds, GameObject prizeGroup,
         GameObject[] prizes, TextMeshProUGUI amount)
     {
-        var panel = Resources.Load<Sprite>("HeavenlyEvents/Panel");
+        var panel = Resources.Load<Sprite>("HeavenlyEvents/PanelWithoutTimer");
+        var timerArt = Resources.Load<Sprite>("HeavenlyEvents/Panel");
         var cardArt = Resources.Load<Sprite>("HeavenlyEvents/RewardCard");
         var symbols = Resources.Load<Texture2D>("HeavenlyEvents/Symbols");
         var padlock = Resources.Load<Sprite>("HeavenlyEvents/Lock");
         var scroll = cardParent.GetComponentInParent<ScrollRect>(true);
-        if (!panel || !cardArt || !symbols || !padlock || !scroll) return null;
+        if (!panel || !timerArt || !cardArt || !symbols || !padlock || !scroll) return null;
 
         var view = new HeavenlyEventView
         {
@@ -59,18 +60,30 @@ public sealed class HeavenlyEventView
 
         var heading = Label(progress, "Event title", view.root, new Vector2(720, 115), new Vector2(512, 370), 77);
         heading.text = title;
-        Move(timer.rectTransform, view.root, new Vector2(275, 90), new Vector2(578, 537));
-        TextStyle(timer, 58, new Color32(0, 44, 133, 255));
+        // The countdown is separate from the backdrop so both its frame and text
+        // can shrink together without squeezing the rest of the event panel.
+        float timerScaleX = timerArt.rect.width / 941f;
+        float timerScaleY = timerArt.rect.height / 1672f;
+        var timerSprite = Sprite.Create(timerArt.texture,
+            new UnityEngine.Rect(timerArt.rect.x + 278f * timerScaleX,
+                timerArt.rect.y + timerArt.rect.height - 554f * timerScaleY,
+                386f * timerScaleX, 121f * timerScaleY), Vector2.one * 0.5f,
+            timerArt.pixelsPerUnit, 0, SpriteMeshType.FullRect);
+        Graphic("Compact countdown frame", view.root, new Vector2(320, 100),
+            new Vector2(512, 510), timerSprite, Color.white);
+        Move(timer.rectTransform, view.root, new Vector2(210, 64), new Vector2(562, 510));
+        TextStyle(timer, 44, new Color32(0, 44, 133, 255));
         InvisibleButton(close, view.root, new Vector2(115, 115), new Vector2(942, 480));
         InvisibleButton(info, view.root, new Vector2(100, 100), new Vector2(930, 590));
-        Move((RectTransform)collect.transform, view.root, new Vector2(355, 105), new Vector2(312, 1710));
-        Move((RectTransform)collectAds.transform, view.root, new Vector2(355, 105), new Vector2(712, 1710));
+        const float collectHeight = 105f * 1.5f;
+        Move((RectTransform)collect.transform, view.root, new Vector2(355, collectHeight), new Vector2(312, 1710));
+        Move((RectTransform)collectAds.transform, view.root, new Vector2(355, collectHeight), new Vector2(712, 1710));
 
-        Move(progress.rectTransform, view.root, new Vector2(490, 70), new Vector2(510, 655));
+        Move(progress.rectTransform, view.root, new Vector2(490, 70), new Vector2(510, 610));
         TextStyle(progress, 49, new Color32(0, 44, 133, 255));
-        Move((RectTransform)prizeGroup.transform, view.root, new Vector2(155, 125), new Vector2(800, 653));
+        Move((RectTransform)prizeGroup.transform, view.root, new Vector2(155, 125), new Vector2(800, 608));
         StylePrizes(prizes, amount, (RectTransform)prizeGroup.transform, 155, 125, 47);
-        Move((RectTransform)slider.transform, view.root, new Vector2(570, 65), new Vector2(510, 655));
+        Move((RectTransform)slider.transform, view.root, new Vector2(570, 65), new Vector2(510, 610));
         foreach (Transform child in slider.transform) child.gameObject.SetActive(false);
         var track = slider.GetComponent<Image>();
         if (!track) track = slider.gameObject.AddComponent<Image>();
@@ -88,14 +101,14 @@ public sealed class HeavenlyEventView
         slider.handleRect = null; slider.fillRect = fill; slider.targetGraphic = track;
         slider.interactable = false; slider.transition = Selectable.Transition.None;
         slider.transform.SetSiblingIndex(1);
-        var symbol = Rect("Event symbol", view.root, new Vector2(115, 125), new Vector2(225, 655));
+        var symbol = Rect("Event symbol", view.root, new Vector2(115, 125), new Vector2(225, 610));
         var symbolImage = symbol.gameObject.AddComponent<Image>();
         symbolImage.sprite = Sprite.Create(symbols,
             new UnityEngine.Rect(symbolIndex * symbols.width / 2f, 0, symbols.width / 2f, symbols.height),
             Vector2.one * 0.5f, 100, 0, SpriteMeshType.FullRect);
         symbolImage.preserveAspect = true; symbolImage.raycastTarget = false;
 
-        Move((RectTransform)scroll.transform, view.root, new Vector2(850, 970), new Vector2(512, 1190));
+        Move((RectTransform)scroll.transform, view.root, new Vector2(850, 900), new Vector2(512, 1125));
         scroll.horizontal = false; scroll.vertical = true;
         if (scroll.horizontalScrollbar) scroll.horizontalScrollbar.gameObject.SetActive(false);
         if (scroll.verticalScrollbar) scroll.verticalScrollbar.gameObject.SetActive(false);
@@ -201,7 +214,9 @@ public sealed class HeavenlyEventView
             headerPrizeMask = mask;
         }
         var parent = (RectTransform)root.parent;
-        root.localScale = Vector3.one * (Mathf.Min(parent.rect.width / 1024, parent.rect.height / 1820) * 0.98f);
+        float scale = Mathf.Min(parent.rect.width / 1024, parent.rect.height / 1820) * 0.98f;
+        root.localScale = Vector3.one * scale;
+        root.anchoredPosition = Vector2.up * (35f * scale);
     }
 
     static RectTransform Rect(string name, Transform parent, Vector2 size, Vector2 center)

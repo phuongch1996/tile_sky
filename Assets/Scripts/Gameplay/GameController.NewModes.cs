@@ -5,6 +5,7 @@ using System.Linq;
 using DG.Tweening;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public partial class GameController
 {
@@ -19,8 +20,18 @@ public partial class GameController
     readonly List<ModeTrayProgress> modeTrays = new();
     readonly List<GameObject> modeTrayVisuals = new();
     TextMeshProUGUI modeObjective;
+    readonly Sprite[] targetTileSprites = new Sprite[NewModeRules.WinningStageCount];
+    RectTransform targetObjectiveRow;
+    TextMeshProUGUI targetCounterText;
+    RectTransform coinObjectiveRow;
+    TextMeshProUGUI coinCounterText;
+    int coinTilesTotal;
 
     bool HasNewMode => NewModeRules.IsExtendedMode((int)gameMode);
+    // Coin levels at every 10th level (10, 20, 30, ...) show a gold tile icon
+    // with a cleared/total counter instead of the "COIN tiles left" text.
+    bool IsGoldLevelCounter => gameMode == GAME_MODE.tile_gold_2 &&
+        GameConfig.level % 10 == 0 && coinTilesTotal > 0;
     int ModeSlotCount => gameMode == GAME_MODE.tile_missslot
         ? BaseSlotCount - NewModeRules.LockedSlots(parameter) : BaseSlotCount;
 
@@ -85,6 +96,7 @@ public partial class GameController
                 newModeClearBoardFallback = coinCount == 0;
                 foreach (var tile in triples.Take(coinCount / 3).SelectMany(group => group))
                     tile.SetType(NewModeRules.CoinTileType);
+                coinTilesTotal = itemTiles.Count(tile => tile.tileType == NewModeRules.CoinTileType);
                 if (coinCount == 0)
                     Debug.LogWarning("Coin mode has no complete ordinary triple; clear the board to win.");
                 break;
@@ -131,16 +143,47 @@ public partial class GameController
             return false;
         }
         tile.tileType = type;
-        var sprite = type == NewModeRules.CoinTileType
-            ? LevelManager.instance.tileSpritesSO.goldSprite
-            : itemSpritesUsing[0];
+        bool isTarget = type == NewModeRules.WinningTileType;
+        var targetTileSprite = isTarget ? GetTargetStageSprite() : null;
+        var sprite = isTarget
+            ? (targetTileSprite != null ? targetTileSprite : itemSpritesUsing[0])
+            : LevelManager.instance.tileSpritesSO.goldSprite;
         tile.item.sprite = sprite;
-        float edge = Mathf.Max(sprite.rect.width, sprite.rect.height);
-        tile.item.size = new Vector2(sprite.rect.width / edge, sprite.rect.height / edge) * 0.825f;
-        tile.item.transform.localPosition = new Vector3(0, 0.05f, 0.05f);
+        if (isTarget && targetTileSprite != null)
+        {
+            // This artwork includes the green face and the outer tile edge.
+            // Fit it across the whole tile rather than the smaller item-icon area.
+            Vector3 tileSize = Vector3.Scale(tile.bg.localBounds.size, tile.bg.transform.localScale);
+            tile.item.size = new Vector2(tileSize.x, tileSize.y);
+            Vector3 center = tile.item.transform.parent.InverseTransformPoint(
+                tile.bg.transform.TransformPoint(tile.bg.localBounds.center));
+            tile.item.transform.localPosition = new Vector3(center.x, center.y, 0.05f);
+        }
+        else
+        {
+            float edge = Mathf.Max(sprite.rect.width, sprite.rect.height);
+            tile.item.size = new Vector2(sprite.rect.width / edge, sprite.rect.height / edge) * 0.825f;
+            tile.item.transform.localPosition = new Vector3(0, 0.05f, 0.05f);
+        }
         GetModeMarker(tile).Configure(tile, type == NewModeRules.WinningTileType
             ? TileModeKind.Winning : TileModeKind.Coin);
         return true;
+    }
+
+    Sprite GetTargetStageSprite()
+    {
+        int stage = NewModeRules.TargetStage(newModeWinningRounds);
+        if (targetTileSprites[stage] == null)
+        {
+            string asset = stage switch
+            {
+                1 => "TargetBunnyShell",
+                2 => "TargetBunnyCarrot",
+                _ => "TargetTile"
+            };
+            targetTileSprites[stage] = Resources.LoadAll<Sprite>("TileSkyModes/" + asset).FirstOrDefault();
+        }
+        return targetTileSprites[stage];
     }
 
     public void OnNewModeTileCollected(ItemTile selected, bool automatic)
@@ -183,6 +226,7 @@ public partial class GameController
         {
             newModeWinningRounds++;
             newModeWaveQueued = newModeWinningRounds < newModeRoundTarget;
+            UpdateModeObjective();
         }
         EvaluateModeObjectives();
     }
@@ -361,6 +405,16 @@ public partial class GameController
     {
         var source = GameScript.instance.txLevel;
         if (source == null) return;
+        if (gameMode == GAME_MODE.tile_winning)
+        {
+            CreateTargetObjective(source);
+            return;
+        }
+        if (IsGoldLevelCounter)
+        {
+            CreateGoldCoinObjective(source);
+            return;
+        }
         if (modeObjective == null)
         {
             var go = new GameObject("Mode objective", typeof(TextMeshProUGUI));
@@ -382,8 +436,114 @@ public partial class GameController
         UpdateModeObjective();
     }
 
+    void CreateTargetObjective(TextMeshProUGUI source)
+    {
+        if (targetObjectiveRow == null)
+        {
+            targetObjectiveRow = new GameObject("Target bunny objective", typeof(RectTransform))
+                .GetComponent<RectTransform>();
+            targetObjectiveRow.SetParent(source.transform.parent, false);
+            targetObjectiveRow.anchorMin = source.rectTransform.anchorMin;
+            targetObjectiveRow.anchorMax = source.rectTransform.anchorMax;
+            targetObjectiveRow.pivot = source.rectTransform.pivot;
+            targetObjectiveRow.anchoredPosition = source.rectTransform.anchoredPosition + Vector2.down * 75;
+            targetObjectiveRow.sizeDelta = new Vector2(850f, 105f);
+
+            var icon = new GameObject("Three carrot bunnies", typeof(RectTransform), typeof(Image))
+                .GetComponent<Image>();
+            icon.transform.SetParent(targetObjectiveRow, false);
+            icon.sprite = Resources.LoadAll<Sprite>("TileSkyModes/TargetGoal").FirstOrDefault();
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
+            var iconRect = icon.rectTransform;
+            iconRect.anchorMin = iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+            iconRect.pivot = new Vector2(1f, 0.5f);
+            iconRect.anchoredPosition = new Vector2(-8f, 0f);
+            iconRect.sizeDelta = new Vector2(105f, 105f);
+
+            targetCounterText = new GameObject("Target cleared counter", typeof(TextMeshProUGUI))
+                .GetComponent<TextMeshProUGUI>();
+            targetCounterText.transform.SetParent(targetObjectiveRow, false);
+            targetCounterText.font = source.font;
+            targetCounterText.fontSharedMaterial = source.fontSharedMaterial;
+            targetCounterText.fontSize = 58f;
+            targetCounterText.color = Color.white;
+            targetCounterText.outlineColor = new Color32(25, 65, 125, 255);
+            targetCounterText.outlineWidth = 0.175f;
+            targetCounterText.fontMaterial.SetTexture("_OutlineTex", Texture2D.whiteTexture);
+            targetCounterText.alignment = TextAlignmentOptions.MidlineLeft;
+            targetCounterText.raycastTarget = false;
+            var textRect = targetCounterText.rectTransform;
+            textRect.anchorMin = textRect.anchorMax = new Vector2(0.5f, 0.5f);
+            textRect.pivot = new Vector2(0f, 0.5f);
+            textRect.anchoredPosition = new Vector2(8f, 0f);
+            textRect.sizeDelta = new Vector2(140f, 90f);
+        }
+        GameScript.instance.RegisterModeObjectiveCounter(targetObjectiveRow, 105f, pinToTray: true);
+        UpdateModeObjective();
+    }
+
+    void CreateGoldCoinObjective(TextMeshProUGUI source)
+    {
+        if (coinObjectiveRow == null)
+        {
+            coinObjectiveRow = new GameObject("Coin objective", typeof(RectTransform)).GetComponent<RectTransform>();
+            coinObjectiveRow.SetParent(source.transform.parent, false);
+            // Fallback placement matching the text objective; the tray counter
+            // repositions the row afterwards when its frame is available.
+            coinObjectiveRow.anchorMin = source.rectTransform.anchorMin;
+            coinObjectiveRow.anchorMax = source.rectTransform.anchorMax;
+            coinObjectiveRow.pivot = source.rectTransform.pivot;
+            coinObjectiveRow.anchoredPosition = source.rectTransform.anchoredPosition + Vector2.down * 75;
+            coinObjectiveRow.sizeDelta = new Vector2(850f, 64f);
+
+            var iconRect = new GameObject("Coin icon", typeof(RectTransform), typeof(Image))
+                .GetComponent<RectTransform>();
+            iconRect.SetParent(coinObjectiveRow, false);
+            iconRect.anchorMin = iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+            iconRect.pivot = new Vector2(1f, 0.5f);
+            iconRect.anchoredPosition = new Vector2(-8f, 0f);
+            iconRect.sizeDelta = new Vector2(64f, 64f);
+            var icon = iconRect.GetComponent<Image>();
+            icon.sprite = LevelManager.instance.tileSpritesSO.goldSprite;
+            icon.preserveAspect = true;
+            icon.raycastTarget = false;
+
+            coinCounterText = new GameObject("Coin counter", typeof(RectTransform), typeof(TextMeshProUGUI))
+                .GetComponent<TextMeshProUGUI>();
+            coinCounterText.transform.SetParent(coinObjectiveRow, false);
+            coinCounterText.font = source.font;
+            coinCounterText.fontSize = 44;
+            coinCounterText.alignment = TextAlignmentOptions.Left;
+            coinCounterText.raycastTarget = false;
+            var textRect = coinCounterText.rectTransform;
+            textRect.anchorMin = textRect.anchorMax = new Vector2(0.5f, 0.5f);
+            textRect.pivot = new Vector2(0f, 0.5f);
+            textRect.anchoredPosition = new Vector2(8f, 0f);
+            textRect.sizeDelta = new Vector2(260f, 64f);
+        }
+        GameScript.instance.RegisterModeObjectiveCounter(coinObjectiveRow);
+        UpdateModeObjective();
+    }
+
     void UpdateModeObjective()
     {
+        if (gameMode == GAME_MODE.tile_winning)
+        {
+            if (targetCounterText != null)
+                targetCounterText.text = Mathf.Clamp(newModeWinningRounds, 0, NewModeRules.WinningStageCount) +
+                    "/" + NewModeRules.WinningStageCount;
+            return;
+        }
+        if (IsGoldLevelCounter)
+        {
+            if (coinCounterText != null)
+            {
+                int left = itemTiles.Count(tile => tile.tileType == NewModeRules.CoinTileType);
+                coinCounterText.text = (coinTilesTotal - Mathf.Clamp(left, 0, coinTilesTotal)) + "/" + coinTilesTotal;
+            }
+            return;
+        }
         if (modeObjective == null) return;
         modeObjective.text = gameMode switch
         {
@@ -391,8 +551,6 @@ public partial class GameController
             GAME_MODE.tile_poison => "POISON triple: adds one tile, then shuffles",
             GAME_MODE.tile_bomb => "BOMB at zero: adds one tile to the tray",
             GAME_MODE.tile_tray => "Uncover trays: " + modeTrays.Count(t => t.cleared) + "/" + modeTrays.Count,
-            GAME_MODE.tile_winning => newModeClearBoardFallback ? "Clear the remaining tiles" :
-                "TARGET triples: " + newModeWinningRounds + "/" + newModeRoundTarget,
             GAME_MODE.tile_gold_2 => "COIN tiles left: " + itemTiles.Count(t => t.tileType == NewModeRules.CoinTileType),
             _ => ""
         };
@@ -402,7 +560,7 @@ public partial class GameController
     {
         winningRounds = newModeWinningRounds, roundTarget = newModeRoundTarget,
         clearBoardFallback = newModeClearBoardFallback, trays = modeTrays,
-        waveQueued = newModeWaveQueued
+        waveQueued = newModeWaveQueued, coinTilesTotal = coinTilesTotal
     };
 
     void RestoreNewModeProgress(GameplayProgressData data)
@@ -410,9 +568,18 @@ public partial class GameController
         if (!HasNewMode) return;
         var saved = data.modeProgress;
         newModeWinningRounds = saved.winningRounds;
-        newModeRoundTarget = saved.roundTarget;
+        newModeRoundTarget = gameMode == GAME_MODE.tile_winning
+            ? NewModeRules.WinningStageCount : saved.roundTarget;
         newModeClearBoardFallback = saved.clearBoardFallback;
         newModeWaveQueued = saved.waveQueued;
+        coinTilesTotal = saved.coinTilesTotal;
+        if (gameMode == GAME_MODE.tile_winning)
+        {
+            // Tile types are restored before the saved round number. Refresh the
+            // target art now so resumed games show the shell/carrot stage correctly.
+            foreach (var tile in itemTiles.Where(tile => tile.tileType == NewModeRules.WinningTileType))
+                tile.SetType(NewModeRules.WinningTileType);
+        }
         modeTrays.Clear();
         if (saved.trays != null) modeTrays.AddRange(saved.trays);
         newModeReady = true;
@@ -443,6 +610,7 @@ public sealed class ModeProgressData
     public int roundTarget;
     public bool clearBoardFallback;
     public bool waveQueued;
+    public int coinTilesTotal;
     public List<ModeTrayProgress> trays = new();
 }
 
