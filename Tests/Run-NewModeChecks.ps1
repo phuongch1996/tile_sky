@@ -20,6 +20,7 @@ $rsp = [regex]::Replace($rsp, '(?m)^-refout:.*$', '-refout:"Temp/mode-integratio
 $newSources = @(
     'Assets/BaseProject/Scripts/GoogleTestAds.cs',
     'Assets/Scripts/Gameplay/NewModeRules.cs',
+    'Assets/Scripts/Gameplay/Effects/MissingSlotTrayEffect.cs',
     'Assets/Scripts/Gameplay/LeveljsonConverter.cs',
     'Assets/Scripts/Gameplay/GameController.NewModes.cs',
     'Assets/Scripts/Gameplay/ItemTile/TileModeMarker.cs'

@@ -6,8 +6,8 @@ public class PopupUnlock : Popup
 {
     public Button btGoToFeature;
     public Button btNextLevel;
-    Sprite greenButtonFace;
     Sprite orangeButtonFace;
+    Popup openedFeature;
     public GameObject[] features;
     readonly string[] featureDesc = new string[]
     {
@@ -27,7 +27,6 @@ public class PopupUnlock : Popup
         SetupTweenCallback(() =>
         {
             btGoToFeature.onClick.AddListener(() => GoToFeature());
-            btNextLevel.onClick.AddListener(() => Next());
         });
     }
     int feature;
@@ -42,28 +41,28 @@ public class PopupUnlock : Popup
     }
     public override void Open()
     {
+        DetachFeatureClose();
         ApplyWinButtons();
         btGoToFeature.onClick.RemoveAllListeners();
         btNextLevel.onClick.RemoveAllListeners();
+        btNextLevel.gameObject.SetActive(false);
         base.Open();
     }
 
     void ApplyWinButtons()
     {
-        if (!greenButtonFace || !orangeButtonFace)
+        if (!orangeButtonFace)
         {
             var atlas = Resources.Load<Texture2D>("HeavenlyWin/Buttons");
             if (!atlas) return;
-            greenButtonFace = CreateButtonFace(atlas, true);
-            orangeButtonFace = CreateButtonFace(atlas, false);
+            orangeButtonFace = CreateButtonFace(atlas);
         }
         StyleUnlockButton(btGoToFeature, orangeButtonFace);
-        StyleUnlockButton(btNextLevel, greenButtonFace);
     }
 
-    static Sprite CreateButtonFace(Texture2D atlas, bool green)
+    static Sprite CreateButtonFace(Texture2D atlas)
     {
-        var rect = new Rect(atlas.width * 0.11f, atlas.height * (green ? 0.51f : 0.01f),
+        var rect = new Rect(atlas.width * 0.11f, atlas.height * 0.01f,
             atlas.width * 0.78f, atlas.height * 0.48f);
         return Sprite.Create(atlas, rect, new Vector2(0.5f, 0.5f), 100, 0, SpriteMeshType.FullRect);
     }
@@ -96,39 +95,43 @@ public class PopupUnlock : Popup
 
     void OnDestroy()
     {
-        if (greenButtonFace) Destroy(greenButtonFace);
+        DetachFeatureClose();
         if (orangeButtonFace) Destroy(orangeButtonFace);
-    }
-    public override void Close()
-    {
-        base.Close();
     }
     void GoToFeature()
     {
-        switch (feature)
+        if (openedFeature)
+            return;
+
+        var game = GameScript.instance;
+        Popup target = feature switch
         {
-            case 0:
-                GameScript.instance.OnDailyLogin();
-                break;
-            case 1:
-                GameScript.instance.OnOpenFreeGold();
-                break;
-            case 2:
-                GameScript.instance.OnOpenPiggyBank();
-                break;
-            case 3:
-                GameScript.instance.OnOpenRank();
-                break;
-            case 4:
-                GameScript.instance.OnOpenBattlePass();
-                break;
-            default:
-                break;
-        }
-        //Close();
+            0 => game.dailyLoginPopup,
+            1 => game.freeGoldPopup,
+            2 => game.piggyBankPopup,
+            3 => game.rankPopup,
+            4 => game.battlePassPopup,
+            _ => null
+        };
+        if (!target)
+            return;
+
+        Close();
+        openedFeature = target;
+        openedFeature.Closed += OnFeatureClosed;
+        openedFeature.Open();
     }
-    void Next()
+
+    void OnFeatureClosed()
     {
+        DetachFeatureClose();
         GameScript.instance.Next();
+    }
+
+    void DetachFeatureClose()
+    {
+        if (openedFeature)
+            openedFeature.Closed -= OnFeatureClosed;
+        openedFeature = null;
     }
 }

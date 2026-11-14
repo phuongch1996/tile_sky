@@ -195,6 +195,7 @@ public class GameScript : MonoBehaviour
     public GameObject comboCountGO;
     public TextMeshProUGUI txComboCounter;
     [SerializeField] private SpriteRenderer objectiveTrayFrame;
+    public SpriteRenderer ObjectiveTrayFrame => objectiveTrayFrame;
     private RectTransform modeObjectiveCounter;
     private bool modeObjectivePinnedToTray;
     [Space]
@@ -390,6 +391,8 @@ public class GameScript : MonoBehaviour
             return 0;
         }
     }
+    bool HideEventCountersForMode => GameConfig.gameMode is GAME_MODE.tile_winning or GAME_MODE.tile_tray;
+
     public void HideEventCounters()
     {
         goldTileCountGO.SetActive(false);
@@ -399,7 +402,7 @@ public class GameScript : MonoBehaviour
     public void EventGoalCounter()
     {
         HideEventCounters();
-        if (!EventManager.instance.isEvent || GameConfig.isChallengeLevel)
+        if (HideEventCountersForMode || !EventManager.instance.isEvent || GameConfig.isChallengeLevel)
             return;
 
         switch (EventManager.eventType)
@@ -428,11 +431,14 @@ public class GameScript : MonoBehaviour
     public void GoldTileCounter()
     {
         HideEventCounters();
+        // Event collection keeps its animation target even when the counter is hidden.
+        GameController.instance.eventParent.SetParent(GameController.instance.eventParentUI);
+        GameController.instance.eventParent.localPosition = Vector3.zero;
+        if (HideEventCountersForMode)
+            return;
         OnEventCounter(EventTileExtend.eventCounter, EventTileExtend.eventTotal);
         levelTextGO.SetActive(false);
         goldTileCountGO.SetActive(true);
-        GameController.instance.eventParent.SetParent(GameController.instance.eventParentUI);
-        GameController.instance.eventParent.localPosition = Vector3.zero;
     }
     public void GoldTileUpdate(EventTileExtend eventTile)
     {
@@ -467,6 +473,8 @@ public class GameScript : MonoBehaviour
     public void ComboCounter()
     {
         HideEventCounters();
+        if (HideEventCountersForMode)
+            return;
         OnComboCounter(GameTextScript.comboCount);
         levelTextGO.SetActive(false);
         comboCountGO.SetActive(true);

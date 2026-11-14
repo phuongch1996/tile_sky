@@ -46,11 +46,15 @@ public partial class PopupShop
         Image frame = shopArt.gameObject.AddComponent<Image>();
         frame.sprite = panelArt;
         frame.raycastTarget = true;
-        if (bg)
-        {
-            bg.sprite = null;
-            bg.color = new Color32(9, 25, 59, 245);
-        }
+        // Keep Home visible through a single modal shade instead of the shop background.
+        if (bg && bg.gameObject != panel)
+            bg.gameObject.SetActive(false);
+        Image shade = panel.GetComponent<Image>();
+        if (!shade) shade = panel.AddComponent<Image>();
+        shade.sprite = null;
+        shade.color = new Color(0f, 0f, 0f, 0.4f);
+        shade.raycastTarget = true;
+        shade.enabled = true;
         isBGChange = false;
         showTopBar = false;
         fadeIgnore.Clear();
@@ -348,7 +352,7 @@ public partial class PopupShop
     {
         if (!shopArt) return;
         var parent = (RectTransform)shopArt.parent;
-        float scale = Mathf.Min(parent.rect.width / 1000f, parent.rect.height / 1500f) * 0.96f;
+        float scale = Mathf.Min(parent.rect.width / 1000f, parent.rect.height / 1500f) * 0.86f;
         shopArt.localScale = Vector3.one * Mathf.Max(0.01f, scale);
     }
 

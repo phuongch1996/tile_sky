@@ -30,6 +30,7 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
 
     int collisionCount;
     Sequence tileAppearSequence;
+    public bool IsTileAppearing => tileAppearSequence != null && tileAppearSequence.IsActive() && !tileAppearSequence.IsComplete();
     Transform slotFlameRoot;
     SpriteRenderer slotFlameOuter;
     SpriteRenderer slotFlameCore;
@@ -108,6 +109,7 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
         is2Up = false;
         isRainbow = false;
         isFogAnim = false;
+        bg.color = Color.white;
         eventTileExtend = null;
         shadow.sprite = bg.sprite;
         shadow.DOKill();
@@ -226,6 +228,7 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
         if (IsEventTile)
             return;
         isRainbow = false;
+        bg.color = Color.white;
         if (GameController.instance != null && GameController.instance.TrySetNewModeTileType(this, type))
             return;
         if (GameConfig.gameMode == GAME_MODE.tile_rainbow && type == -1)
@@ -247,6 +250,7 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
     {
         tileType = -1;
         isRainbow = true;
+        bg.color = new Color32(218, 190, 255, 255);
         var usingSprite = LevelManager.instance.tileSpritesSO.rainbowSprite;
         const float rainbowSize = 0.85f;
         item.sprite = usingSprite;
@@ -258,6 +262,7 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
     }
     public void SetEventTile()
     {
+        bg.color = Color.white;
         //eventTileExtend = Instantiate(GameController.instance.eventTileExtend, sprites);
         eventTileExtend = PoolManager.instance.GetObject<EventTileExtend>(GameController.instance.eventExtendPrefab, sprites);
         eventTileExtend.transform.localPosition = Vector3.zero;
@@ -281,6 +286,16 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
         collisionCount = 0;
         ToggleTouchable(true);
     }
+
+    public void RefreshFogCover()
+    {
+        shadow.DOKill();
+        shadow.transform.DOKill();
+        isFogAnim = false;
+        shadow.color = Color.white;
+        shadow.transform.localPosition = Vector3.zero;
+        shadow.gameObject.SetActive(state == ITEMTILE_STATE.HIDDEN);
+    }
     public virtual void ToggleTouchable(bool touchable)
     {
         //Debug.Log(touchable);
@@ -291,6 +306,8 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
             {
                 if (GameConfig.gameMode == GAME_MODE.tile_fog)
                 {
+                    if (isFogAnim || !shadow.gameObject.activeSelf)
+                        return;
                     isFogAnim = true;
                     shadow.transform.DOBlendableLocalMoveBy(new Vector3(GameConfig.GetRandom(-1, 1), 0), 0.5f);
                     shadow.DOFade(0, 0.5f).OnComplete(() =>
@@ -308,7 +325,12 @@ public class ItemTile : PoolObject, IPointerDownHandler, IPointerUpHandler, IPoi
         {
             state = ITEMTILE_STATE.HIDDEN;
             if (GameController.instance.gameState != GAME_STATE.START && GameController.instance.gameState != GAME_STATE.SHUFFLE)
-                shadow.gameObject.SetActive(true);
+            {
+                if (GameConfig.gameMode == GAME_MODE.tile_fog)
+                    RefreshFogCover();
+                else
+                    shadow.gameObject.SetActive(true);
+            }
         }
     }
     //hidden -> touchable

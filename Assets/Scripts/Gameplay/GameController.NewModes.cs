@@ -10,6 +10,7 @@ using UnityEngine.UI;
 public partial class GameController
 {
     bool newModeReady;
+    MissingSlotTrayEffect missingSlotTrayEffect;
     bool newModeEffectBusy;
     bool newModeClearing;
     bool newModeWaveQueued;
@@ -19,10 +20,29 @@ public partial class GameController
     int newModeRoundTarget;
     readonly List<ModeTrayProgress> modeTrays = new();
     readonly List<GameObject> modeTrayVisuals = new();
+    readonly List<Vector3> modeTrayScales = new();
+    readonly Queue<int> heavenGateCollectionQueue = new();
+    bool heavenGateEntranceComplete;
+    bool heavenGateCollectionRunning;
+    int heavenGateCollectionsPending;
+    int heavenGatesDelivered;
+    Image pinnedObjectiveIcon;
+    bool HeavenGateCollectionsFinished => gameMode != GAME_MODE.tile_tray ||
+        (heavenGateEntranceComplete && heavenGateCollectionsPending == 0 && modeTrays.All(tray => tray.cleared));
     TextMeshProUGUI modeObjective;
     readonly Sprite[] targetTileSprites = new Sprite[NewModeRules.WinningStageCount];
-    RectTransform targetObjectiveRow;
-    TextMeshProUGUI targetCounterText;
+    RectTransform pinnedObjectiveRow;
+    TextMeshProUGUI pinnedCounterText;
+    Sprite heavenGateSprite;
+    Sprite HeavenGateSprite
+    {
+        get
+        {
+            if (!heavenGateSprite)
+                heavenGateSprite = Resources.Load<Sprite>("TileSkyModes/HeavenGate");
+            return heavenGateSprite;
+        }
+    }
     RectTransform coinObjectiveRow;
     TextMeshProUGUI coinCounterText;
     int coinTilesTotal;
@@ -36,7 +56,9 @@ public partial class GameController
         ? BaseSlotCount - NewModeRules.LockedSlots(parameter) : BaseSlotCount;
 
     public bool NewModeInputBlocked => HasNewMode && newModeReady &&
-        (newModeEffectBusy || newModeClearing || newModeWaveQueued || newModePoisonPending > 0 ||
+        ((gameMode == GAME_MODE.tile_missslot && missingSlotTrayEffect && !missingSlotTrayEffect.IsComplete) ||
+         (gameMode == GAME_MODE.tile_tray && (!heavenGateEntranceComplete || heavenGateCollectionsPending > 0)) ||
+         newModeEffectBusy || newModeClearing || newModeWaveQueued || newModePoisonPending > 0 ||
          PendingModeBombs().Count > 0);
 
     List<TileModeMarker> PendingModeBombs() => itemTiles == null ? new List<TileModeMarker>() : itemTiles
@@ -103,7 +125,7 @@ public partial class GameController
         }
         newModeReady = true;
         CreateModeObjective();
-        CreateLockedSlotLabels();
+        PrepareMissingSlotTray();
     }
 
     static TileModeMarker GetModeMarker(ItemTile tile) =>
@@ -235,6 +257,9 @@ public partial class GameController
     {
         if (!HasNewMode || !newModeReady || newModeClearing) return;
         UpdateModeObjective();
+        // The normal last-triple animation can empty the board before the last gate is collected.
+        if (gameMode == GAME_MODE.tile_tray && itemTiles.Count == 0)
+            EvaluateModeObjectives();
         if (gameState != GAME_STATE.PLAYING || newModeEffectBusy || !ModeTilesSettled()) return;
         if (EvaluateModeObjectives()) return;
         if (newModeWaveQueued)
@@ -258,15 +283,18 @@ public partial class GameController
             won = !newModeClearBoardFallback && !itemTiles.Any(tile => tile.tileType == NewModeRules.CoinTileType);
         if (gameMode == GAME_MODE.tile_tray)
         {
+            if (!heavenGateEntranceComplete) return false;
             for (int i = 0; i < modeTrays.Count; i++)
             {
                 var tray = modeTrays[i];
                 if (tray.cleared || IsTrayCovered(tray)) continue;
                 tray.cleared = true;
-                if (i < modeTrayVisuals.Count && modeTrayVisuals[i] != null)
-                    modeTrayVisuals[i].transform.DOScale(0, 0.25f).SetEase(Ease.InBack);
+                heavenGateCollectionQueue.Enqueue(i);
+                heavenGateCollectionsPending++;
             }
-            won = modeTrays.Count > 0 && modeTrays.All(tray => tray.cleared);
+            if (heavenGateCollectionQueue.Count > 0 && !heavenGateCollectionRunning)
+                StartCoroutine(CollectHeavenGates());
+            won = modeTrays.Count > 0 && HeavenGateCollectionsFinished;
         }
         if (!won) return false;
         newModeClearing = true;
@@ -363,51 +391,140 @@ public partial class GameController
     {
         foreach (var previous in modeTrayVisuals) if (previous != null) Destroy(previous);
         modeTrayVisuals.Clear();
+        modeTrayScales.Clear();
+        heavenGateCollectionQueue.Clear();
+        heavenGateCollectionsPending = 0;
+        heavenGateCollectionRunning = false;
+        heavenGateEntranceComplete = false;
+        heavenGatesDelivered = modeTrays.Count(tray => tray.cleared);
         for (int i = 0; i < modeTrays.Count; i++)
         {
             var tray = modeTrays[i];
-            var go = new GameObject("Objective tray " + (i + 1), typeof(SpriteRenderer));
+            var go = new GameObject("Heaven gate " + (i + 1), typeof(SpriteRenderer));
             go.transform.SetParent(floorTransformList[tray.floor - 1], false);
             go.transform.localPosition = new Vector3(tray.x, tray.y, 0.1f);
-            go.transform.localScale = Vector3.one * 2.2f;
             var sprite = go.GetComponent<SpriteRenderer>();
-            sprite.sprite = LevelManager.instance.tileSpritesSO.bgSprite;
-            sprite.color = new Color(1f, 0.65f, 0.1f, 0.8f);
+            sprite.sprite = HeavenGateSprite;
+            if (sprite.sprite)
+                go.transform.localScale = Vector3.one * (2.2f / Mathf.Max(
+                    sprite.sprite.bounds.size.x, sprite.sprite.bounds.size.y));
+            sprite.color = Color.white;
             sprite.sortingLayerName = "Floor" + tray.floor;
             sprite.sortingOrder = -100;
             go.SetActive(!tray.cleared);
+            modeTrayScales.Add(go.transform.localScale);
+            go.transform.localScale = Vector3.zero;
             modeTrayVisuals.Add(go);
         }
     }
 
-    void CreateLockedSlotLabels()
+    IEnumerator PlayHeavenGateEntrance()
     {
-        if (gameMode != GAME_MODE.tile_missslot) return;
-        for (int i = SlotCount; i < BaseSlotCount; i++)
+        if (gameMode != GAME_MODE.tile_tray) yield break;
+        yield return new WaitUntil(() => !GameScript.instance.IsLevelEntering &&
+            !itemTiles.Any(tile => tile.IsTileAppearing));
+        var entrance = DOTween.Sequence().SetLink(gameObject);
+        for (int i = 0; i < modeTrayVisuals.Count; i++)
         {
-            Transform slot = GetSlotTransform(i);
-            if (slot == null) continue;
-            var go = new GameObject("Locked slot", typeof(TextMeshPro));
-            go.transform.SetParent(slot, false);
-            var text = go.GetComponent<TextMeshPro>();
-            text.font = TMP_Settings.defaultFontAsset;
-            text.text = "X";
-            text.fontSize = 6;
-            text.alignment = TextAlignmentOptions.Center;
-            text.color = new Color(1, 0.25f, 0.2f);
-            text.rectTransform.sizeDelta = Vector2.one;
-            text.renderer.sortingLayerName = "Slotted";
-            text.renderer.sortingOrder = 100;
+            var gate = modeTrayVisuals[i];
+            if (!gate || !gate.activeSelf) continue;
+            entrance.Insert(i * 0.08f, gate.transform.DOScale(modeTrayScales[i], 0.4f).SetEase(Ease.OutBack));
         }
+        if (entrance.Duration() > 0f)
+            yield return entrance.WaitForCompletion();
+        else
+            entrance.Kill();
+        heavenGateEntranceComplete = true;
+    }
+
+    IEnumerator CollectHeavenGates()
+    {
+        heavenGateCollectionRunning = true;
+        while (heavenGateCollectionQueue.Count > 0)
+        {
+            int index = heavenGateCollectionQueue.Dequeue();
+            var gate = index < modeTrayVisuals.Count ? modeTrayVisuals[index] : null;
+            if (gate && pinnedObjectiveIcon && Camera.main)
+            {
+                var renderer = gate.GetComponent<SpriteRenderer>();
+                var parent = (RectTransform)pinnedObjectiveRow.parent;
+                var canvas = parent.GetComponentInParent<Canvas>();
+                var uiCamera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+                Vector2 start, min, max;
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(parent,
+                    Camera.main.WorldToScreenPoint(renderer.bounds.center), uiCamera, out start);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(parent,
+                    Camera.main.WorldToScreenPoint(renderer.bounds.min), uiCamera, out min);
+                RectTransformUtility.ScreenPointToLocalPointInRectangle(parent,
+                    Camera.main.WorldToScreenPoint(renderer.bounds.max), uiCamera, out max);
+                var flying = new GameObject("Collected heaven gate", typeof(RectTransform), typeof(Image));
+                var rect = (RectTransform)flying.transform;
+                rect.SetParent(parent, false);
+                rect.SetAsLastSibling();
+                rect.anchorMin = rect.anchorMax = parent.pivot;
+                rect.anchoredPosition = start;
+                var image = flying.GetComponent<Image>();
+                image.sprite = HeavenGateSprite;
+                image.preserveAspect = true;
+                image.raycastTarget = false;
+                Vector2 startSize = new Vector2(Mathf.Abs(max.x - min.x), Mathf.Abs(max.y - min.y));
+                rect.sizeDelta = startSize;
+                gate.SetActive(false);
+                var flight = DOTween.Sequence().SetLink(gameObject);
+                flight.Append(DOVirtual.Float(0f, 1f, 0.75f, progress =>
+                {
+                    var icon = pinnedObjectiveIcon.rectTransform;
+                    Vector2 destination = parent.InverseTransformPoint(icon.TransformPoint(icon.rect.center));
+                    rect.anchoredPosition = Vector2.Lerp(start, destination, progress) +
+                        Vector2.up * (Mathf.Sin(progress * Mathf.PI) * 100f);
+                    rect.sizeDelta = Vector2.Lerp(startSize, icon.rect.size, progress);
+                }).SetEase(Ease.InOutSine));
+                flight.Join(rect.DOLocalRotate(new Vector3(0, 0, 720f), 0.75f, RotateMode.FastBeyond360)
+                    .SetEase(Ease.InOutSine));
+                yield return flight.WaitForCompletion();
+                Destroy(flying);
+            }
+            else if (gate)
+                gate.SetActive(false);
+
+            heavenGatesDelivered++;
+            UpdateModeObjective();
+            if (pinnedObjectiveIcon)
+            {
+                var icon = pinnedObjectiveIcon.transform;
+                icon.localScale = Vector3.one;
+                yield return icon.DOPunchScale(Vector3.one * 0.22f, 0.3f, 1, 0.5f)
+                    .SetLink(gameObject).WaitForCompletion();
+                icon.localScale = Vector3.one;
+            }
+            heavenGateCollectionsPending--;
+            SaveProgress();
+        }
+        heavenGateCollectionRunning = false;
+        GameScript.instance.PowerUpsInteractable();
+        EvaluateModeObjectives();
+    }
+
+    void PrepareMissingSlotTray()
+    {
+        if (gameMode != GAME_MODE.tile_missslot || missingSlotTrayEffect) return;
+        missingSlotTrayEffect = MissingSlotTrayEffect.Create(GameScript.instance.ObjectiveTrayFrame, slotTransformList, SlotCount);
+    }
+
+    IEnumerator PlayMissingSlotEntrance()
+    {
+        if (gameMode != GAME_MODE.tile_missslot || !missingSlotTrayEffect) yield break;
+        yield return new WaitUntil(() => !GameScript.instance.IsLevelEntering && !itemTiles.Any(tile => tile.IsTileAppearing));
+        yield return missingSlotTrayEffect.Play();
     }
 
     void CreateModeObjective()
     {
         var source = GameScript.instance.txLevel;
         if (source == null) return;
-        if (gameMode == GAME_MODE.tile_winning)
+        if (gameMode is GAME_MODE.tile_winning or GAME_MODE.tile_tray)
         {
-            CreateTargetObjective(source);
+            CreatePinnedObjective(source);
             return;
         }
         if (IsGoldLevelCounter)
@@ -436,23 +553,25 @@ public partial class GameController
         UpdateModeObjective();
     }
 
-    void CreateTargetObjective(TextMeshProUGUI source)
+    void CreatePinnedObjective(TextMeshProUGUI source)
     {
-        if (targetObjectiveRow == null)
+        bool isGate = gameMode == GAME_MODE.tile_tray;
+        if (pinnedObjectiveRow == null)
         {
-            targetObjectiveRow = new GameObject("Target bunny objective", typeof(RectTransform))
+            pinnedObjectiveRow = new GameObject(isGate ? "Heaven gate objective" : "Target bunny objective", typeof(RectTransform))
                 .GetComponent<RectTransform>();
-            targetObjectiveRow.SetParent(source.transform.parent, false);
-            targetObjectiveRow.anchorMin = source.rectTransform.anchorMin;
-            targetObjectiveRow.anchorMax = source.rectTransform.anchorMax;
-            targetObjectiveRow.pivot = source.rectTransform.pivot;
-            targetObjectiveRow.anchoredPosition = source.rectTransform.anchoredPosition + Vector2.down * 75;
-            targetObjectiveRow.sizeDelta = new Vector2(850f, 105f);
+            pinnedObjectiveRow.SetParent(source.transform.parent, false);
+            pinnedObjectiveRow.anchorMin = source.rectTransform.anchorMin;
+            pinnedObjectiveRow.anchorMax = source.rectTransform.anchorMax;
+            pinnedObjectiveRow.pivot = source.rectTransform.pivot;
+            pinnedObjectiveRow.anchoredPosition = source.rectTransform.anchoredPosition + Vector2.down * 75;
+            pinnedObjectiveRow.sizeDelta = new Vector2(850f, 105f);
 
-            var icon = new GameObject("Three carrot bunnies", typeof(RectTransform), typeof(Image))
+            var icon = new GameObject(isGate ? "Heaven gate icon" : "Three carrot bunnies", typeof(RectTransform), typeof(Image))
                 .GetComponent<Image>();
-            icon.transform.SetParent(targetObjectiveRow, false);
-            icon.sprite = Resources.LoadAll<Sprite>("TileSkyModes/TargetGoal").FirstOrDefault();
+            icon.transform.SetParent(pinnedObjectiveRow, false);
+            pinnedObjectiveIcon = icon;
+            icon.sprite = isGate ? HeavenGateSprite : Resources.LoadAll<Sprite>("TileSkyModes/TargetGoal").FirstOrDefault();
             icon.preserveAspect = true;
             icon.raycastTarget = false;
             var iconRect = icon.rectTransform;
@@ -461,25 +580,25 @@ public partial class GameController
             iconRect.anchoredPosition = new Vector2(-8f, 0f);
             iconRect.sizeDelta = new Vector2(105f, 105f);
 
-            targetCounterText = new GameObject("Target cleared counter", typeof(TextMeshProUGUI))
+            pinnedCounterText = new GameObject("Target cleared counter", typeof(TextMeshProUGUI))
                 .GetComponent<TextMeshProUGUI>();
-            targetCounterText.transform.SetParent(targetObjectiveRow, false);
-            targetCounterText.font = source.font;
-            targetCounterText.fontSharedMaterial = source.fontSharedMaterial;
-            targetCounterText.fontSize = 58f;
-            targetCounterText.color = Color.white;
-            targetCounterText.outlineColor = new Color32(25, 65, 125, 255);
-            targetCounterText.outlineWidth = 0.175f;
-            targetCounterText.fontMaterial.SetTexture("_OutlineTex", Texture2D.whiteTexture);
-            targetCounterText.alignment = TextAlignmentOptions.MidlineLeft;
-            targetCounterText.raycastTarget = false;
-            var textRect = targetCounterText.rectTransform;
+            pinnedCounterText.transform.SetParent(pinnedObjectiveRow, false);
+            pinnedCounterText.font = source.font;
+            pinnedCounterText.fontSharedMaterial = source.fontSharedMaterial;
+            pinnedCounterText.fontSize = 58f;
+            pinnedCounterText.color = Color.white;
+            pinnedCounterText.outlineColor = new Color32(25, 65, 125, 255);
+            pinnedCounterText.outlineWidth = 0.175f;
+            pinnedCounterText.fontMaterial.SetTexture("_OutlineTex", Texture2D.whiteTexture);
+            pinnedCounterText.alignment = TextAlignmentOptions.MidlineLeft;
+            pinnedCounterText.raycastTarget = false;
+            var textRect = pinnedCounterText.rectTransform;
             textRect.anchorMin = textRect.anchorMax = new Vector2(0.5f, 0.5f);
             textRect.pivot = new Vector2(0f, 0.5f);
             textRect.anchoredPosition = new Vector2(8f, 0f);
             textRect.sizeDelta = new Vector2(140f, 90f);
         }
-        GameScript.instance.RegisterModeObjectiveCounter(targetObjectiveRow, 105f, pinToTray: true);
+        GameScript.instance.RegisterModeObjectiveCounter(pinnedObjectiveRow, 105f, pinToTray: true);
         UpdateModeObjective();
     }
 
@@ -528,10 +647,16 @@ public partial class GameController
 
     void UpdateModeObjective()
     {
+        if (gameMode == GAME_MODE.tile_tray)
+        {
+            if (pinnedCounterText != null)
+                pinnedCounterText.text = heavenGatesDelivered + "/" + modeTrays.Count;
+            return;
+        }
         if (gameMode == GAME_MODE.tile_winning)
         {
-            if (targetCounterText != null)
-                targetCounterText.text = Mathf.Clamp(newModeWinningRounds, 0, NewModeRules.WinningStageCount) +
+            if (pinnedCounterText != null)
+                pinnedCounterText.text = Mathf.Clamp(newModeWinningRounds, 0, NewModeRules.WinningStageCount) +
                     "/" + NewModeRules.WinningStageCount;
             return;
         }
@@ -550,7 +675,6 @@ public partial class GameController
             GAME_MODE.tile_missslot => "Match 3 - " + SlotCount + " tray slots",
             GAME_MODE.tile_poison => "POISON triple: adds one tile, then shuffles",
             GAME_MODE.tile_bomb => "BOMB at zero: adds one tile to the tray",
-            GAME_MODE.tile_tray => "Uncover trays: " + modeTrays.Count(t => t.cleared) + "/" + modeTrays.Count,
             GAME_MODE.tile_gold_2 => "COIN tiles left: " + itemTiles.Count(t => t.tileType == NewModeRules.CoinTileType),
             _ => ""
         };
@@ -585,7 +709,7 @@ public partial class GameController
         newModeReady = true;
         CreateModeTrayVisuals();
         CreateModeObjective();
-        CreateLockedSlotLabels();
+        PrepareMissingSlotTray();
     }
 
     void RestoreNewModeTile(ItemTile tile, GameplayTileProgressData data)

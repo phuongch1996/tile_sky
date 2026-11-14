@@ -11,7 +11,10 @@ public static class NewModeRules
     public static bool IsExtendedMode(int mode) => mode >= 9 && mode <= 14;
     // Legacy CSVs include 8, which intentionally keeps its old normal-mode fallback.
     public static bool IsReadableMode(int mode) => (mode >= 0 && mode <= 8) || IsExtendedMode(mode);
-    public static int LockedSlots(int parameter) => Math.Max(1, Math.Min(4, parameter <= 0 ? 1 : parameter));
+    // Legacy level parameters may request more locks; this mode always locks one slot.
+    public static int LockedSlots(int parameter) => 1;
+    public static bool AreIceNeighbours(int floor, int otherFloor, float dx, float dy) =>
+        floor == otherFloor && ((Math.Abs(dx) == 1f && dy == 0f) || (dx == 0f && Math.Abs(dy) == 1f));
     public static int BombBudget(int value) => value > 0 ? value : 5;
     public static int TargetRounds(int parameter) => WinningStageCount;
     public static int TargetStage(int clearedRounds) => Math.Max(0, Math.Min(WinningStageCount - 1, clearedRounds));

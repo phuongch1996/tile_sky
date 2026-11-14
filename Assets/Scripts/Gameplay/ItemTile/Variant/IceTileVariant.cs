@@ -120,10 +120,29 @@ public class IceTileVariant : ItemTile
                 continue;
 
             Vector2 offset = iceTile.tilePos - collectedTile.tilePos;
-            bool horizontal = Mathf.Approximately(Mathf.Abs(offset.x), 1f) && Mathf.Approximately(offset.y, 0f);
-            bool vertical = Mathf.Approximately(offset.x, 0f) && Mathf.Approximately(Mathf.Abs(offset.y), 1f);
-            if (horizontal || vertical)
+            if (NewModeRules.AreIceNeighbours(iceTile.floor, collectedTile.floor, offset.x, offset.y))
                 iceTile.InstaUnfreeze();
+        }
+    }
+    public static void UnfreezeIsolatedTiles(List<ItemTile> board)
+    {
+        foreach (var iceTile in iceTilesList)
+        {
+            if (iceTile == null || iceTile.Touchable || iceTile.state == ITEMTILE_STATE.SLOTTED ||
+                iceTile.state == ITEMTILE_STATE.DONE || !board.Contains(iceTile))
+                continue;
+
+            bool hasNeighbour = board.Exists(tile => tile != iceTile &&
+                tile.state != ITEMTILE_STATE.SLOTTED && tile.state != ITEMTILE_STATE.DONE &&
+                NewModeRules.AreIceNeighbours(iceTile.floor, tile.floor,
+                    tile.tilePos.x - iceTile.tilePos.x, tile.tilePos.y - iceTile.tilePos.y));
+            if (hasNeighbour)
+                continue;
+
+            if (iceTile.state == ITEMTILE_STATE.TOUCHABLE || iceTile.state == ITEMTILE_STATE.HOVERING)
+                iceTile.InstaUnfreeze();
+            else
+                iceTile.RestoreCounter(0);
         }
     }
     public void InstaUnfreeze()

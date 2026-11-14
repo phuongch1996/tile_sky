@@ -31,6 +31,7 @@ public class Popup : MonoBehaviour
     [Space]
     public bool showTopBar;
     public bool Showing => panel.activeSelf;
+    public event Action Closed;
     public virtual void Open()
     {
         if (showTopBar)
@@ -83,6 +84,7 @@ public class Popup : MonoBehaviour
     }
     public virtual void Close()
     {
+        bool wasShowing = Showing;
         if (showTopBar)
         {
             if (HomeScript.instance)
@@ -91,6 +93,8 @@ public class Popup : MonoBehaviour
                 GameScript.instance.topBarScript.Bottom();
         }
         panel.SetActive(false);
+        if (wasShowing)
+            Closed?.Invoke();
     }
     public virtual void SetupTweenCallback()
     {

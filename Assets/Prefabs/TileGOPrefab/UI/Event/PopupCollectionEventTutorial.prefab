@@ -1449,7 +1449,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: Golden Tile Challenge
+  m_text: Star collection
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: e1c44b8c4cd0f4b4ab0227fc7a484d8d, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: d5b066497606ed442a0c7c03d2650c73, type: 2}
@@ -3673,6 +3673,8 @@ MonoBehaviour:
   - {fileID: 2248876741047520717}
   showTopBar: 0
   btPanel: {fileID: 2459497519498368995}
+  starCollectionTutorial: 1
+  collectionTiles: {fileID: 11400000, guid: 1922039038ba587499536984e37b6366, type: 2}
   continueGame: 0
 --- !u!1 &8151348794001670653
 GameObject:

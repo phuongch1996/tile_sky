@@ -43,6 +43,9 @@ public partial class GameController : MonoBehaviour
     public BrokenAnimScript brokenAnimScript;
 
     public GameObject lowOnSpaceOB;
+    TextMeshProUGUI carefulWarning;
+    Sequence carefulWarningEntrance;
+    bool carefulWarningVisible;
     public GameObject challengeAnim;
     public PoolObject likeAnim;
     //public PoolObjectSpine vaporizeAnim;
@@ -307,7 +310,10 @@ public partial class GameController : MonoBehaviour
                 break;
             case GAME_MODE.tile_freeze:
                 gameModeCount = parameter;
-                gameModeTileIndexes = GameConfig.GetRandomCountFromTotal(gameModeCount, 1, totalTileCount);
+                // Connected contains only same-floor, edge-adjacent pairs; isolated cells cannot freeze.
+                var iceCandidates = GetTileIndexesFromListV3(tilemaps,
+                    connectedList.SelectMany(pair => pair).Distinct().ToList());
+                gameModeTileIndexes = GameConfig.GetRandomCount(gameModeCount, iceCandidates.ToArray());
                 break;
             case GAME_MODE.tile_double:
                 gameModeCount = parameter;
@@ -867,6 +873,8 @@ public partial class GameController : MonoBehaviour
             if (!slottedItems.Contains(tile))
                 tile.shadow.gameObject.SetActive(tile.state == ITEMTILE_STATE.HIDDEN);
         }
+        yield return PlayHeavenGateEntrance();
+        yield return PlayMissingSlotEntrance();
         Danger();
         StartCoroutine(WinCoroutine());
         GameConfig.SetActionTime(GameConfig.startLevelKey);
@@ -1172,6 +1180,8 @@ public partial class GameController : MonoBehaviour
         {
             tile.shadow.gameObject.SetActive(tile.state == ITEMTILE_STATE.HIDDEN);
         }
+        yield return PlayHeavenGateEntrance();
+        yield return PlayMissingSlotEntrance();
         Danger();
         StartCoroutine(WinCoroutine());
         yield return null;
@@ -1256,7 +1266,7 @@ public partial class GameController : MonoBehaviour
     }
     IEnumerator WinCoroutine()
     {
-        yield return new WaitUntil(() => itemTiles.Count == 0);
+        yield return new WaitUntil(() => itemTiles.Count == 0 && HeavenGateCollectionsFinished);
         gameState = GAME_STATE.WIN;
         yield return new WaitUntil(() => !isClearAnim);
         yield return StartCoroutine(PlayClearAnim(true));
@@ -1409,13 +1419,18 @@ public partial class GameController : MonoBehaviour
     public IEnumerator DoneShuffle()
     {
         yield return new WaitForSeconds(waitTimeToStart);
+        // Rebuild occlusion only after moving tiles have reached their final board positions.
+        if (GameConfig.gameMode == GAME_MODE.tile_fog)
+            yield return new WaitUntil(() => !itemTiles.Any(tile => tile.IsTileAppearing));
         foreach (ItemTile tile in itemTiles)
             if (!slottedItems.Contains(tile))
                 tile.SetState();
         yield return new WaitForFixedUpdate();
         foreach (ItemTile tile in itemTiles)
         {
-            if (!tile.is2Up)
+            if (GameConfig.gameMode == GAME_MODE.tile_fog)
+                tile.RefreshFogCover();
+            else if (!tile.is2Up)
                 tile.shadow.gameObject.SetActive(tile.state == ITEMTILE_STATE.HIDDEN);
         }
         if (GameConfig.gameMode == GAME_MODE.tile_2up && !slottedItems.Exists(x => x.is2Up))
@@ -1593,10 +1608,6 @@ public partial class GameController : MonoBehaviour
             //case GAME_MODE.tile_snail:
             //    itemList_temp.RemoveAll(x => SnailScript.instance.currentIndex == x.sortingIndex);
             //    break;
-            case GAME_MODE.tile_2up:
-                int up2Type = slottedItems.Find(x => x.is2Up).tileType;
-                itemList_temp.RemoveAll(x => x.tileType == up2Type);
-                break;
             case GAME_MODE.tile_rainbow:
                 itemList_temp.RemoveAll(x => x.isRainbow);
                 break;
@@ -1641,8 +1652,6 @@ public partial class GameController : MonoBehaviour
             List<int> tileType_Checked = new();
             for (int i = 0; i < slottedItems.Count; i++)
             {
-                if (slottedItems[i].is2Up)
-                    continue;
                 int tileType = slottedItems[i].tileType;
                 if (tileType < 0)
                     continue;
@@ -1699,8 +1708,6 @@ public partial class GameController : MonoBehaviour
             List<int> tileType_Checked = new();
             for (int i = 0; i < slottedItems.Count; i++)
             {
-                if (slottedItems[i].is2Up)
-                    continue;
                 int tileType = slottedItems[i].tileType;
                 if (tileType < 0)
                     continue;
@@ -1851,6 +1858,7 @@ public partial class GameController : MonoBehaviour
         {
             yield return new WaitUntil(() => gameState == GAME_STATE.PLAYING);
         }
+        IceTileVariant.UnfreezeIsolatedTiles(itemTiles);
         touchableTiles = itemTiles.FindAll(x => x.state == ITEMTILE_STATE.TOUCHABLE || x.state == ITEMTILE_STATE.HOVERING);
         bool fullFreeze = true;
         Debug.Log(touchableTiles.Count);
@@ -1876,50 +1884,60 @@ public partial class GameController : MonoBehaviour
     }
     public IEnumerator Up2()
     {
+        // A surviving 2Up tile belongs to the current pair, even after a shuffle/load.
+        if (itemTiles.Exists(x => x.is2Up))
+            yield break;
         gameState = GAME_STATE.UP2;
         yield return new WaitForSeconds(0.1f);
-        if (slottedItems.Exists(x => x.is2Up))
+        if (itemTiles.Exists(x => x.is2Up) || SlotCount - slottedItems.Count < 2)
         {
-            gameState = GAME_STATE.PLAYING;
+            if (gameState == GAME_STATE.UP2)
+                gameState = GAME_STATE.PLAYING;
             yield break;
         }
         List<ItemTile> itemList_temp = new(itemTiles);
-        itemList_temp.RemoveAll(x => x.state == ITEMTILE_STATE.SLOTTED || slottedItems.Exists(y => y.tileType == x.tileType) || x.IsEventTile);
-        itemList_temp.Reverse();
-        Dictionary<int, List<ItemTile>> dicItems_all = new();
-        foreach (ItemTile item in itemList_temp)
+        itemList_temp.RemoveAll(x => slottedItems.Contains(x) || match3Items.Contains(x) ||
+            x.state == ITEMTILE_STATE.SLOTTED || x.state == ITEMTILE_STATE.DONE ||
+            slottedItems.Exists(y => y.tileType == x.tileType) || x.IsEventTile);
+        if (itemList_temp.Count >= 2)
         {
-            if (dicItems_all.ContainsKey(item.tileType))
-                dicItems_all[item.tileType].Add(item);
-            else
-                dicItems_all.Add(item.tileType, new List<ItemTile> { item });
-        }
-        if (dicItems_all.Count > 0)
-        {
-            int randomType = GameConfig.GetRandom(dicItems_all.Keys.ToArray());
-            if (dicItems_all[randomType].Count > 0)
+            for (int i = 0; i < 2; i++)
             {
-                for (int i = 0; i < 2; i++)
-                {
-                    slottedItems.Insert(0, dicItems_all[randomType][i]);
-                    dicItems_all[randomType][i].itemCollider.enabled = false;
-                    dicItems_all[randomType][i].SetSortingLayer("Slotted");
-                    dicItems_all[randomType][i].state = ITEMTILE_STATE.SLOTTED;
-                    dicItems_all[randomType][i].is2Up = true;
-                    dicItems_all[randomType][i].glow.gameObject.SetActive(true);
-                    dicItems_all[randomType][i].shadow.color = new Color(1, 1, 1, 0.2f);
-                    dicItems_all[randomType][i].shadow.gameObject.SetActive(true);
-                    dicItems_all[randomType][i].gameObject.transform.DOScale(Vector3.one * 1.75f, 0.35f);
-                }
-                yield return new WaitForSeconds(0.35f);
-                foreach (ItemTile tile in slottedItems)
-                    _ = tile.Slotted;
+                ItemTile tile = itemList_temp[Random.Range(0, itemList_temp.Count)];
+                itemList_temp.Remove(tile);
+                slottedItems.Insert(0, tile);
+                tile.itemCollider.enabled = false;
+                tile.SetSortingLayer("Slotted");
+                tile.state = ITEMTILE_STATE.SLOTTED;
+                tile.is2Up = true;
+                tile.glow.gameObject.SetActive(true);
+                tile.shadow.color = new Color(1, 1, 1, 0.2f);
+                tile.shadow.gameObject.SetActive(true);
+                tile.gameObject.transform.DOScale(Vector3.one * 1.75f, 0.35f);
             }
+            yield return new WaitForSeconds(0.35f);
+            foreach (ItemTile tile in slottedItems)
+                _ = tile.Slotted;
         }
         GameScript.instance.PowerUpsInteractable();
-        if (gameState != GAME_STATE.PAUSE)
+        if (gameState == GAME_STATE.UP2)
             gameState = GAME_STATE.PLAYING;
         SaveProgress();
+    }
+
+    IEnumerator ClearTwoUpBonus(int count)
+    {
+        for (int i = 0; i < count && itemTiles.Count > 0; i++)
+        {
+            // Leave the other 2Up tile alone and never steal a pending match/event tile.
+            var candidates = itemTiles.Where(tile => !tile.is2Up && !tile.IsEventTile &&
+                tile.state != ITEMTILE_STATE.DONE && !match3Items.Contains(tile)).ToList();
+            var triples = NewModeRules.CompleteTripleIndices(candidates.Select(tile => tile.tileType).ToList());
+            if (triples.Count == 0)
+                yield break;
+            var triple = triples[Random.Range(0, triples.Count)].Select(index => candidates[index]).ToList();
+            yield return Remove3MatchWithHint(triple);
+        }
     }
     public IEnumerator Rainbow()
     {
@@ -1958,8 +1976,53 @@ public partial class GameController : MonoBehaviour
     }
     public void Danger()
     {
-        lowOnSpaceOB.SetActive(IsDanger);
-        return;
+        if (lowOnSpaceOB) lowOnSpaceOB.SetActive(false);
+        SetCarefulWarning(IsDanger);
+    }
+
+    void SetCarefulWarning(bool visible)
+    {
+        if (!carefulWarning)
+        {
+            var source = GameScript.instance.txLevel;
+            var safeArea = source.GetComponentInParent<SafeAreaView>();
+            var parent = safeArea ? (RectTransform)safeArea.transform :
+                (RectTransform)source.canvas.rootCanvas.transform;
+            carefulWarning = new GameObject("Careful warning", typeof(RectTransform), typeof(TextMeshProUGUI))
+                .GetComponent<TextMeshProUGUI>();
+            carefulWarning.gameObject.layer = parent.gameObject.layer;
+            carefulWarning.transform.SetParent(parent, false);
+            carefulWarning.font = source.font;
+            carefulWarning.text = "Careful";
+            carefulWarning.fontSize = 48f;
+            carefulWarning.color = new Color32(255, 222, 48, 255);
+            carefulWarning.outlineColor = new Color32(30, 55, 110, 255);
+            carefulWarning.outlineWidth = 0.18f;
+            carefulWarning.fontMaterial.SetTexture("_OutlineTex", Texture2D.whiteTexture);
+            carefulWarning.alignment = TextAlignmentOptions.BottomRight;
+            carefulWarning.raycastTarget = false;
+            var rect = carefulWarning.rectTransform;
+            rect.anchorMin = rect.anchorMax = new Vector2(1f, 0f);
+            rect.pivot = new Vector2(1f, 0f);
+            rect.sizeDelta = new Vector2(260f, 85f);
+            rect.anchoredPosition = new Vector2(-35f, 35f);
+            carefulWarning.gameObject.SetActive(false);
+        }
+        // Repeated Danger checks must not replay the entrance while the warning is already visible.
+        if (carefulWarningVisible == visible) return;
+        carefulWarningVisible = visible;
+        carefulWarningEntrance?.Kill();
+        carefulWarning.gameObject.SetActive(visible);
+        if (!visible) return;
+
+        var warningRect = carefulWarning.rectTransform;
+        warningRect.anchoredPosition = new Vector2(-15f, 15f);
+        warningRect.localScale = Vector3.one * 0.75f;
+        carefulWarning.alpha = 0f;
+        carefulWarningEntrance = DOTween.Sequence().SetLink(gameObject)
+            .Append(warningRect.DOAnchorPos(new Vector2(-35f, 35f), 0.3f).SetEase(Ease.OutCubic))
+            .Join(warningRect.DOScale(1f, 0.35f).SetEase(Ease.OutBack))
+            .Join(carefulWarning.DOFade(1f, 0.18f));
     }
     bool dangerAnim;
     Sequence dangerSeq;
@@ -2206,7 +2269,8 @@ public partial class GameController : MonoBehaviour
             StartCoroutine(OnWin(tiles, useHintMergeFx));
             yield break;
         }
-        bool is2Up = tiles.Exists(x => x.is2Up);
+        int twoUpCount = tiles.Count(x => x.is2Up);
+        bool is2Up = twoUpCount > 0;
         bool isRainbow = tiles.Exists(x => x.isRainbow);
         if (slottedItems.Count > 3)
             clearAnimPlay = true;
@@ -2255,6 +2319,8 @@ public partial class GameController : MonoBehaviour
             item.gameObject.SetActive(false);
         }
         OnNewModeMatchCleared(tiles);
+        if (is2Up)
+            yield return ClearTwoUpBonus(twoUpCount);
         bool isLose = !newModeClearing && match3Items.Count == 0 && !IsSlotAvailable;
         //bool isLose = !GameController.instance.IsSlotAvailable;
         if (isLose)
@@ -2270,7 +2336,13 @@ public partial class GameController : MonoBehaviour
             GameScript.instance.Lose();
         }
         if (is2Up)
-            StartCoroutine(Up2());
+        {
+            if (!itemTiles.Exists(tile => tile.is2Up) && itemTiles.Count > 0 &&
+                gameState != GAME_STATE.WIN && gameState != GAME_STATE.LOSE)
+                yield return Up2();
+            if (gameState == GAME_STATE.UP2)
+                gameState = GAME_STATE.PLAYING;
+        }
         if (isRainbow)
             StartCoroutine(Rainbow());
         if (useHintMergeFx)

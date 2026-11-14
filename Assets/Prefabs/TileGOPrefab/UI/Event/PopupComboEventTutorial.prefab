@@ -3602,6 +3602,8 @@ MonoBehaviour:
   - {fileID: 1964503603006466298}
   showTopBar: 0
   btPanel: {fileID: 6070336729826047284}
+  starCollectionTutorial: 0
+  collectionTiles: {fileID: 0}
   continueGame: 0
 --- !u!1 &5124924204336428721
 GameObject:

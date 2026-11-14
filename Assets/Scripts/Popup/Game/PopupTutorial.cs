@@ -39,9 +39,10 @@ public class PopupTutorial : Popup
         HideOptionalPopup(addSlotPopup);
         HideOptionalPopup(hardPopup);
         HideOptionalPopup(superHardPopup);
-        if (NewModeRules.IsExtendedMode(tutIndex))
+        // Revised modes use text-only instructions; legacy tile diagrams describe old rules.
+        if (tutIndex == 5 || NewModeRules.IsExtendedMode(tutIndex))
         {
-            OpenNewModeTutorial(tutIndex);
+            OpenTextModeTutorial(tutIndex);
             return;
         }
         if (tutIndex < 0 || tutIndex >= tutorials.Length)
@@ -56,11 +57,11 @@ public class PopupTutorial : Popup
     TextMeshProUGUI modeTutorialTitle;
     GameObject newModePanel;
 
-    void OpenNewModeTutorial(int mode)
+    void OpenTextModeTutorial(int mode)
     {
         if (modeTutorial == null)
         {
-            newModePanel = new GameObject("New mode tutorial", typeof(RectTransform), typeof(Image));
+            newModePanel = new GameObject("Text-only mode tutorial", typeof(RectTransform), typeof(Image));
             newModePanel.transform.SetParent(box, false);
             var go = new GameObject("New mode instructions", typeof(TextMeshProUGUI));
             go.transform.SetParent(newModePanel.transform, false);
@@ -83,10 +84,11 @@ public class PopupTutorial : Popup
         }
         string instructions = mode switch
         {
-            9 => "LIMITED TRAY\n\nSome tray slots are locked. Match triples before the remaining slots fill up.",
+            5 => "2UP TILES\n\nTwo random tiles start in your tray. Match a triple containing either 2UP tile to clear one extra triple. Clear both 2UP tiles before a new pair appears.",
+            9 => "LIMITED TRAY\n\nOne tray slot is locked. Match triples before the six remaining slots fill up.",
             10 => "POISON\n\nMatching a POISON triple sends one random ordinary tile to your tray, then shuffles the board.",
             11 => "BOMB\n\nExposed bombs count down on each selection. At zero, each bomb sends one random tile to the tray. Collect a bomb before it expires.",
-            12 => "UNCOVER TRAYS\n\nRemove the tiles covering every orange tray to win. Remaining tiles clear automatically.",
+            12 => "HEAVEN GATES\n\nRemove the tiles covering every heaven gate to win. Remaining tiles clear automatically.",
             13 => "TARGET TILES\n\nMatch 3 eggs to hatch bunnies. Match 3 bunnies in shells, then 3 carrot bunnies. Complete all 3 stages to win.",
             14 => "COIN TILES\n\nMatch every COIN triple to win. Remaining tiles clear automatically.",
             _ => ""
@@ -151,7 +153,10 @@ public class PopupTutorial : Popup
     public override void Open()
     {
         foreach (var tutorial in tutorials)
+        {
+            HideTileIllustrations(tutorial);
             ApplySettingsFrame(tutorial);
+        }
         ApplySettingsFrame(hardPopup);
         ApplySettingsFrame(superHardPopup);
         ApplySettingsFrame(newModePanel);
@@ -163,6 +168,15 @@ public class PopupTutorial : Popup
         btPanel.interactable = true;
         Invoke(nameof(ClosePanel), 5);
         base.Open();
+    }
+
+    static void HideTileIllustrations(GameObject tutorial)
+    {
+        if (!tutorial) return;
+        // Each mode panel has two direct text children; all other children are tile diagrams.
+        foreach (Transform child in tutorial.transform)
+            if (!child.TryGetComponent<TextMeshProUGUI>(out _))
+                child.gameObject.SetActive(false);
     }
 
     private void ApplySettingsFrame(GameObject tutorial)

@@ -297,14 +297,15 @@ public partial class PopupWin : Popup
                 graph.DOFade(0, 0.5f);
             if (progressFull)
             {
-                GameScript.instance.OpenBonus(() =>
+                ShowWinButtons(() => GameScript.instance.OpenBonus(() =>
                 {
                     if (GameConfig.level == bgLevelRange.end && (bgLevelRange.rangeIndex + 1) < GameScript.instance.canvasBG.bgSpritesSO.GetBGCount())
                     {
                         GameScript.instance.OnPreviewMap(bgLevelRange.rangeIndex + 1, () => Next());
                     }
-                    Invoke(nameof(Win2), 1f);
-                });
+                    EnableWinButtons();
+                    Invoke(nameof(ShowWinFollowUp), 1f);
+                }));
                 return;
             }
             else if (levelProgress && GameConfig.level == bgLevelRange.end && (bgLevelRange.rangeIndex + 1) < GameScript.instance.canvasBG.bgSpritesSO.GetBGCount())
@@ -323,6 +324,12 @@ public partial class PopupWin : Popup
         });
     }
     void Win2()
+    {
+        ShowWinFollowUp();
+        ShowWinButtons(EnableWinButtons);
+    }
+
+    void ShowWinFollowUp()
     {
         if (GameConfig.GetCurrentLevel() == GameConfig.unlockDailyLogin && GameConfig.IsDailyLogin() && GameConfig.IsDailyLoginAvailable())//daily login
             GameScript.instance.OpenUnlock(0);
@@ -343,6 +350,10 @@ public partial class PopupWin : Popup
         {
             GameScript.instance.rateUsPopup.WinOpen();
         }
+    }
+
+    void ShowWinButtons(System.Action onShown)
+    {
         MaskableGraphic[] maskgraphics = win2GO.GetComponentsInChildren<MaskableGraphic>(false);
         foreach (var graphic in maskgraphics)
         {
@@ -358,9 +369,14 @@ public partial class PopupWin : Popup
         })
             .OnComplete(() =>
             {
-                btHome.onClick.AddListener(OnRandomRewardAdsClick);
-                btNext.onClick.AddListener(() => Next());
+                onShown?.Invoke();
             });
+    }
+
+    void EnableWinButtons()
+    {
+        btHome.onClick.AddListener(OnRandomRewardAdsClick);
+        btNext.onClick.AddListener(() => Next());
     }
     void Next()
     {

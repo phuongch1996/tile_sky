@@ -1,0 +1,5 @@
+Tool: built-in image_gen; transparent_background: true
+Edit target: Assets/Art/Tile Evo/Tile/Bo2/sao gay.png
+Style reference: Assets/Art/TileSky/BoosterUndo.png
+
+Use case: precise-object-edit. Asset type: production Unity puzzle Rainbow tile foreground icon. Image 1 is the edit target: retain the recognizable chunky rounded five-point rainbow star and roughly its shape. Image 2 is style reference only for Tile Sky. Make a modest visual refresh: cleaner pastel rainbow bands across the star, a thin warm gold beveled rim, softer glossy highlights and only two tiny inset shine marks. Friendly polished toy-like rendering, front orthographic view, clear at 60px. Preserve the five-point silhouette; do not add wings, a wand, extra stars, clouds or text. One star only, centered in a square image filling around 88 percent of the square, transparent outside the star. Remove the purple rectangular frame and any old outline artifacts from the target. Actual transparent alpha, no checkerboard, no background, no tile backing (the game adds a colored backing separately), no cast shadow outside the silhouette, no floating specks.

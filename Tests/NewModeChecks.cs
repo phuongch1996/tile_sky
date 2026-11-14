@@ -112,8 +112,16 @@ internal static class NewModeChecks
         Console.WriteLine("Legacy CSV rows verified: " + legacyLevels);
         AuditActiveLevels(root, activeLevels);
 
-        Check(NewModeRules.LockedSlots(0) == 1 && NewModeRules.LockedSlots(100) == 4,
-            "Locked-slot safety limits wrong");
+        foreach (int locks in new[] { int.MinValue, -1, 0, 1, 2, 3, 4, 100, int.MaxValue })
+            Check(NewModeRules.LockedSlots(locks) == 1,
+                "Limited-tray mode must lock exactly one slot, including legacy parameters");
+        Check(NewModeRules.AreIceNeighbours(2, 2, 1, 0) && NewModeRules.AreIceNeighbours(2, 2, -1, 0) &&
+            NewModeRules.AreIceNeighbours(2, 2, 0, 1) && NewModeRules.AreIceNeighbours(2, 2, 0, -1),
+            "Ice must recognize each of its four same-floor neighbours");
+        Check(!NewModeRules.AreIceNeighbours(2, 3, 1, 0) && !NewModeRules.AreIceNeighbours(2, 2, 1, 1) &&
+            !NewModeRules.AreIceNeighbours(2, 2, 0, 0) && !NewModeRules.AreIceNeighbours(2, 2, 2, 0) &&
+            !NewModeRules.AreIceNeighbours(2, 2, 0.5f, 0.5f),
+            "Other floors, diagonals, the tile itself and gaps cannot qualify as ice neighbours");
         Check(NewModeRules.BombBudget(0) == 5 && NewModeRules.BombBudget(8) == 8, "Bomb budget wrong");
         Check(NewModeRules.BombAfterSelection(5, true, false) == 4, "Exposed bomb did not tick");
         Check(NewModeRules.BombAfterSelection(5, false, false) == 5, "Hidden bomb ticked");

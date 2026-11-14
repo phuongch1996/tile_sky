@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" package="com.vik.tilespace" android:versionCode="1" android:versionName="1.0">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools" package="com.chp.tilesky" android:versionCode="1" android:versionName="1.0">
   <uses-permission android:name="android.permission.VIBRATE" />
   <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
   <application android:label="@string/app_name" android:icon="@drawable/app_icon">
@@ -7,7 +7,7 @@
     <meta-data android:name="firebase_analytics_collection_deactivated" android:value="true" tools:replace="android:value" />
     <meta-data android:name="firebase_analytics_collection_enabled" android:value="false" tools:replace="android:value" />
     <meta-data android:name="firebase_messaging_auto_init_enabled" android:value="false" tools:replace="android:value" />
-    <provider android:name="com.google.firebase.provider.FirebaseInitProvider" android:authorities="com.vik.tilespace.firebaseinitprovider" tools:node="remove" />
+    <provider android:name="com.google.firebase.provider.FirebaseInitProvider" android:authorities="com.chp.tilesky.firebaseinitprovider" tools:node="remove" />
     <activity android:name="com.unity3d.player.UnityPlayerActivity" android:theme="@style/UnityThemeSelector" android:configChanges="fontScale|keyboard|keyboardHidden|locale|mnc|mcc|navigation|orientation|screenLayout|screenSize|smallestScreenSize|uiMode|touchscreen">
       <intent-filter>
         <action android:name="android.intent.action.MAIN" />
