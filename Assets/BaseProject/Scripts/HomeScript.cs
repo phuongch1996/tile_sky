@@ -437,7 +437,7 @@ public class HomeScript : MonoBehaviour
 			rect.sizeDelta = backgroundIconSize * artworkScale;
 			if (button.image != null) button.image.preserveAspect = true;
 		}
-		var features = new[]
+        var features = new[]
 		{
 			new { Button = btSettings, Level = int.MinValue },
 			new { Button = btQuest, Level = 0 },

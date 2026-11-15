@@ -79,9 +79,7 @@ public class GameConfig
     public const int unlockPiggyBank = 22;
     public const int unlockRank = 26;
     //public static bool IsDailyChallenge => false;
-    public static bool IsDailyChallenge => UnityAuthentication.IsLeaderboard() && UnityAuthentication.instance
-         && GetCurrentDate() == UnityAuthentication.instance.dailyChallengeDateIndex
-         && GetCurrentLevel() >= Common.config_unlock_dailychallenge;
+    public static bool IsDailyChallenge => false;
 
     public const string startLevelKey = "start_level";
 

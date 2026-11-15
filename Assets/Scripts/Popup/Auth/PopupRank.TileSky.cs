@@ -16,10 +16,15 @@ public partial class PopupRank
         tileSkyRankRoot = TileSkyRankArt.Rect("Tile Sky Leaderboard", safeArea, Vector2.zero, Vector2.zero);
         TileSkyRankArt.Stretch(tileSkyRankRoot, Vector2.zero, Vector2.zero);
 
-        // Replace the old destination-themed background with a sky gradient.
+        // Reuse the same background artwork currently selected on Home.
         if (bg)
         {
-            bg.sprite = TileSkyRankArt.Sky;
+            var homeBackground = HomeScript.instance && HomeScript.instance.canvasBG
+                ? HomeScript.instance.canvasBG.bg
+                : null;
+            bg.sprite = homeBackground && homeBackground.sprite
+                ? homeBackground.sprite
+                : TileSkyRankArt.Sky;
             bg.type = Image.Type.Simple;
             bg.color = Color.white;
             bg.preserveAspect = false;
@@ -57,6 +62,7 @@ public partial class PopupRank
             toggle.graphic = null;
             toggle.transition = Selectable.Transition.None;
             tileSkyTabImages[i] = image;
+            toggle.gameObject.SetActive(false);
         }
 
         dailyTab = BuildTileSkyTab(dailyParent, currentUserDaily, noDailyGO, "Daily rankings");
@@ -93,7 +99,6 @@ public partial class PopupRank
         foreach (Transform child in safeArea)
             if (child != tileSkyRankRoot && (!bg || child != bg.transform)) child.gameObject.SetActive(false);
         LayoutTileSkyTabs();
-        RefreshTileSkyTabs();
     }
 
     GameObject BuildTileSkyTab(Transform content, RankCard currentUser, GameObject empty, string name)
@@ -167,14 +172,9 @@ public partial class PopupRank
     void LayoutTileSkyTabs()
     {
         if (!tileSkyRankRoot) return;
-        var toggles = new[] { toggleDailyRank, toggleAllTimeRank, toggleDailyChallengeRank };
-        int count = toggleDailyChallengeRank.gameObject.activeSelf ? 3 : 2;
-        for (int i = 0; i < count; i++)
-        {
-            var rect = (RectTransform)toggles[i].transform;
-            rect.anchorMin = rect.anchorMax = new Vector2((i + 0.5f) / count, 1);
-            rect.anchoredPosition = new Vector2(0, -295);
-        }
+        var rect = (RectTransform)toggleAllTimeRank.transform;
+        rect.anchorMin = rect.anchorMax = new Vector2(0.5f, 1);
+        rect.anchoredPosition = new Vector2(0, -295);
     }
 
     void RefreshTileSkyTabs()

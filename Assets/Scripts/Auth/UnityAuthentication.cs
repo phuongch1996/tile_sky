@@ -5,6 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Unity.Services.Leaderboards.Models;
+using Unity.Services.Authentication;
+using Unity.Services.Core;
+using Unity.Services.Leaderboards;
 using UnityEngine;
 
 public class UnityAuthentication : MonoBehaviour
@@ -89,14 +92,27 @@ public class UnityAuthentication : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
     // Retain local profile/art references without signing into the former game.
-    void Start()
+    async void Start()
     {
-        isSignedIn = false;
+        isSignedIn = null;
         SetLogInStatus(0);
         dailyChallengeDateIndex = null;
         currentDailyChallengeVersionId = string.Empty;
         dailyChallengeScore = null;
         pastEntry = null;
+        try
+        {
+            await UnityServices.InitializeAsync();
+            if (!AuthenticationService.Instance.IsSignedIn)
+                await AuthenticationService.Instance.SignInAnonymouslyAsync();
+            isSignedIn = true;
+            SetLogInStatus(1);
+        }
+        catch (Exception exception)
+        {
+            isSignedIn = false;
+            Debug.LogWarning($"Leaderboard sign-in unavailable: {exception.Message}");
+        }
     }
     public static bool? isSignedIn = false;
 
@@ -104,7 +120,7 @@ public class UnityAuthentication : MonoBehaviour
     {
         return nextReset - TimeManager.instance.currentTime;
     }
-    public static bool IsLeaderboard() { return false; }
+    public static bool IsLeaderboard() { return isSignedIn == true; }
     public Sprite GetAvatarSprite(int avatar)
     {
         var heavenlyAvatars = HeavenlyInfoArt.Avatars;
@@ -137,7 +153,28 @@ public class UnityAuthentication : MonoBehaviour
         if (!PlayerPrefs.HasKey(key)) PlayerPrefs.SetString(key, Guid.NewGuid().ToString("N"));
         return PlayerPrefs.GetString(key);
     }
-    public void WinAddScore() { SaveLocalScore(); }
+    public async void WinAddScore()
+    {
+        SaveLocalScore();
+        if (!IsLeaderboard()) return;
+        try
+        {
+            int reachedLevel = Mathf.Max(0, GameConfig.GetCurrentLevel() - 1);
+            var metadata = new ScoreMetadata {
+                playerAvatar = GameConfig.GetPlayerAvatar(),
+                displayName = GameConfig.GetDisplayName(),
+                playerFrame = GameConfig.GetPlayerFrame(),
+                playerFlag = GameConfig.GetPlayerFlag()
+            };
+            await LeaderboardsService.Instance.AddPlayerScoreAsync(
+                "tileevo_alltime", reachedLevel,
+                new AddPlayerScoreOptions { Metadata = metadata });
+        }
+        catch (Exception exception)
+        {
+            Debug.LogWarning($"Leaderboard score upload failed: {exception.Message}");
+        }
+    }
     public Task UpdateMetadata() { return Task.CompletedTask; }
     const string localLBKey = "tilespace_local_lb";
 
@@ -210,7 +247,11 @@ public class UnityAuthentication : MonoBehaviour
     // Compatibility API: no requests, uploads, remote players or archived rewards.
     public Task<bool> UpdateDailyChallengeScore(float score) { return Task.FromResult(false); }
     public Task AddScoreDaily(int score) { return Task.CompletedTask; }
-    public Task AddScore(int score) { return Task.CompletedTask; }
+    public async Task AddScore(int score)
+    {
+        if (!IsLeaderboard()) return;
+        await LeaderboardsService.Instance.AddPlayerScoreAsync("tileevo_alltime", score);
+    }
     public Task<LeaderboardEntry> AddScoreDailyChallenge(float score) { return Task.FromResult<LeaderboardEntry>(null); }
     //public void ButtonGetScores()
     //{
@@ -218,7 +259,8 @@ public class UnityAuthentication : MonoBehaviour
     //    GetScores();
     //}
     public Task<LeaderboardScoresPage> GetScoresDaily() { return Task.FromResult(new LeaderboardScoresPage(results: new List<LeaderboardEntry>())); }
-    public Task<LeaderboardScoresPage> GetScores() { return Task.FromResult(new LeaderboardScoresPage(results: new List<LeaderboardEntry>())); }
+    public Task<LeaderboardScoresPage> GetScores() => LeaderboardsService.Instance.GetScoresAsync(
+        "tileevo_alltime", new GetScoresOptions { Limit = 100, IncludeMetadata = true });
     public Task<LeaderboardScoresPage> GetScoresDailyChallenge() { return Task.FromResult(new LeaderboardScoresPage(results: new List<LeaderboardEntry>())); }
     public Task<LeaderboardScores> GetPlayerRangeDailyChallenge() { return Task.FromResult(new LeaderboardScores(new List<LeaderboardEntry>())); }
     //public void ButtonGetPlayerScore()
@@ -227,7 +269,8 @@ public class UnityAuthentication : MonoBehaviour
     //    GetPlayerScore();
     //}
     public Task<LeaderboardEntry> GetPlayerScoreDaily() { return Task.FromResult<LeaderboardEntry>(null); }
-    public Task<LeaderboardEntry> GetPlayerScore() { return Task.FromResult<LeaderboardEntry>(null); }
+    public Task<LeaderboardEntry> GetPlayerScore() => LeaderboardsService.Instance.GetPlayerScoreAsync(
+        "tileevo_alltime", new GetPlayerScoreOptions { IncludeMetadata = true });
     public Task<LeaderboardEntry> GetPlayerScoreDailyChallenge() { return Task.FromResult<LeaderboardEntry>(null); }
     public Task<DateTime> GetDailyLeaderboardVersion() { return Task.FromResult(DateTime.UtcNow); }
     public LeaderboardEntry pastEntry;

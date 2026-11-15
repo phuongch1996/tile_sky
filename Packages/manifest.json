@@ -22,6 +22,7 @@
     "com.unity.purchasing": "5.4.0",
     "com.unity.render-pipelines.universal": "17.6.0",
     "com.unity.services.deployment": "1.7.2",
+    "com.unity.services.authentication": "3.3.3",
     "com.unity.services.leaderboards": "file:com.unity.services.leaderboards",
     "com.unity.test-framework": "1.8.0",
     "com.unity.timeline": "6.6.0",

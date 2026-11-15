@@ -96,6 +96,11 @@ public partial class PopupRank : Popup
         toggleDailyRank.interactable = false;
         toggleAllTimeRank.interactable = false;
         toggleDailyChallengeRank.interactable = false;
+        // Tile Sky uses one global leaderboard: highest level reached.
+        toggleDailyRank.gameObject.SetActive(false);
+        toggleDailyChallengeRank.gameObject.SetActive(false);
+        toggleAllTimeRank.gameObject.SetActive(false);
+        toggleAllTimeRank.isOn = true;
         BindRankTabHandlers();
         toggleDailyChallengeRank.gameObject.SetActive(GameConfig.IsDailyChallenge);
         LayoutTileSkyTabs();
@@ -103,7 +108,7 @@ public partial class PopupRank : Popup
         if (!isInit)
         {
             loadingGO.SetActive(true);
-            toggleDailyRank.isOn = true;
+            toggleAllTimeRank.isOn = true;
             ChangeTab();
             //TabDaily(true);
             GetLeaderboard();
@@ -192,9 +197,7 @@ public partial class PopupRank : Popup
                 Mathf.Max(0, GameConfig.GetCurrentLevel() - 1));
             userRankCards.Add(currentUserDaily);
             userRankCards.Add(currentUserAllTime);
-            loadFailedGO.SetActive(true);
-            var message = loadFailedGO.GetComponentInChildren<TextMeshProUGUI>(true);
-            if (message) message.text = "Leaderboard is not connected yet.";
+            loadFailedGO.SetActive(false);
             loadingGO.SetActive(false);
             isInit = true;
             return;
