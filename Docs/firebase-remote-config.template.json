@@ -1,0 +1,262 @@
+{
+    "parameters":  {
+                       "ads_aoa_show":  {
+                                            "defaultValue":  {
+                                                                 "value":  "false"
+                                                             },
+                                            "valueType":  "BOOLEAN"
+                                        },
+                       "ads_aoa_resume_game_show":  {
+                                                        "defaultValue":  {
+                                                                             "value":  "false"
+                                                                         },
+                                                        "valueType":  "BOOLEAN"
+                                                    },
+                       "ads_aoa_open_count":  {
+                                                  "defaultValue":  {
+                                                                       "value":  "1"
+                                                                   },
+                                                  "valueType":  "NUMBER"
+                                              },
+                       "ads_aoa_type":  {
+                                            "defaultValue":  {
+                                                                 "value":  "1"
+                                                             },
+                                            "valueType":  "NUMBER"
+                                        },
+                       "ads_aoa_duration":  {
+                                                "defaultValue":  {
+                                                                     "value":  "10"
+                                                                 },
+                                                "valueType":  "NUMBER"
+                                            },
+                       "ads_aoa_id_admob":  {
+                                                "defaultValue":  {
+                                                                     "value":  "ca-app-pub-3940256099942544/9257395921"
+                                                                 },
+                                                "valueType":  "STRING"
+                                            },
+                       "ads_aoa_id_max":  {
+                                              "defaultValue":  {
+                                                                   "value":  ""
+                                                               },
+                                              "valueType":  "STRING"
+                                          },
+                       "ads_aoa_start_level":  {
+                                                   "defaultValue":  {
+                                                                        "value":  "1"
+                                                                    },
+                                                   "valueType":  "NUMBER"
+                                               },
+                       "ads_inter_shown_on_level_start":  {
+                                                              "defaultValue":  {
+                                                                                   "value":  "false"
+                                                                               },
+                                                              "valueType":  "BOOLEAN"
+                                                          },
+                       "ads_inter_shown_on_level_end":  {
+                                                            "defaultValue":  {
+                                                                                 "value":  "false"
+                                                                             },
+                                                            "valueType":  "BOOLEAN"
+                                                        },
+                       "ads_inter_ad_break_time":  {
+                                                       "defaultValue":  {
+                                                                            "value":  "60"
+                                                                        },
+                                                       "valueType":  "NUMBER"
+                                                   },
+                       "ads_inter_ad_break_id_admob":  {
+                                                           "defaultValue":  {
+                                                                                "value":  "ca-app-pub-3940256099942544/1033173712"
+                                                                            },
+                                                           "valueType":  "STRING"
+                                                       },
+                       "ads_inter_ad_break_id_max":  {
+                                                         "defaultValue":  {
+                                                                              "value":  ""
+                                                                          },
+                                                         "valueType":  "STRING"
+                                                     },
+                       "ads_inter_start_level":  {
+                                                     "defaultValue":  {
+                                                                          "value":  "1"
+                                                                      },
+                                                     "valueType":  "NUMBER"
+                                                 },
+                       "ads_inter_level_range":  {
+                                                     "defaultValue":  {
+                                                                          "value":  "1"
+                                                                      },
+                                                     "valueType":  "NUMBER"
+                                                 },
+                       "ads_inter_type":  {
+                                              "defaultValue":  {
+                                                                   "value":  "1"
+                                                               },
+                                              "valueType":  "NUMBER"
+                                          },
+                       "ads_inter_duration":  {
+                                                  "defaultValue":  {
+                                                                       "value":  "60"
+                                                                   },
+                                                  "valueType":  "NUMBER"
+                                              },
+                       "ads_inter_first_show":  {
+                                                    "defaultValue":  {
+                                                                         "value":  "60"
+                                                                     },
+                                                    "valueType":  "NUMBER"
+                                                },
+                       "ads_inter_id_admob":  {
+                                                  "defaultValue":  {
+                                                                       "value":  "ca-app-pub-3940256099942544/1033173712"
+                                                                   },
+                                                  "valueType":  "STRING"
+                                              },
+                       "ads_inter_id_max":  {
+                                                "defaultValue":  {
+                                                                     "value":  ""
+                                                                 },
+                                                "valueType":  "STRING"
+                                            },
+                       "ads_banner_show":  {
+                                               "defaultValue":  {
+                                                                    "value":  "false"
+                                                                },
+                                               "valueType":  "BOOLEAN"
+                                           },
+                       "ads_banner_type":  {
+                                               "defaultValue":  {
+                                                                    "value":  "1"
+                                                                },
+                                               "valueType":  "NUMBER"
+                                           },
+                       "ads_banner_id_admob":  {
+                                                   "defaultValue":  {
+                                                                        "value":  "ca-app-pub-3940256099942544/9214589741"
+                                                                    },
+                                                   "valueType":  "STRING"
+                                               },
+                       "ads_banner_id_max":  {
+                                                 "defaultValue":  {
+                                                                      "value":  ""
+                                                                  },
+                                                 "valueType":  "STRING"
+                                             },
+                       "ads_banner_fallback":  {
+                                                   "defaultValue":  {
+                                                                        "value":  "false"
+                                                                    },
+                                                   "valueType":  "BOOLEAN"
+                                               },
+                       "ads_reward_type":  {
+                                               "defaultValue":  {
+                                                                    "value":  "1"
+                                                                },
+                                               "valueType":  "NUMBER"
+                                           },
+                       "ads_reward_id_admob":  {
+                                                   "defaultValue":  {
+                                                                        "value":  "ca-app-pub-3940256099942544/5224354917"
+                                                                    },
+                                                   "valueType":  "STRING"
+                                               },
+                       "ads_reward_id_max":  {
+                                                 "defaultValue":  {
+                                                                      "value":  ""
+                                                                  },
+                                                 "valueType":  "STRING"
+                                             },
+                       "ads_mrec_show":  {
+                                             "defaultValue":  {
+                                                                  "value":  "false"
+                                                              },
+                                             "valueType":  "BOOLEAN"
+                                         },
+                       "ads_mrec_id_max":  {
+                                               "defaultValue":  {
+                                                                    "value":  ""
+                                                                },
+                                               "valueType":  "STRING"
+                                           },
+                       "ads_collapse_show":  {
+                                                 "defaultValue":  {
+                                                                      "value":  "false"
+                                                                  },
+                                                 "valueType":  "BOOLEAN"
+                                             },
+                       "ads_collapse_duration":  {
+                                                     "defaultValue":  {
+                                                                          "value":  "60"
+                                                                      },
+                                                     "valueType":  "NUMBER"
+                                                 },
+                       "ads_collapse_id_admob":  {
+                                                     "defaultValue":  {
+                                                                          "value":  "ca-app-pub-3940256099942544/9214589741"
+                                                                      },
+                                                     "valueType":  "STRING"
+                                                 },
+                       "ads_collapse_start_level":  {
+                                                        "defaultValue":  {
+                                                                             "value":  "1"
+                                                                         },
+                                                        "valueType":  "NUMBER"
+                                                    },
+                       "rewarded_reset_capping_time":  {
+                                                           "defaultValue":  {
+                                                                                "value":  "false"
+                                                                            },
+                                                           "valueType":  "BOOLEAN"
+                                                       },
+                       "config_loading_time":  {
+                                                   "defaultValue":  {
+                                                                        "value":  "2"
+                                                                    },
+                                                   "valueType":  "NUMBER"
+                                               },
+                       "config_tile_shadow":  {
+                                                  "defaultValue":  {
+                                                                       "value":  "0"
+                                                                   },
+                                                  "valueType":  "NUMBER"
+                                              },
+                       "config_unlock_battlepass":  {
+                                                        "defaultValue":  {
+                                                                             "value":  "31"
+                                                                         },
+                                                        "valueType":  "NUMBER"
+                                                    },
+                       "config_unlock_piggybank":  {
+                                                       "defaultValue":  {
+                                                                            "value":  "22"
+                                                                        },
+                                                       "valueType":  "NUMBER"
+                                                   },
+                       "config_unlock_rank":  {
+                                                  "defaultValue":  {
+                                                                       "value":  "26"
+                                                                   },
+                                                  "valueType":  "NUMBER"
+                                              },
+                       "config_unlock_dailychallenge":  {
+                                                            "defaultValue":  {
+                                                                                 "value":  "51"
+                                                                             },
+                                                            "valueType":  "NUMBER"
+                                                        },
+                       "config_event_dates":  {
+                                                  "defaultValue":  {
+                                                                       "value":  "7"
+                                                                   },
+                                                  "valueType":  "NUMBER"
+                                              },
+                       "config_tile_set":  {
+                                               "defaultValue":  {
+                                                                    "value":  "0"
+                                                                },
+                                               "valueType":  "NUMBER"
+                                           }
+                   }
+}

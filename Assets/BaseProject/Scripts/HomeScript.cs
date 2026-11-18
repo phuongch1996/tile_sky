@@ -734,6 +734,8 @@ public class HomeScript : MonoBehaviour
 
 		Canvas.ForceUpdateCanvases();
 		var icons = GetHomeExitIcons();
+		GameScript.CaptureHomeNavigationLayout((RectTransform)btSettings.transform,
+			Mathf.Max(150f, ((RectTransform)btMap.transform).sizeDelta.x * (208f / 183f) + 12f));
 		var style = (PlayExitStyle)UnityEngine.Random.Range(0, 5);
 		bool staggered = style == PlayExitStyle.StaggeredEdges;
 		float duration = Mathf.Max(0.1f, playExitDuration);

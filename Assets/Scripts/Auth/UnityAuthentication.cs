@@ -167,7 +167,7 @@ public class UnityAuthentication : MonoBehaviour
                 playerFlag = GameConfig.GetPlayerFlag()
             };
             await LeaderboardsService.Instance.AddPlayerScoreAsync(
-                "tileevo_alltime", reachedLevel,
+                "tilesky_alltime", reachedLevel,
                 new AddPlayerScoreOptions { Metadata = metadata });
         }
         catch (Exception exception)
@@ -250,7 +250,7 @@ public class UnityAuthentication : MonoBehaviour
     public async Task AddScore(int score)
     {
         if (!IsLeaderboard()) return;
-        await LeaderboardsService.Instance.AddPlayerScoreAsync("tileevo_alltime", score);
+        await LeaderboardsService.Instance.AddPlayerScoreAsync("tilesky_alltime", score);
     }
     public Task<LeaderboardEntry> AddScoreDailyChallenge(float score) { return Task.FromResult<LeaderboardEntry>(null); }
     //public void ButtonGetScores()
@@ -260,7 +260,7 @@ public class UnityAuthentication : MonoBehaviour
     //}
     public Task<LeaderboardScoresPage> GetScoresDaily() { return Task.FromResult(new LeaderboardScoresPage(results: new List<LeaderboardEntry>())); }
     public Task<LeaderboardScoresPage> GetScores() => LeaderboardsService.Instance.GetScoresAsync(
-        "tileevo_alltime", new GetScoresOptions { Limit = 100, IncludeMetadata = true });
+        "tilesky_alltime", new GetScoresOptions { Limit = 100, IncludeMetadata = true });
     public Task<LeaderboardScoresPage> GetScoresDailyChallenge() { return Task.FromResult(new LeaderboardScoresPage(results: new List<LeaderboardEntry>())); }
     public Task<LeaderboardScores> GetPlayerRangeDailyChallenge() { return Task.FromResult(new LeaderboardScores(new List<LeaderboardEntry>())); }
     //public void ButtonGetPlayerScore()
@@ -270,7 +270,7 @@ public class UnityAuthentication : MonoBehaviour
     //}
     public Task<LeaderboardEntry> GetPlayerScoreDaily() { return Task.FromResult<LeaderboardEntry>(null); }
     public Task<LeaderboardEntry> GetPlayerScore() => LeaderboardsService.Instance.GetPlayerScoreAsync(
-        "tileevo_alltime", new GetPlayerScoreOptions { IncludeMetadata = true });
+        "tilesky_alltime", new GetPlayerScoreOptions { IncludeMetadata = true });
     public Task<LeaderboardEntry> GetPlayerScoreDailyChallenge() { return Task.FromResult<LeaderboardEntry>(null); }
     public Task<DateTime> GetDailyLeaderboardVersion() { return Task.FromResult(DateTime.UtcNow); }
     public LeaderboardEntry pastEntry;

@@ -20,7 +20,8 @@ $catalog = (Read-ProjectFile 'Assets/Resources/IAPProductCatalog.json') | Conver
 Assert-Condition (-not $catalog.enableCodelessAutoInitialization) 'IAP automatic initialization remains enabled.'
 Assert-Condition (-not $catalog.enableUnityGamingServicesAutoInitialization) 'UGS automatic initialization remains enabled.'
 foreach ($product in $catalog.products) {
-    Assert-Condition ($product.id.StartsWith('tilespace_')) "Inherited catalog product: $($product.id)"
+    $allowedProductIds = @('tilesky_removeads', 'tilesky_firstpack', 'tilesky_megapack', 'tilesky_ultipack', 'tilesky_gold1', 'tilesky_gold2', 'tilesky_gold3', 'tilespace_piggybank', 'tilespace_battlepass')
+    Assert-Condition ($product.id -in $allowedProductIds) "Unexpected catalog product: $($product.id)"
 }
 Assert-Condition ((Read-ProjectFile 'Assets/Scripts/Manager/IAPManager.cs') -match 'PurchasingEnabled => false;') 'Purchases are enabled without a new store configuration.'
 
@@ -46,20 +47,31 @@ foreach ($root in @('Assets/Scripts','Assets/BaseProject/Scripts')) {
         $source = [IO.File]::ReadAllText($file.FullName)
         $source = [regex]::Replace($source, '(?s)/\*.*?\*/', '')
         $source = [regex]::Replace($source, '(?m)^\s*//.*$', '')
-        Assert-Condition ($source -notmatch 'UnityServices\.InitializeAsync|LeaderboardsService\.Instance|AuthenticationService\.Instance|FirebaseApp\.DefaultInstance|CheckAndFixDependenciesAsync') "Remote backend startup/call remains in $($file.FullName)"
+        Assert-Condition ($source -notmatch 'UnityServices\.InitializeAsync|LeaderboardsService\.Instance|AuthenticationService\.Instance') "Remote backend startup/call remains in $($file.FullName)"
+        if ($file.Name -ne 'FirebaseManager.cs') {
+            Assert-Condition ($source -notmatch 'FirebaseApp\.DefaultInstance|CheckAndFixDependenciesAsync|FirebaseRemoteConfig\.DefaultInstance') "Unexpected Firebase startup in $($file.FullName)"
+        }
         Assert-Condition ($source -notmatch '"tile(evo|go|up)_[^"]*"') "An inherited service/product identifier remains in $($file.FullName)"
     }
 }
-Write-Output 'PASS: game scripts contain no Unity/Firebase backend initialization or leaderboard/account requests.'
+Write-Output 'PASS: Firebase Analytics/Remote Config startup limited to Firebase manager; no UGS or leaderboard/account requests.'
 
 $connect = Read-ProjectFile 'ProjectSettings/UnityConnectSettings.asset'
 Assert-Condition ($connect -match '(?s)UnityAnalyticsSettings:.*?m_Enabled: 0.*?m_InitializeOnStartup: 0') 'Unity Analytics can auto-start.'
 $firebaseConfigs = @(Get-ChildItem (Join-Path $projectRoot 'Assets') -Recurse -File -Include google-services.json,google-services-desktop.json,GoogleService-Info.plist)
-Assert-Condition ($firebaseConfigs.Count -eq 0) 'A Firebase app configuration remains under Assets.'
+$androidConfig = (Read-ProjectFile 'Assets/google-services.json') | ConvertFrom-Json
+Assert-Condition ($androidConfig.client.client_info.android_client_info.package_name -contains 'com.chp.tilesky') 'Firebase config does not match Tile Sky Android package.'
+foreach ($config in $firebaseConfigs) {
+    Assert-Condition ($config.Name -ne 'GoogleService-Info.plist') 'An unconfigured Apple Firebase app remains.'
+    $data = Get-Content -LiteralPath $config.FullName -Raw | ConvertFrom-Json
+    Assert-Condition ($data.project_info.project_id -eq $androidConfig.project_info.project_id) "Unexpected Firebase project in $($config.FullName)"
+}
 $manifest = Read-ProjectFile 'Assets/Plugins/Android/AndroidManifest.xml'
-Assert-Condition ($manifest -match 'FirebaseInitProvider[^>]*tools:node="remove"') 'Firebase Android automatic startup is not blocked.'
-Assert-Condition ($manifest -match 'firebase_analytics_collection_deactivated" android:value="true"') 'Firebase Analytics is not deactivated.'
-Write-Output 'PASS: Unity Analytics disabled; Firebase app configurations absent and Android auto-init blocked.'
+Assert-Condition ($manifest -notmatch 'FirebaseInitProvider[^>]*tools:node="remove"') 'Firebase Android startup is blocked.'
+Assert-Condition ($manifest -notmatch 'firebase_analytics_collection_deactivated') 'Firebase Analytics is deactivated.'
+Assert-Condition ($manifest -match 'firebase_analytics_collection_enabled" android:value="true"') 'Firebase Analytics is not enabled.'
+Assert-Condition ($manifest -match 'firebase_messaging_auto_init_enabled" android:value="false"') 'Messaging automatic startup must stay disabled.'
+Write-Output 'PASS: Tile Sky Firebase Analytics enabled; Unity Analytics and Firebase Messaging remain disabled.'
 
 $ads = Read-ProjectFile 'Assets/GoogleMobileAds/Resources/GoogleMobileAdsSettings.asset'
 Assert-Condition ($ads -match 'adMobAndroidAppId: ca-app-pub-3940256099942544~') 'AdMob Android is not configured with a demo app ID.'

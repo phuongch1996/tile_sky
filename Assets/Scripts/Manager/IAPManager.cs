@@ -22,24 +22,24 @@ public class IAPManager : MonoBehaviour, IDetailedStoreListener
 {
     // No store is configured for this game yet. Never initialize the old catalog.
     public static bool PurchasingEnabled => false;
-    public const string tilespace_removeads = "tilespace_removeads"; //300, 1, true  $0.99
-    public const string tilespace_firstpack = "tilespace_firstpack"; //300, 3        $0.99
-    public const string tilespace_megapack = "tilespace_megapack";   //1500, 15      $4.99
-    public const string tilespace_ultipack = "tilespace_ultipack";   //3000, 30      $9.99
-    public const string tilespace_gold1 = "tilespace_gold1";         //1200          $0.99
-    public const string tilespace_gold2 = "tilespace_gold2";         //3900          $2.99
-    public const string tilespace_gold3 = "tilespace_gold3";         //7800          $4.99
+    public const string tilesky_removeads = "tilesky_removeads"; //300, 1, true  $3.90
+    public const string tilesky_firstpack = "tilesky_firstpack"; //300, 3        $2.90
+    public const string tilesky_megapack = "tilesky_megapack";   //1500, 15      $4.90
+    public const string tilesky_ultipack = "tilesky_ultipack";   //3000, 30      $9.90
+    public const string tilesky_gold1 = "tilesky_gold1";         //1200          $4.90
+    public const string tilesky_gold2 = "tilesky_gold2";         //3900          $12.90
+    public const string tilesky_gold3 = "tilesky_gold3";         //7800          $29.90
     public const string tilespace_piggybank = "tilespace_piggybank"; //piggybank     $2.99
     public const string tilespace_battlepass = "tilespace_battlepass"; //battlepass  $3.99
     public static readonly Dictionary<string, IAPValues> iapidList = new()
     {
-        { tilespace_removeads, new(300, 1, true) },
-        { tilespace_firstpack, new(300, 3) },
-        { tilespace_megapack, new(1500, 15) },
-        { tilespace_ultipack, new(3000, 30) },
-        { tilespace_gold1, new(1200) },
-        { tilespace_gold2, new(3900) },
-        { tilespace_gold3, new(7800) },
+        { tilesky_removeads, new(300, 1, true) },
+        { tilesky_firstpack, new(300, 3) },
+        { tilesky_megapack, new(1500, 15) },
+        { tilesky_ultipack, new(3000, 30) },
+        { tilesky_gold1, new(1200) },
+        { tilesky_gold2, new(3900) },
+        { tilesky_gold3, new(7800) },
     };
     public static IAPValues GetIAPValues(string iapid)
     {
@@ -161,7 +161,7 @@ public class IAPManager : MonoBehaviour, IDetailedStoreListener
     PurchaseProcessingResult IStoreListener.ProcessPurchase(PurchaseEventArgs purchaseEvent)
     {
         if (!PurchasingEnabled) return PurchaseProcessingResult.Pending;
-        if (string.Equals(purchaseEvent.purchasedProduct.definition.id, tilespace_removeads, System.StringComparison.Ordinal))
+        if (string.Equals(purchaseEvent.purchasedProduct.definition.id, tilesky_removeads, System.StringComparison.Ordinal))
         {
             Debug.Log("Non-consumable purchased or restored: " + purchaseEvent.purchasedProduct.definition.id);
             isRestore = true;
@@ -195,7 +195,7 @@ public class IAPManager : MonoBehaviour, IDetailedStoreListener
         }
         else
         {
-            if (string.Equals(product.definition.id, tilespace_removeads, System.StringComparison.Ordinal))
+            if (string.Equals(product.definition.id, tilesky_removeads, System.StringComparison.Ordinal))
                 OnRemoveAds();
             IAPValues iap = GetIAPValues(product.definition.id);
             OnPurchasePack(iap.goldAm, iap.boostersAm, iap.removeAds);
@@ -204,13 +204,13 @@ public class IAPManager : MonoBehaviour, IDetailedStoreListener
     }
     public static bool IsRemoveAdsBought()
     {
-        return PlayerPrefs.GetInt(tilespace_removeads, 0) != 0;
+        return PlayerPrefs.GetInt(tilesky_removeads, 0) != 0;
     }
     public static bool RemoveAdsBought()
     {
         if (IsRemoveAdsBought())
             return false;
-        PlayerPrefs.SetInt(tilespace_removeads, 1);
+        PlayerPrefs.SetInt(tilesky_removeads, 1);
         return true;
     }
     public void OnRemoveAds()

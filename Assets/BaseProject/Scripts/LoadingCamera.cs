@@ -70,6 +70,10 @@ public class LoadingCamera : MonoBehaviour
                 CompleteLoading();
                 return;
             }
+#if TILESKY_NO_ADS
+            CompleteLoading();
+            return;
+#endif
             if (!GameConfig.isUMP)
             {
                 UMPManager.Instance.InitUMP(() =>
@@ -315,6 +319,10 @@ public class LoadingCamera : MonoBehaviour
         if (!loadFinished)
             loadFinished = true;
         else yield break;
+        // Bound startup waiting so offline players can always enter the game.
+        float configDeadline = Time.realtimeSinceStartup + 3f;
+        while (!FirebaseManager.IsRemoteConfigReady && Time.realtimeSinceStartup < configDeadline)
+            yield return null;
         loadProgress.DOKill();
         // Finish the progress bar before dismissing the sky, even on a fast initialization.
         yield return loadProgress.DOFillAmount(1f, Mathf.Max(0.1f, (1f - loadProgress.fillAmount) * 0.5f))

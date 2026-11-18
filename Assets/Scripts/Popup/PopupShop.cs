@@ -40,56 +40,56 @@ public partial class PopupShop : Popup
     {
         EnsureTileSkyShop();
         if (isInit) return;
-        iapButtonRemoveAds.productId = IAPManager.tilespace_removeads;
+        iapButtonRemoveAds.productId = IAPManager.tilesky_removeads;
         iapButtonRemoveAds.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonRemoveAds.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_removeads);
-        IAPValues iapRemoveAds = IAPManager.GetIAPValues(IAPManager.tilespace_removeads);
+        iapButtonRemoveAds.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilesky_removeads);
+        IAPValues iapRemoveAds = IAPManager.GetIAPValues(IAPManager.tilesky_removeads);
         goldImgRemoveAds.sprite = UnityAuthentication.instance.GetGoldSprite(iapRemoveAds.goldAm);
         txValueRemoveAds[0].text = iapRemoveAds.goldAm.ToString();
         txValueRemoveAds[1].text = $"x{iapRemoveAds.boostersAm}";
 
-        iapButtonFirstPack.productId = IAPManager.tilespace_firstpack;
+        iapButtonFirstPack.productId = IAPManager.tilesky_firstpack;
         iapButtonFirstPack.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonFirstPack.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_firstpack);
-        IAPValues iapFirstPack = IAPManager.GetIAPValues(IAPManager.tilespace_firstpack);
+        iapButtonFirstPack.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilesky_firstpack);
+        IAPValues iapFirstPack = IAPManager.GetIAPValues(IAPManager.tilesky_firstpack);
         goldImgFirstPack.sprite = UnityAuthentication.instance.GetGoldSprite(iapFirstPack.goldAm);
         txValueFirstPack[0].text = iapFirstPack.goldAm.ToString();
         txValueFirstPack[1].text = $"x{iapFirstPack.boostersAm}";
 
-        iapButtonMegaPack.productId = IAPManager.tilespace_megapack;
+        iapButtonMegaPack.productId = IAPManager.tilesky_megapack;
         iapButtonMegaPack.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonMegaPack.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_megapack);
-        IAPValues iapMegaPack = IAPManager.GetIAPValues(IAPManager.tilespace_megapack);
+        iapButtonMegaPack.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilesky_megapack);
+        IAPValues iapMegaPack = IAPManager.GetIAPValues(IAPManager.tilesky_megapack);
         goldImgMegaPack.sprite = UnityAuthentication.instance.GetGoldSprite(iapMegaPack.goldAm);
         txValueMegaPack[0].text = iapMegaPack.goldAm.ToString();
         txValueMegaPack[1].text = $"x{iapMegaPack.boostersAm}";
 
-        iapButtonUltiPack.productId = IAPManager.tilespace_ultipack;
+        iapButtonUltiPack.productId = IAPManager.tilesky_ultipack;
         iapButtonUltiPack.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonUltiPack.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_ultipack);
-        IAPValues iapUltiPack = IAPManager.GetIAPValues(IAPManager.tilespace_ultipack);
+        iapButtonUltiPack.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilesky_ultipack);
+        IAPValues iapUltiPack = IAPManager.GetIAPValues(IAPManager.tilesky_ultipack);
         goldImgUltiPack.sprite = UnityAuthentication.instance.GetGoldSprite(iapUltiPack.goldAm);
         txValueUltiPack[0].text = iapUltiPack.goldAm.ToString();
         txValueUltiPack[1].text = $"x{iapUltiPack.boostersAm}";
 
-        iapButtonGold1.productId = IAPManager.tilespace_gold1;
+        iapButtonGold1.productId = IAPManager.tilesky_gold1;
         iapButtonGold1.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonGold1.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_gold1);
-        IAPValues iapGold1 = IAPManager.GetIAPValues(IAPManager.tilespace_gold1);
+        iapButtonGold1.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilesky_gold1);
+        IAPValues iapGold1 = IAPManager.GetIAPValues(IAPManager.tilesky_gold1);
         goldImgGold1.sprite = UnityAuthentication.instance.GetGoldSprite(iapGold1.goldAm);
         txValueGold1.text = iapGold1.goldAm.ToString();
 
-        iapButtonGold2.productId = IAPManager.tilespace_gold2;
+        iapButtonGold2.productId = IAPManager.tilesky_gold2;
         iapButtonGold2.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonGold2.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_gold2);
-        IAPValues iapGold2 = IAPManager.GetIAPValues(IAPManager.tilespace_gold2);
+        iapButtonGold2.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilesky_gold2);
+        IAPValues iapGold2 = IAPManager.GetIAPValues(IAPManager.tilesky_gold2);
         goldImgGold2.sprite = UnityAuthentication.instance.GetGoldSprite(iapGold2.goldAm);
         txValueGold2.text = iapGold2.goldAm.ToString();
 
-        iapButtonGold3.productId = IAPManager.tilespace_gold3;
+        iapButtonGold3.productId = IAPManager.tilesky_gold3;
         iapButtonGold3.button.onClick.AddListener(() => IAPManager.instance.OnIAPClick());
-        iapButtonGold3.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilespace_gold3);
-        IAPValues iapGold3 = IAPManager.GetIAPValues(IAPManager.tilespace_gold3);
+        iapButtonGold3.GetComponentInChildren<TextMeshProUGUI>().text = ShopPrice(IAPManager.tilesky_gold3);
+        IAPValues iapGold3 = IAPManager.GetIAPValues(IAPManager.tilesky_gold3);
         goldImgGold3.sprite = UnityAuthentication.instance.GetGoldSprite(iapGold3.goldAm);
         txValueGold3.text = iapGold3.goldAm.ToString();
 

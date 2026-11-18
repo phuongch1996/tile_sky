@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 public partial class PopupRateUs : Popup
 {
+    public static bool FeatureEnabled => false;
     public Button btClose;
     public Button btPanel;
     public Button[] btStars;
@@ -45,6 +46,7 @@ public partial class PopupRateUs : Popup
     }
     public bool WinOpen()
     {
+        if (!FeatureEnabled) return false;
 #if UNITY_IOS
         return false;
 #endif
@@ -57,6 +59,7 @@ public partial class PopupRateUs : Popup
     }
     public override void Open()
     {
+        if (!FeatureEnabled) return;
         ApplyTileSkyLayout();
         btClose.interactable = true;
         btPanel.interactable = true;
@@ -94,7 +97,7 @@ public partial class PopupRateUs : Popup
         {
             isRate = true;
             GameConfig.SetDisableCommonAd(true);
-            Application.OpenURL("https://play.google.com/store/apps/details?id=com.vik.tilespace&hl=vi");
+            Application.OpenURL("https://play.google.com/store/apps/details?id=com.chp.tilesky");
             return;
         }
         DoneRate();

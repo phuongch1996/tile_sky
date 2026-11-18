@@ -104,14 +104,14 @@ public partial class PopupShop
         if (btBuyBoosters.Length > 3) btBuyBoosters[3].gameObject.SetActive(false);
 
         ShopSection("GIFT PACKS", -384);
-        BuildShopPack("NO ADS", IAPManager.tilespace_removeads, iapButtonRemoveAds, goldImgRemoveAds, txValueRemoveAds, new Vector2(-210, -588));
-        BuildShopPack("STARTER PACK", IAPManager.tilespace_firstpack, iapButtonFirstPack, goldImgFirstPack, txValueFirstPack, new Vector2(210, -588));
-        BuildShopPack("MEGA PACK", IAPManager.tilespace_megapack, iapButtonMegaPack, goldImgMegaPack, txValueMegaPack, new Vector2(-210, -938));
-        BuildShopPack("ULTIMATE PACK", IAPManager.tilespace_ultipack, iapButtonUltiPack, goldImgUltiPack, txValueUltiPack, new Vector2(210, -938));
+        BuildShopPack("NO ADS", IAPManager.tilesky_removeads, iapButtonRemoveAds, goldImgRemoveAds, txValueRemoveAds, new Vector2(-210, -588));
+        BuildShopPack("STARTER PACK", IAPManager.tilesky_firstpack, iapButtonFirstPack, goldImgFirstPack, txValueFirstPack, new Vector2(210, -588));
+        BuildShopPack("MEGA PACK", IAPManager.tilesky_megapack, iapButtonMegaPack, goldImgMegaPack, txValueMegaPack, new Vector2(-210, -938));
+        BuildShopPack("ULTIMATE PACK", IAPManager.tilesky_ultipack, iapButtonUltiPack, goldImgUltiPack, txValueUltiPack, new Vector2(210, -938));
         ShopSection("GOLD", -1150);
-        BuildShopGold(IAPManager.tilespace_gold1, iapButtonGold1, goldImgGold1, txValueGold1, -270);
-        BuildShopGold(IAPManager.tilespace_gold2, iapButtonGold2, goldImgGold2, txValueGold2, 0);
-        BuildShopGold(IAPManager.tilespace_gold3, iapButtonGold3, goldImgGold3, txValueGold3, 270);
+        BuildShopGold(IAPManager.tilesky_gold1, iapButtonGold1, goldImgGold1, txValueGold1, -270);
+        BuildShopGold(IAPManager.tilesky_gold2, iapButtonGold2, goldImgGold2, txValueGold2, 0);
+        BuildShopGold(IAPManager.tilesky_gold3, iapButtonGold3, goldImgGold3, txValueGold3, 270);
 
         MoveShopButton(btClose, shopArt, new Vector2(105, 105), new Vector2(405, 600), Color.white);
         btClose.image.sprite = ShopSlice(controls, new Rect(402, 62, 446, 436));

@@ -12,6 +12,7 @@ public class PopupSettings : Popup
     public Button btRateUs;
     public override void SetupTweenCallback()
     {
+        ToggleRate();
         SetupTweenCallback(() =>
         {
             btClose.onClick.AddListener(() => Close());
@@ -54,7 +55,7 @@ public class PopupSettings : Popup
     public void ToggleRate()
     {
         //btRateUs.gameObject.SetActive(PlayerPrefs.GetInt(PopupRateUs.ratingKey, 0) == 0);
-        btRateUs.gameObject.SetActive(!PopupRateUs.HasRating());
+        btRateUs.gameObject.SetActive(PopupRateUs.FeatureEnabled && !PopupRateUs.HasRating());
         togglesRectTfm.anchoredPosition = new Vector2(0, btRateUs.gameObject.activeSelf ? 0 : 0);
     }
     public override void Close()

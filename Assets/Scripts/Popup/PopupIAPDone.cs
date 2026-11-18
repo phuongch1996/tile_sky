@@ -31,13 +31,13 @@ public class PopupIAPDone : Popup
         removeAdsGO.SetActive(isRemoveAds);
         txPackName.text = iapid switch
         {
-            IAPManager.tilespace_removeads => "remove ads",
-            IAPManager.tilespace_firstpack => "first pack",
-            IAPManager.tilespace_megapack => "mega pack",
-            IAPManager.tilespace_ultipack => "ultimate pack",
-            IAPManager.tilespace_gold1 => "gold pack",
-            IAPManager.tilespace_gold2 => "gold pack",
-            IAPManager.tilespace_gold3 => "gold pack",
+            IAPManager.tilesky_removeads => "remove ads",
+            IAPManager.tilesky_firstpack => "first pack",
+            IAPManager.tilesky_megapack => "mega pack",
+            IAPManager.tilesky_ultipack => "ultimate pack",
+            IAPManager.tilesky_gold1 => "gold pack",
+            IAPManager.tilesky_gold2 => "gold pack",
+            IAPManager.tilesky_gold3 => "gold pack",
             IAPManager.tilespace_piggybank => "piggy bank",
             _ => ""
         };

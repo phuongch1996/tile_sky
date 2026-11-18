@@ -69,6 +69,10 @@ sysinfo.txt
 mono_crash.*
 
 # Builds
+# Local upload signing keys and passwords
+/Signing/
+/Signing.rar
+/Signing.zip
 *.apk
 *.aab
 *.unitypackage

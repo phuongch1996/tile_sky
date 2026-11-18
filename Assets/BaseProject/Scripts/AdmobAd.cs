@@ -38,6 +38,9 @@ public class AdmobAd : MonoBehaviour
     /// </summary>
     private void Start()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         // On Android, Unity is paused when displaying interstitial or rewarded video.
         // This setting makes iOS behave consistently with Android.
         MobileAds.SetiOSAppPauseOnBackground(true);
@@ -60,6 +63,9 @@ public class AdmobAd : MonoBehaviour
     /// </summary>
     public void InitializeGoogleMobileAds()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         // The Google Mobile Ads Unity plugin needs to be run only once and before loading any ads.
         if (_isInitialized.HasValue)
         {
@@ -95,6 +101,9 @@ public class AdmobAd : MonoBehaviour
     }
     public void LoadAds()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         LoadAppOpenAd();
         LoadInterstitialAd();
         //LoadInterstitialAdAdBreak();
@@ -155,6 +164,9 @@ public class AdmobAd : MonoBehaviour
     /// </summary>
     public void LoadAppOpenAd()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         // Clean up the old ad before loading a new one.
         if (_appOpenAd != null)
         {
@@ -205,6 +217,9 @@ public class AdmobAd : MonoBehaviour
     /// </summary>
     public void ShowAppOpenAd()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         // App open ads can be preloaded for up to 4 hours.
         if (_appOpenAd != null && _appOpenAd.CanShowAd() && DateTime.Now < _expireTime)
         {
@@ -369,6 +384,9 @@ public class AdmobAd : MonoBehaviour
     /// </summary>
     public void LoadBannerAd(bool isCollapsible)
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         Debug.Log("Creating banner view.");
         // If we already have a banner, destroy the old one.
         if (_bannerView != null)
@@ -402,6 +420,9 @@ public class AdmobAd : MonoBehaviour
     /// </summary>
     public void ShowBannerAd()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         if (_bannerView != null)
         {
             Debug.Log("Showing banner view.");
@@ -607,6 +628,9 @@ public class AdmobAd : MonoBehaviour
     int retryAttempt = 0;
     public void LoadInterstitialAd()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         // Clean up the old ad before loading a new one.
         if (_interstitialAd != null)
         {
@@ -659,6 +683,9 @@ public class AdmobAd : MonoBehaviour
     /// </summary>
     public void ShowInterstitialAd()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         if (_interstitialAd != null && _interstitialAd.CanShowAd())
         {
             Debug.Log("Showing interstitial ad.");
@@ -841,6 +868,9 @@ public class AdmobAd : MonoBehaviour
     int retryAttemptAdBreak = 0;
     public void LoadInterstitialAdAdBreak()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         // Clean up the old ad before loading a new one.
         if (_interstitialAdAdBreak != null)
         {
@@ -896,6 +926,9 @@ public class AdmobAd : MonoBehaviour
     /// </summary>
     public void ShowInterstitialAdAdBreak()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         if (_interstitialAdAdBreak != null && _interstitialAdAdBreak.CanShowAd())
         {
             Debug.Log("Showing interstitial ad.");
@@ -947,6 +980,9 @@ public class AdmobAd : MonoBehaviour
     int rewardRetryAttempt = 0;
     public void LoadRewardedAd()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         // Clean up the old ad before loading a new one.
         if (_rewardedAd != null)
         {
@@ -1004,6 +1040,9 @@ public class AdmobAd : MonoBehaviour
     /// </summary>
     public void ShowRewardedAd()//int rewardType)
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         if (_rewardedAd != null && _rewardedAd.CanShowAd())
         {
             Debug.Log("Showing rewarded ad.");
@@ -1239,6 +1278,9 @@ public class AdmobAd : MonoBehaviour
     /// </summary>
     public void LoadNativeOverlayAd()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         // Clean up the old ad before loading a new one.
         if (_nativeOverlayAd != null)
         {
@@ -1296,6 +1338,9 @@ public class AdmobAd : MonoBehaviour
     /// </summary>
     public void RenderNativeOverlayAd()
     {
+#if TILESKY_NO_ADS
+        return;
+#endif
         if (_nativeOverlayAd != null)
         {
             Debug.Log("Rendering Native Overlay ad.");
@@ -1347,6 +1392,9 @@ public class AdmobAd : MonoBehaviour
     /// </summary>
     public bool ShowNativeOverlayAd()
     {
+#if TILESKY_NO_ADS
+        return false;
+#endif
         if (_nativeOverlayAd != null)
         {
             Debug.Log("Showing Native Overlay ad.");

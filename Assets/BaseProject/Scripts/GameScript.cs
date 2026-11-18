@@ -10,6 +10,72 @@ using UnityEngine.UI;
 
 public class GameScript : MonoBehaviour
 {
+    private static Vector2 homeNavigationCenter, homeNavigationEdge, homeNavigationNext;
+    private static bool hasHomeNavigationLayout;
+
+    // Capture before Home's exit tween moves its icons. The two scenes have
+    // different safe-area hierarchies, so anchored positions are not interchangeable.
+    public static void CaptureHomeNavigationLayout(RectTransform settings, float spacing)
+    {
+        var canvas = settings.GetComponentInParent<Canvas>().rootCanvas;
+        var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        Vector2 Normalize(Vector3 point) => RectTransformUtility.WorldToScreenPoint(camera, point) /
+            new Vector2(Screen.width, Screen.height);
+        homeNavigationCenter = Normalize(settings.TransformPoint(settings.rect.center));
+        homeNavigationEdge = Normalize(settings.TransformPoint(settings.rect.max));
+        homeNavigationNext = Normalize(settings.TransformPoint(settings.rect.center + Vector2.right * spacing));
+        hasHomeNavigationLayout = true;
+    }
+
+    private void FitHomeNavigationLayout()
+    {
+        var settings = FindObjectsByType<Button>(FindObjectsInactive.Include, FindObjectsSortMode.None)
+            .FirstOrDefault(button => button.gameObject.scene == gameObject.scene && button.name == "btsetting");
+        if (!settings) return;
+        var parent = (RectTransform)settings.transform.parent;
+        var back = parent.Find("bthome") as RectTransform;
+        if (!back) return;
+        var canvas = parent.GetComponentInParent<Canvas>().rootCanvas;
+        var camera = canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : canvas.worldCamera;
+        Vector2 Local(Vector2 point)
+        {
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(parent,
+                point * new Vector2(Screen.width, Screen.height), camera, out var result);
+            return result;
+        }
+        Vector2 center, size, next;
+        if (hasHomeNavigationLayout)
+        {
+            center = Local(homeNavigationCenter);
+            size = (Local(homeNavigationEdge) - center) * 2f;
+            next = Local(homeNavigationNext);
+        }
+        else
+        {
+            // Direct GameScene starts have no Home transition to capture. Reproduce
+            // Home's feature-row anchors inside the same safe-area coordinate space.
+            var safeArea = (RectTransform)parent.parent;
+            var homePoint = new Vector2(safeArea.rect.xMin + 135f,
+                safeArea.rect.yMin + safeArea.rect.height * 0.8375f + 241.54f);
+            center = parent.InverseTransformPoint(safeArea.TransformPoint(homePoint));
+            size = new Vector2(149.78f, 146.7f) * (208f / 183f);
+            next = center + Vector2.right * (size.x + 12f);
+        }
+        var settingsRect = (RectTransform)settings.transform;
+        settingsRect.anchorMin = settingsRect.anchorMax = back.anchorMin = back.anchorMax = Vector2.one * 0.5f;
+        settingsRect.pivot = back.pivot = Vector2.one * 0.5f;
+        settingsRect.sizeDelta = size;
+        settingsRect.anchoredPosition = next - parent.rect.center;
+        // Match visible artwork height, including preserveAspect and transparent padding.
+        float pixelsToLocal = Mathf.Min(size.x / 256f, size.y / 234f);
+        float backSize = pixelsToLocal * 184f * 1254f / 1041f;
+        back.sizeDelta = Vector2.one * backSize;
+        var artworkCenter = center + new Vector2(-1.5f, 0.5f) * pixelsToLocal;
+        back.anchoredPosition = artworkCenter - new Vector2(-2.5f, -22.5f) * (backSize / 1254f) - parent.rect.center;
+        settings.image.preserveAspect = true;
+        back.GetComponent<Image>().preserveAspect = true;
+    }
+
     [SerializeField, Min(0.1f)] private float homeExitDuration = 1f;
     [SerializeField, Min(0.1f)] private float levelEntranceDuration = 0.85f;
     public bool IsLevelEntering { get; private set; }
@@ -807,6 +873,8 @@ public class GameScript : MonoBehaviour
         if (IsReturningHome || IsLevelEntering)
             return;
 
+        Canvas.ForceUpdateCanvases();
+        FitHomeNavigationLayout();
         PositionTrayCounters();
 
         var buttons = FindObjectsByType<Button>(FindObjectsSortMode.None)

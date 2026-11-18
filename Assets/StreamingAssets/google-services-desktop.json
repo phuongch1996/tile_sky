@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "236806793836",
+    "project_id": "tile-sky",
+    "storage_bucket": "tile-sky.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:236806793836:android:1b10595be1adea9a108649",
+        "android_client_info": {
+          "package_name": "com.chp.tilesky"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZqcQvLLjlx6zEkuHEstBx-cQ7XDTW6i0"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
